@@ -64,8 +64,12 @@ WSGI_APPLICATION = 'gym_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'gym_app',
+        'USER': 'leovita',
+        'PASSWORD': '',
+        'HOST': 'localhost',  # O l'indirizzo del tuo server PostgreSQL
+        'PORT': '5432',  # Porta predefinita di PostgreSQL
     }
 }
 
@@ -101,10 +105,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = 'staticfiles/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'staticfiles/admin'),
 ]
 
 # Default primary key field type
