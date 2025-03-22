@@ -79,7 +79,6 @@ class GymClass(models.Model):
         return GymBooking.objects.filter(class_id=self.class_id).count()
 
     def check_availability(self):
-        # Controlla se ci sono ancora posti disponibili
         current_participants = self.check_participants()
         return current_participants < self.max_partecipants
 
@@ -100,11 +99,9 @@ class GymBooking(models.Model):
         return False
 
     def delete_gym_booking(self):
-        # Logica per eliminare una prenotazione
         self.delete()
     
     def show_booking_details(self):
-        # Logica per mostrare i dettagli della prenotazione
         return {
             'user': self.user.username,
             'class': self.class_id.name,
@@ -126,15 +123,12 @@ class SpaService(models.Model):
     imgs = models.CharField(max_length=255, blank=True, help_text="URLs delle immagini separate da virgola")
 
     def add_service(self):
-        # Logica per aggiungere un servizio
         self.save()
 
     def change_service(self):
-        # Logica per modificare un servizio
         self.save()
 
     def delete_service(self):
-        # Logica per eliminare un servizio
         self.delete()
 
     def check_availability(self):
@@ -156,7 +150,6 @@ class SpaBooking(models.Model):
     max_partecipants = models.IntegerField(default=1)
 
     def book_spa_service(self):
-        # Logica per prenotare un servizio spa
         if self.service_id.check_availability():
             self.save()
             return True

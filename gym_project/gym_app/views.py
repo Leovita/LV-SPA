@@ -1,5 +1,6 @@
 # gym_app/views.py
 
+from datetime import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required

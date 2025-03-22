@@ -5,19 +5,18 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    # Home
     path('', views.home, name='home'),
     
-    # Auth
+    #auth
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     
-    # User
-    path('profile/', views.profile_view, name='profile'),
+    #user
+    path('profile/', views.profile_view, name='profile'), 
     path('history/', views.history_view, name='history'),
     
-    # Gym Classes
+    #gym
     path('classes/', views.gym_class_list, name='gym_class_list'),
     path('classes/<int:class_id>/', views.gym_class_detail, name='gym_class_detail'),
     path('classes/add/', views.add_gym_class, name='add_gym_class'),
@@ -26,7 +25,7 @@ urlpatterns = [
     path('classes/<int:class_id>/book/', views.book_gym_class, name='book_gym_class'),
     path('bookings/<int:booking_id>/delete/', views.delete_gym_booking, name='delete_gym_booking'),
     
-    # Spa Services
+    #spa
     path('spa/', views.spa_service_list, name='spa_service_list'),
     path('spa/<int:service_id>/', views.spa_service_detail, name='spa_service_detail'),
     path('spa/add/', views.add_spa_service, name='add_spa_service'),
