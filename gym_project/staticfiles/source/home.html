@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LV Spa Resort</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">Chi Siamo</a></li>
+                <li><a href="#services">Servizi</a></li>
+                <li><a href="#contact">Contatti</a></li>
+            </ul>
+
+            <div class="header-actions">
+                <button class="login-btn">Login</button>
+                <button class="register-btn">Registrati</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>LV Spa Resort</h1>
+            <p>Rilassati, ricarica le energie e abbandona lo stress!</p>
+            <a href="#services" class="btn">Scopri i Nostri Servizi</a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <h2>Chi Siamo</h2>
+        <p>Il nostro Spa Resort offre esperienze di benessere uniche, trattamenti esclusivi e un ambiente rilassante per aiutarti a ritrovare l'equilibrio.</p>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <h2>I Nostri Servizi</h2>
+
+        <!-- Gym Services Section -->
+        <div class="services-category">
+            <h3>Servizi Palestra</h3>
+            <div class="service-card">
+                <img src="imgs/pt.png" alt="Personal Training">
+                <h3>Personal Training</h3>
+                <p>Sessioni di allenamento personalizzato per raggiungere i tuoi obiettivi fitness.</p>
+                <p><strong>Prezzo:</strong> €30 per sessione</p>
+                <p><strong>Posti disponibili:</strong> 5</p>
+            </div>
+            <div class="service-card">
+                <img src="imgs/yoga.png" alt="Yoga Session">
+                <h3>Yoga Session</h3>
+                <p>Lezioni di yoga per migliorare la flessibilità e la concentrazione.</p>
+                <p><strong>Prezzo:</strong> €20 per sessione</p>
+                <p><strong>Posti disponibili:</strong> 10</p>
+            </div>
+            <div class="service-card">
+                <img src="imgs/zumba.png" alt="Zumba">
+                <h3>Zumba</h3>
+                <p>Lezioni di zumba per un allenamento divertente e dinamico.</p>
+                <p><strong>Prezzo:</strong> €15 per sessione</p>
+                <p><strong>Posti disponibili:</strong> 15</p>
+            </div>
+        </div>
+
+        <!-- Spa Services Section -->
+        <div class="services-category">
+            <h3>Servizi Spa</h3>
+            <div class="service-card">
+                <img src="imgs/massaggio.png" alt="Massaggio Relax">
+                <h3>Massaggio Relax</h3>
+                <p>Un massaggio terapeutico per alleviare lo stress e rilassare il corpo.</p>
+                <p><strong>Prezzo:</strong> €50 per sessione</p>
+                <p><strong>Posti disponibili:</strong> 2</p>
+            </div>
+            <div class="service-card">
+                <img src="imgs/trattviso.png" alt="Trattamenti Viso">
+                <h3>Trattamenti Viso</h3>
+                <p>Servizi di bellezza per curare la pelle del viso e renderla luminosa.</p>
+                <p><strong>Prezzo:</strong> €40 per trattamento</p>
+                <p><strong>Posti disponibili:</strong> 3</p>
+            </div>
+            <div class="service-card">
+                <img src="imgs/sauna.png" alt="Sauna e Bagno Turco">
+                <h3>Sauna e Bagno Turco</h3>
+                <p>Esperienza di rilassamento profondo con sauna e bagno turco.</p>
+                <p><strong>Prezzo:</strong> €25 per sessione</p>
+                <p><strong>Posti disponibili:</strong> 5</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <h2>Contattaci</h2>
+        <form id="contact-form">
+            <input type="text" id="name" placeholder="Nome" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <textarea id="message" placeholder="Messaggio" required></textarea>
+            <button type="submit">Invia</button>
+        </form>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

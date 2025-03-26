@@ -68,8 +68,8 @@ DATABASES = {
         'NAME': 'gym_app',
         'USER': 'leovita',
         'PASSWORD': '',
-        'HOST': 'localhost',  # O l'indirizzo del tuo server PostgreSQL
-        'PORT': '5432',  # Porta predefinita di PostgreSQL
+        'HOST': 'localhost',  
+        'PORT': '5432',  
     }
 }
 
