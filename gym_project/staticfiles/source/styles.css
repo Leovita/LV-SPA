@@ -189,7 +189,7 @@ header nav ul li a:hover::after {
     flex-wrap: wrap;
     justify-content: center;
     gap: 30px;
-}
+}  
 
 .services-category h3 {
     width: 100%;
@@ -204,11 +204,13 @@ header nav ul li a:hover::after {
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     padding: 30px;
+
     width: calc(33.333% - 30px);
     text-align: center;
     transition: all 0.4s ease;
     position: relative;
     overflow: hidden;
+    text-decoration: none;
 }
 
 .service-card::before {
