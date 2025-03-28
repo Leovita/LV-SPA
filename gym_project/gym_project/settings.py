@@ -26,7 +26,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'gym_app',
+    
+    #addo le mie apps
+    'users',
+    'palestra',
+    'spa',
+    'subscriptions',
 ]
 
 MIDDLEWARE = [
@@ -65,7 +70,7 @@ WSGI_APPLICATION = 'gym_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'gym_app',
+        'NAME': 'spaapp',
         'USER': 'leovita',
         'PASSWORD': '',
         'HOST': 'localhost',  
@@ -117,7 +122,7 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Utente personalizzato
-AUTH_USER_MODEL = 'gym_app.User'
+AUTH_USER_MODEL = 'users.User'
 
 # URL di reindirizzamento dopo il login
 LOGIN_URL = 'login'
