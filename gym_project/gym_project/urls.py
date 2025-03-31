@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     #aggiungo tutti gli urls delle mie apps 
     path('users/', include('users.urls')),         
-    path('palestra/', include('palestra.urls')),  
-    path('spa/', include('spa.urls')),             
-    path('subscriptions/', include('subscriptions.urls')), 
+    #path('palestra/', include('palestra.urls')),  
+    #path('spa/', include('spa.urls')),             
+    #path('subscriptions/', include('subscriptions.urls')), 
 ]
