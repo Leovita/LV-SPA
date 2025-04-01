@@ -55,6 +55,13 @@
             overflow: hidden;
             color: var(--white);
         }
+
+        .auth-image img {
+            width: 200px; /* Regola la dimensione del logo */
+            height: auto;
+            display: block;
+            margin: 20px auto 0; /* Sposta il logo sotto il testo */
+    }
         
         .auth-image::before {
             content: '';
@@ -63,7 +70,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: url('placeholder');
+            background-image: url("placeholder");
             background-size: cover;
             background-position: center;
             opacity: 0.3;
@@ -305,7 +312,7 @@
             <div class="auth-image-content">
                 <h2>Welcome Back</h2>
                 <p>Log in to access your account or create a new one to join our community.</p>
-                <img src="{% static /imgs/sauna.png}" alt="Welcome illustration">
+                <img src="{% static '/users/imgs/logo.png' %}" alt="Welcome illustration">
             </div>
         </div>
         <div class="auth-forms">
