@@ -13,14 +13,15 @@ document.getElementById('contact-form').addEventListener('submit', function(even
     }
 });
 
+document.querySelector(".login-btn").addEventListener("click", function() {
+    window.location.href = "/login/";
+});
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Select the "Scopri i Nostri Servizi" button in the hero section
     const discoverServicesBtn = document.querySelector('.hero .btn');
     
-    // Select the services section
     const servicesSection = document.getElementById('services');
     
-    // Add click event listener to the button
     if (discoverServicesBtn && servicesSection) {
         discoverServicesBtn.addEventListener('click', function(event) {
             event.preventDefault();
