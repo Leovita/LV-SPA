@@ -70,7 +70,6 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: url("placeholder");
             background-size: cover;
             background-position: center;
             opacity: 0.3;
@@ -317,24 +316,25 @@
         </div>
         <div class="auth-forms">
             <div class="tabs">
-                <div class="tab-btn active" onclick="showTab('login')">Login</div>
-                <div class="tab-btn" onclick="showTab('register')">Register</div>
+                <div class="tab-btn active" onclick="showTab('login', this)">Login</div>
+                <div class="tab-btn" onclick="showTab('register', this)">Register</div>
             </div>
             
             <!-- Login Form -->
             <div class="form-container active" id="login-form">
-                <form>
+                <form method="POST" action="{% url 'login' %}">
+                    {% csrf_token %}
                     <div class="form-group">
                         <label for="login-email">Email Address</label>
-                        <input type="email" id="login-email" required>
+                        <input name="email" type="email" id="login-email" required>
                     </div>
                     <div class="form-group">
                         <label for="login-password">Password</label>
-                        <input type="password" id="login-password" required>
+                        <input name="login-password" type="password" id="login-password" required>
                     </div>
                     <div class="form-footer">
                         <div class="remember-me">
-                            <input type="checkbox" id="remember">
+                            <input name="remember-me" type="checkbox" id="remember">
                             <label for="remember">Remember me</label>
                         </div>
                         <a href="#" class="forgot-password">Forgot Password?</a>
@@ -403,23 +403,19 @@
     </div>
 
     <script>
-        function showTab(tabName) {
-            // Hide all forms
+        function showTab(tabName, currentTarget) {
             document.querySelectorAll('.form-container').forEach(form => {
                 form.classList.remove('active');
             });
-            
-            // Remove active class from all tabs
+
             document.querySelectorAll('.tab-btn').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
-            // Show selected form
+
             document.getElementById(tabName + '-form').classList.add('active');
-            
-            // Set active tab
-            event.currentTarget.classList.add('active');
+
+            currentTarget.classList.add('active');
         }
-    </script>
+    </script></body>
 </body>
 </html>

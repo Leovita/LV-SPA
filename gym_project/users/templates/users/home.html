@@ -22,7 +22,7 @@
 
             <div class="header-actions">
                 <button class="login-btn">Login</button>
-                <button class="register-btn">Registrati</button>
+                <button class="register-btn" onclick="showTab('register')">Registrati</button>
             </div>
         </nav>
     </header>
@@ -114,6 +114,5 @@
         <p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
     </footer>
 
-    <script src="{% static 'users/js/script.js' %}"></script>
-</body>
+    <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script></body>
 </html>

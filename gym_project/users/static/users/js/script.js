@@ -17,6 +17,12 @@ document.querySelector(".login-btn").addEventListener("click", function() {
     window.location.href = "/login/";
 });
 
+document.querySelector(".register-btn").addEventListener("click", function() {
+    console.log("register premuto!");
+    showTab('register');
+});
+
+
 document.addEventListener('DOMContentLoaded', function() {
     const discoverServicesBtn = document.querySelector('.hero .btn');
     
