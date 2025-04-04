@@ -310,7 +310,7 @@
         <div class="auth-image">
             <div class="auth-image-content">
                 <h2>Welcome Back</h2>
-                <p>Log in to access your account or create a new one to join our community.</p>
+                <p>Log in t o access your account or create a new one to join our community.</p>
                 <img src="{% static '/users/imgs/logo.png' %}" alt="Welcome illustration">
             </div>
         </div>
@@ -360,7 +360,7 @@
             
             <!-- Register Form -->
             <div class="form-container" id="register-form">
-                <form method="POST" action="{% url 'login' %}">
+                <form method="POST" action="{% url 'register' %}">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="register-name">Full Name</label>
@@ -436,6 +436,7 @@
             if (tab) {
                 showTab(tab); 
             } else {
+                //default login
                 showTab('login');
             }
         });

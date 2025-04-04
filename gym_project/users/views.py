@@ -41,28 +41,27 @@ def home_view(request):
 
 def register(request):
     if request.method == "POST":
-        full_name = request.POST["full_name"]
-        email = request.POST["email"]
-        password = request.POST["password"]
-        password_confirm = request.POST["password_confirm"]
+        full_name = request.POST.get("register-name")
+        email = request.POST.get("register-email")
+        password = request.POST.get("register-password")
+        password_confirm = request.POST.get("register-confirm")
+
+        print(full_name, email, password, password_confirm)
+        if not full_name or not email or not password or not password_confirm:
+            return render(request, "login.html/tab=register", {"error": "Tutti i campi devono essere compilati."})
+
+        if User.objects.filter(email=email).exists():
+            return render(request, "login.html/tab=register", {"error": "Un utente con questa email esiste già."})
 
         if password != password_confirm:
-            messages.error(request, "Le password non coincidono!")
-            return redirect("register")
-        
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email già registrata!")
-            return redirect("register")
-        
-        # Create user if the email does not exist
-        user = User.objects.create_user(username=email, email=email, password=password)
-        user.first_name = full_name
-        user.save()
+            return render(request, "register.html", {"error": "Le password non coincidono."})
+   
+        user = User.objects.create_user(email=email, password=password, full_name=full_name)
 
-        messages.success(request, "Registrazione completata! Ora puoi accedere.")
-        return redirect("login") 
 
-    return render(request, "register.html")
+
+        return redirect('login')  # Dopo la registrazione, puoi reindirizzare l'utente al login (esempio)
+    return render(request, "users/login.html")
 
 
 def user_logout(request):
