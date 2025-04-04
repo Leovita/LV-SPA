@@ -316,9 +316,9 @@
         </div>
         <div class="auth-forms">
             <div class="tabs">
-                <div class="tab-btn active" onclick="showTab('login', this)">Login</div>
-                <div class="tab-btn" onclick="showTab('register', this)">Register</div>
-            </div>
+                <div class="tab-btn active" data-tab="login" onclick="showTab('login')">Login</div>
+                <div class="tab-btn" data-tab="register" onclick="showTab('register')">Registrati</div>
+            </div>            
             
             <!-- Login Form -->
             <div class="form-container active" id="login-form">
@@ -402,21 +402,46 @@
             </div>
         </div>
     </div>
-
+    
     <script>
-        function showTab(tabName, currentTarget) {
-            document.querySelectorAll('.form-container').forEach(form => {
+        function getTabFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('tab');
+        }
+    
+        function showTab(tabName) {
+            document.querySelectorAll('.form-container').forEach(function(form) {
                 form.classList.remove('active');
             });
-
-            document.querySelectorAll('.tab-btn').forEach(tab => {
-                tab.classList.remove('active');
+    
+            document.querySelectorAll('.tab-btn').forEach(function(button) {
+                button.classList.remove('active');
             });
-
-            document.getElementById(tabName + '-form').classList.add('active');
-
-            currentTarget.classList.add('active');
+    
+            if (tabName) {
+                const tab = document.getElementById(tabName + '-form');
+                if (tab) {
+                    tab.classList.add('active');
+                }
+    
+                const activeTabButton = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+                if (activeTabButton) {
+                    activeTabButton.classList.add('active');
+                }
+            }
         }
-    </script></body>
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            const tab = getTabFromURL(); 
+            if (tab) {
+                showTab(tab); 
+            } else {
+                showTab('login');
+            }
+        });
+    </script>    
+    
+    
+    </body>
 </body>
 </html>

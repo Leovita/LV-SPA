@@ -77,22 +77,19 @@ header nav ul li a:hover::after {
 }
 
 .user-logo {
-    width: 50px; /* Dimensione del logo */
+    width: 50px; 
     height: auto;
     position: absolute;
     top: 10px;
     right: 20px;
 }
 
-/* Contenitore del dropdown */
-/* Contenitore del dropdown */
 .dropdown {
     position: relative;
     display: inline-block;
     cursor: pointer;
 }
 
-/* Immagine del profilo */
 .user-profile-pic {
     width: 45px;
     height: 45px;
@@ -100,9 +97,8 @@ header nav ul li a:hover::after {
     cursor: pointer;
 }
 
-/* Menu del dropdown */
 .dropdown-menu {
-    display: none; /* Nasconde il menu per default */
+    display: none; 
     position: absolute;
     right: 0;
     background-color: white;
@@ -110,10 +106,9 @@ header nav ul li a:hover::after {
     box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
     border-radius: 15px;
     overflow: hidden;
-    z-index: 1000; /* Assicurati che il menu sia sopra altri elementi */
+    z-index: 1000; 
 }
 
-/* Link all'interno del menu */
 .dropdown-menu a {
     display: block;
     padding: 10px;
@@ -122,12 +117,10 @@ header nav ul li a:hover::after {
     font-weight: 500;
 }
 
-/* Hover sugli elementi del menu */
 .dropdown-menu a:hover {
     background-color: #f2f2f2;
 }
 
-/* Mostra il menu quando il dropdown è attivo */
 .dropdown.active .dropdown-menu {
     display: block;
 }
@@ -164,7 +157,6 @@ header nav ul li a:hover::after {
     border-color: var(--secondary-color);
 }
 
-/* Hero Section */
 .hero {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: var(--white);
@@ -183,11 +175,11 @@ header nav ul li a:hover::after {
     right: 0;
     bottom: 0;
     background-image: url('../imgs/saunalong.jpg');
-    background-size: cover; /* L'immagine copre l'intera area della sezione */
-    background-position: center; /* L'immagine è centrata */
-    background-repeat: no-repeat; /* Evita che l'immagine si ripeta */
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
     z-index: 1;
-    opacity: 0.5; /* Regola l'opacità se necessario */
+    opacity: 0.5; 
 }
 
 
@@ -227,7 +219,6 @@ header nav ul li a:hover::after {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Services Section */
 .services {
     padding: 100px 20px;
     background-color: var(--white);
