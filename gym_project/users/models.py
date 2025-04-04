@@ -21,7 +21,7 @@ class User(AbstractBaseUser):
     email = models.EmailField(unique=True)  
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
     phone = models.CharField(max_length=20, blank=True)
-    img = models.CharField(max_length=255, blank=True, help_text="URL dell'immagine del profilo")
+    profile_picture = models.ImageField(upload_to="profile_pics/", default="def_pfp.png")
     subscription = models.CharField(max_length=100, blank=True)
     
     USERNAME_FIELD = 'email' 

@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout
 from users.models import User
+
+
 
 def profile(request):
     return render(request, 'profile.html')
@@ -24,7 +26,7 @@ def login(request):
                 print("OTTIMO SEI DENTRO!!")
                 auth_login(request, authenticated_user)  
                 messages.success(request, "Login effettuato con successo!")
-                return render(request, 'users/home.html')
+                return redirect('home')
             else:
                 print("Credenziali non valide")
                 messages.error(request, "Credenziali non valide. Riprova.")
@@ -33,6 +35,7 @@ def login(request):
             messages.error(request, "Credenziali non valide. Riprova.")
 
     return render(request, "users/login.html")
+
 def home_view(request):
     return render(request, 'users/home.html')
 
@@ -57,6 +60,12 @@ def register(request):
         user.save()
 
         messages.success(request, "Registrazione completata! Ora puoi accedere.")
-        return redirect("login")  # Redirect to login page after registration
+        return redirect("login") 
 
     return render(request, "register.html")
+
+
+def user_logout(request):
+    """Effettua il logout dell'utente e lo reindirizza alla homepage."""
+    logout(request)
+    return redirect('home')

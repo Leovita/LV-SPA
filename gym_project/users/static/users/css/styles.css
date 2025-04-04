@@ -76,6 +76,63 @@ header nav ul li a:hover::after {
     gap: 20px;
 }
 
+.user-logo {
+    width: 50px; /* Dimensione del logo */
+    height: auto;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+
+/* Contenitore del dropdown */
+/* Contenitore del dropdown */
+.dropdown {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* Immagine del profilo */
+.user-profile-pic {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Menu del dropdown */
+.dropdown-menu {
+    display: none; /* Nasconde il menu per default */
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 15px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    overflow: hidden;
+    z-index: 1000; /* Assicurati che il menu sia sopra altri elementi */
+}
+
+/* Link all'interno del menu */
+.dropdown-menu a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: black;
+    font-weight: 500;
+}
+
+/* Hover sugli elementi del menu */
+.dropdown-menu a:hover {
+    background-color: #f2f2f2;
+}
+
+/* Mostra il menu quando il dropdown è attivo */
+.dropdown.active .dropdown-menu {
+    display: block;
+}
+
+
 .login-btn, .register-btn {
     padding: 10px 20px;
     border-radius: 50px;

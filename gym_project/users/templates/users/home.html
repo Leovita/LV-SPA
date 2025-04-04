@@ -21,8 +21,21 @@
             </ul>
 
             <div class="header-actions">
-                <button class="login-btn">Login</button>
-                <button class="register-btn" onclick="showTab('register')">Registrati</button>
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'users/imgs/def_pfp.png' %}{% endif %}" 
+                         alt="User Profile" class="user-profile-pic" onclick="toggleDropdown()">
+                    <div class="dropdown-menu" id="dropdown-menu">
+                        <a href="{% url 'profile' %}">Profilo/Settings</a>
+                        <a href="{% url 'logout' %}">Gestione Abbonamento</a>
+                        <a href="{% url 'logout' %}">Gestione Prenotazioni</a>
+                        <a href="{% url 'logout' %}">Logout</a>
+                    </div>
+                </div>
+            {% else %}
+                <button class="login-btn" onclick="window.location.href='{% url 'login' %}'">Login</button>
+                <button class="register-btn" onclick="window.location.href='{% url 'register' %}'">Registrati</button>
+            {% endif %}
             </div>
         </nav>
     </header>

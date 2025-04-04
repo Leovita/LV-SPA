@@ -7,8 +7,9 @@ urlpatterns = [
     #url specifiche per user
     path('', views.home_view, name='home'),
     path('profile/', views.profile, name='profile'),
-    path('login/', views.login, name='login'),
+    path('login/', views.login, name='login'), 
+    path('register/', views.register, name='register'),
+    path('logout/', views.user_logout, name='logout'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
