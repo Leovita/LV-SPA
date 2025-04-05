@@ -2,8 +2,11 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
 from users.models import User
+from palestra.models import GymClass
 
-
+def services_view(request):
+    gym_services = GymClass.objects.all()  
+    return render(request, 'home.html', {'gym_services': gym_services})
 
 def profile(request):
     return render(request, 'profile.html')
