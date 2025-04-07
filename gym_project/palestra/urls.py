@@ -2,6 +2,6 @@ from django.urls import path
 from . import views  
 
 urlpatterns = [
-
-    path('gym_class/<int:id>/', views.gym_class_detail_view, name='gym_class_detail'),
+    #path('', views.all_services_view, name='all_services_view'),  # Mostra tutti i servizi
+    # Aggiungi altri URL per la gestione dei dettagli, se necessario
 ]

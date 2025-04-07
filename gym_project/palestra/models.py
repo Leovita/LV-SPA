@@ -19,10 +19,10 @@ class GymClass(models.Model):
         return current_participants < self.max_partecipants
 
     def __str__(self):
-        return f"{self.name} - {self.date.strftime('%d/%m/%Y %H:%M')}"
+        return f"{self.name} - {self.scheduled.strftime('%d/%m/%Y %H:%M')}"
 
     def get_absolute_url(self):
-        return reverse('gym_class_detail', args=[str(self.id)])
+        return reverse('all_services_view', args=[str(self.id)])
     
 class GymBooking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -4,10 +4,6 @@ from django.contrib.auth import authenticate, login as auth_login, logout
 from users.models import User
 from palestra.models import GymClass
 
-def services_view(request):
-    gym_services = GymClass.objects.all()  
-    return render(request, 'home.html', {'gym_services': gym_services})
-
 def profile(request):
     return render(request, 'profile.html')
 
@@ -40,7 +36,8 @@ def login(request):
     return render(request, "users/login.html")
 
 def home_view(request):
-    return render(request, 'users/home.html')
+    gym_services = GymClass.objects.all()
+    return render(request, 'users/home.html', {'gym_services': gym_services})
 
 def register(request):
     if request.method == "POST":
