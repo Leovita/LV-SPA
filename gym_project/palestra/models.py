@@ -4,8 +4,9 @@ from users.models import User
 from django.utils import timezone
 
 class GymClass(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, default="Marco Ros")
     description = models.TextField()
+    scheduled = models.DateTimeField(default=timezone.now)
     instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='instructor_classes')
     max_partecipants = models.IntegerField()
     imgs = models.CharField(max_length=255, blank=True, help_text="URLs delle immagini")

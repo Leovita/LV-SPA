@@ -18,7 +18,7 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **xtra_F)
 
 class User(AbstractBaseUser):
-    full_name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255, default="Nome Cognome")
     email = models.EmailField(unique=True)  
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
     phone = models.CharField(max_length=20, blank=True)
