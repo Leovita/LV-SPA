@@ -7,7 +7,7 @@ from palestra.views import all_services_view
 urlpatterns = [
     #url specifiche per user
     #path('', views.home_view, name='home'),
-    path('', views.home_view, name='home'),  # usa quella view per la home page
+    path('', views.home, name='home'),  # usa quella view per la home page
     path('profile/', views.profile, name='profile'),
     path('login/', views.login, name='login'), 
     path('register/', views.register, name='register'),

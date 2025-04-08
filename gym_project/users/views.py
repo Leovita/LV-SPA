@@ -1,6 +1,8 @@
+from datetime import timezone
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
+from spa.models import SpaService
 from users.models import User
 from palestra.models import GymClass
 
@@ -35,9 +37,14 @@ def login(request):
 
     return render(request, "users/login.html")
 
-def home_view(request):
+def home(request):
     gym_services = GymClass.objects.all()
-    return render(request, 'users/home.html', {'gym_services': gym_services})
+    spa_services = SpaService.objects.all()
+    
+    return render(request, 'users/home.html', {
+        'gym_services': gym_services,
+        'spa_services': spa_services,
+    })
 
 def register(request):
     if request.method == "POST":

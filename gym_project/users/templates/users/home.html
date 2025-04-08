@@ -32,10 +32,10 @@
                         <a href="{% url 'logout' %}">Logout</a>
                     </div>
                 </div>
-            {% else %}
-            <button class="login-btn" onclick="window.location.href='{% url 'login' %}?tab=login'">Login</button>
-            <button class="register-btn" onclick="window.location.href='{% url 'register' %}?tab=register'">Registrati</button>
-            {% endif %}
+                {% else %}
+                <button class="login-btn" onclick="window.location.href='{% url 'login' %}?tab=login'">Login</button>
+                <button class="register-btn" onclick="window.location.href='{% url 'register' %}?tab=register'">Registrati</button>
+                {% endif %}
             </div>
         </nav>
     </header>
@@ -55,22 +55,18 @@
         <p>Il nostro Spa Resort offre esperienze di benessere uniche, trattamenti esclusivi e un ambiente rilassante per aiutarti a ritrovare l'equilibrio.</p>
     </section>
 
-    <!-- Gym Services Section -->
-    <div class="services-category">
-        <h3>Servizi Palestra</h3>
-        {% for service in gym_services %}
-        <div class="service-card"></div>
-                <!-- Immagine del servizio -->
-                <p>{{ service.imgs }}</p>
+    <!-- Servizi Section -->
+    <section id="services">
+
+        <!-- Servizi Palestra -->
+        <div class="services-category">
+            <h3>Servizi Palestra</h3>
+            {% for service in gym_services %}
+            <a href="{% url 'login' %}" class="service-card">
                 <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
-                
-                <h3>{{ service.name }}</h3>
+                <h3>{{ service.name }}</h3> 
                 <p>{{ service.description }}</p>
-                
-                <!-- Istruttore -->
                 <p><strong>Istruttore:</strong> {{ service.instructor.username }}</p>
-                
-                <!-- Disponibilità -->
                 <p><strong>Posti disponibili:</strong> 
                     {% if service.check_availability %}
                         Disponibile
@@ -78,42 +74,37 @@
                         Esaurito
                     {% endif %}
                 </p>
-                
-                <!-- Dettagli sui posti -->
                 <p><strong>Posti totali:</strong> {{ service.max_partecipants }}</p>
                 <p><strong>Partecipanti attuali:</strong> {{ service.check_participants }}</p>
-        </a>
-    {% empty %}
-        <p>Non ci sono servizi disponibili al momento.</p>
-    {% endfor %}
-</div>
+            </a>
+            {% empty %}
+                <p>Non ci sono servizi disponibili al momento.</p>
+            {% endfor %}
+        </div>
 
-<!-- Spa Services Section -->
-<div class="services-category">
-    <h3>Servizi Spa</h3>
-    <a href="dettagli-massaggio-relax.html" class="service-card">
-        <img src="{% static 'users/imgs/massaggio.png' %}" alt="Massaggio Relax">
-        <h3>Massaggio Relax</h3>
-        <p>Un massaggio terapeutico per alleviare lo stress e rilassare il corpo.</p>
-        <p><strong>Prezzo:</strong> €50 per sessione</p>
-        <p><strong>Posti disponibili:</strong> 2</p>
-    </a>
-    <a href="dettagli-trattamenti-viso.html" class="service-card">
-        <img src="{% static 'users/imgs/trattviso.png' %}" alt="Trattamenti Viso">
-        <h3>Trattamenti Viso</h3>
-        <p>Servizi di bellezza per curare la pelle del viso e renderla luminosa.</p>
-        <p><strong>Prezzo:</strong> €40 per trattamento</p>
-        <p><strong>Posti disponibili:</strong> 3</p>
-    </a>
-    <a href="dettagli-sauna.html" class="service-card">
-        <img src="{% static 'users/imgs/sauna.png' %}" alt="Sauna e Bagno Turco">
-        <h3>Sauna e Bagno Turco</h3>
-        <p>Esperienza di rilassamento profondo con sauna e bagno turco.</p>
-        <p><strong>Prezzo:</strong> €25 per sessione</p>
-        <p><strong>Posti disponibili:</strong> 5</p>
-    </a>
-</div>
-</section>
+        <!-- Servizi Spa -->
+        <div class="services-category">
+            <h3>Servizi Spa</h3>
+            {% for spa in spa_services %}
+            <a href="{% url 'login' %}" class="service-card">
+                <img src="{{ spa.imgs.url }}" alt="{{ spa.name }}">
+                <h3>{{ spa.name }}</h3>
+                <p>{{ spa.description }}</p>
+                <p><strong>Prezzo:</strong> €{{ spa.price }}</p>
+                <p><strong>Posti disponibili:</strong>
+                    {% if service.check_availability %}
+                        Disponibile
+                    {% else %}
+                        Esaurito
+                    {% endif %}
+                </p>
+            </a>
+            {% empty %}
+                <p>Non ci sono servizi disponibili al momento.</p>
+            {% endfor %}
+        </div>
+
+    </section>
 
     <!-- Contact Section -->
     <section id="contact" class="contact">
@@ -131,5 +122,6 @@
         <p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
     </footer>
 
-    <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script></body>
+    <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
+</body>
 </html>

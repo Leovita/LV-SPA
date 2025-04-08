@@ -9,7 +9,7 @@ class SpaService(models.Model):
     scheduled = models.DateTimeField(default=timezone.now)
     price = models.IntegerField()
     max_partecipants = models.IntegerField(default=1)
-    imgs = models.CharField(max_length=255, blank=True, help_text="URLs delle immagini")
+    imgs = models.ImageField(upload_to='spa/', blank=True, null=True, help_text="Carica un'immagine del trattamento")
 
     def check_availability(self):
         return SpaBooking.objects.filter(service_id=self.id).count() < self.max_partecipants

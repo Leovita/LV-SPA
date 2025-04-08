@@ -9,7 +9,7 @@ class GymClass(models.Model):
     scheduled = models.DateTimeField(default=timezone.now)
     instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='instructor_classes')
     max_partecipants = models.IntegerField()
-    imgs = models.CharField(max_length=255, blank=True, help_text="URLs delle immagini")
+    imgs = models.ImageField(upload_to='palestra/', blank=True, null=True, help_text="Carica un'immagine del corso")
 
     def check_participants(self):
         return GymBooking.objects.filter(class_id=self.id).count()
