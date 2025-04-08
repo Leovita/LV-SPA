@@ -5,9 +5,11 @@ from django.contrib.auth import authenticate, login as auth_login, logout
 from spa.models import SpaService
 from users.models import User
 from palestra.models import GymClass
+from django.contrib.auth.decorators import login_required
+from users.models import ProfileUpdateForm, ProfilePictureForm
 
 def profile(request):
-    return render(request, 'profile.html')
+    return render(request, 'users/profile.html')
 
 def login(request): 
     if request.method == "POST":
@@ -65,9 +67,7 @@ def register(request):
    
         user = User.objects.create_user(email=email, password=password, full_name=full_name)
 
-
-
-        return redirect('login')  # Dopo la registrazione, puoi reindirizzare l'utente al login (esempio)
+        return redirect('login') 
     return render(request, "users/login.html")
 
 
@@ -75,3 +75,66 @@ def user_logout(request):
     """Effettua il logout dell'utente e lo reindirizza alla homepage."""
     logout(request)
     return redirect('home')
+
+@login_required
+def profile_view(request):
+    """
+    Visualizza la pagina del profilo utente.
+    """
+    return render(request, 'users/profile.html')
+
+@login_required
+def update_profile(request):
+    """
+    Gestisce l'aggiornamento dei dati personali dell'utente.
+    """
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Il tuo profilo è stato aggiornato con successo!')
+            return redirect('profile')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    
+    return redirect('profile')
+
+@login_required
+def update_profile_picture(request):
+    """
+    Gestisce l'aggiornamento dell'immagine del profilo.
+    """
+    if request.method == 'POST':
+        form = ProfilePictureForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid()  :
+            form.save()
+            messages.success(request, 'La tua immagine del profilo è stata aggiornata con successo!')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    
+    return redirect('profile')
+
+@login_required
+def change_password_view(request):
+    """
+    Visualizza la pagina per il cambio della password.
+    """
+    return render(request, 'users/change_password.html')
+
+@login_required
+def delete_account(request):
+    """
+    Mostra una pagina di conferma per l'eliminazione dell'account.
+    Esegue l'eliminazione solo dopo la conferma (POST).
+    """
+    if request.method == 'POST':
+        user = request.user
+        user.delete()
+        messages.success(request, 'Il tuo account è stato eliminato con successo.')
+        return redirect('home')
+
+    return render(request, 'users/delete_account.html')

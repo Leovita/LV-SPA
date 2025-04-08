@@ -1,0 +1,27 @@
+.delete-account-container {
+    max-width: 600px;
+    margin: 100px auto;
+    padding: 40px;
+    background-color: #fff0f0;
+    border: 1px solid #ffcccc;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.btn-danger {
+    background-color: #d9534f;
+    color: white;
+    padding: 10px 20px;
+    margin-right: 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background-color: #ccc;
+    color: black;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+}
