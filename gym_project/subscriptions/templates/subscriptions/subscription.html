@@ -22,19 +22,21 @@
 
             <div class="header-actions">
                 {% if user.is_authenticated %}
-                <div class="dropdown">
-                    <img src="{% if user.profile_picture and user.profile_picture.url %}{{ user.profile_picture.url }}{% else %}/media/profile-pics/def_pfp.png{% endif %}" 
-                         alt="Profile Picture" class="user-profile-pic" onclick="toggleDropdown()">
-                    <div class="dropdown-menu" id="dropdown-menu">
-                        <a href="{% url 'profile' %}">Profilo</a>
-                        <a href="{% url 'subscription_plans' %}">Gestione Abbonamento</a>
-                        <a href="{% url 'login' %}">Gestione Prenotazioni</a>
-                        <a href="{% url 'logout' %}">Logout</a>
+                    <div class="dropdown">
+                        <img src="{% if user.profile_picture and user.profile_picture.url %}{{ user.profile_picture.url }}{% else %}/media/profile-pics/def_pfp.png{% endif %}"
+                             alt="Profile Picture" class="user-profile-pic" onclick="toggleDropdown()">
+                        <div class="dropdown-menu" id="dropdown-menu">
+                            <a href="{% url 'profile' %}">Profilo</a>
+                            {% if user.is_superuser %}
+                                <a href="{% url 'login' %}">Aggiungi Corso</a>
+                                <a href="{% url 'login' %}">Gestisci Abbonamenti</a>
+                            {% endif %}
+                            <a href="{% url 'logout' %}">Logout</a>
+                        </div>
                     </div>
-                </div>
                 {% else %}
-                <button class="login-btn" onclick="window.location.href='{% url 'login' %}?tab=login'">Login</button>
-                <button class="register-btn" onclick="window.location.href='{% url 'register' %}?tab=register'">Registrati</button>
+                    <button class="login-btn" onclick="window.location.href='{% url 'login' %}?tab=login'">Login</button>
+                    <button class="register-btn" onclick="window.location.href='{% url 'register' %}?tab=register'">Registrati</button>
                 {% endif %}
             </div>
         </nav>
