@@ -1,0 +1,313 @@
+/* Base structure - correzione per il footer */
+html {
+    position: relative;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+footer {
+    padding: 1rem;
+    text-align: center;
+    background-color: var(--primary-color);
+    color: var(--white);
+    margin-top: auto; /* Questo spinge il footer in basso */
+    width: 100%;
+}
+
+/* Contenuto principale */
+.subscription-section {
+    flex: 1; /* Questo fa espandere la sezione per riempire lo spazio disponibile */
+    padding: 120px 20px 80px;
+    background-color: var(--background-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+/* Color variables */
+:root {
+    --primary-color: #2C3E50;
+    --secondary-color: #34495E;
+    --accent-color: #3498DB;
+    --background-color: #F4F6F7;
+    --text-color: #2C3E50;
+    --white: #FFFFFF;
+    --green: #27AE60;
+    --light-blue: #E1F0FA;
+    --error-color: #E74C3C;
+    --success-color: #27AE60;
+}
+.subscription-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Heading style */
+.subscription-container h1 {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    margin-bottom: 40px;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+/* Plans container layout */
+.plans-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 40px;
+    width: 100%;
+}
+
+/* Plan card styling */
+.plan-card {
+    background-color: var(--white);
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    width: 350px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.plan-card.active-plan {
+    border: 3px solid var(--accent-color);
+}
+
+/* Plan header styling */
+.plan-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--white);
+    padding: 25px 20px;
+    text-align: center;
+}
+
+.plan-header h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.plan-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.plan-duration {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+/* Plan description styling */
+.plan-description {
+    padding: 25px;
+    min-height: 150px;
+    color: var(--text-color);
+    line-height: 1.6;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.plan-description p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* Plan action styling */
+.plan-action {
+    padding: 0 25px 25px;
+    text-align: center;
+}
+
+/* Button styling */
+.subscribe-plan-btn, 
+.current-plan-btn, 
+.return-btn {
+    display: inline-block;
+    padding: 12px 25px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.subscribe-plan-btn {
+    background-color: var(--accent-color);
+    color: var(--white);
+}
+
+.subscribe-plan-btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.current-plan-btn {
+    background-color: var(--green);
+    color: var(--white);
+    cursor: default;
+}
+
+.return-profile {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.return-btn {
+    background-color: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    width: auto;
+    text-decoration: none;
+    padding: 10px 30px;
+    font-size: 0.95rem;
+    display: inline-block;
+}
+
+.return-btn:hover {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+/* Messages styling */
+.messages {
+    max-width: 600px;
+    margin: 0 auto 25px;
+    width: 100%;
+}
+
+.message {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 500;
+    transition: opacity 0.5s ease;
+}
+
+.message.success {
+    background-color: rgba(39, 174, 96, 0.15);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+.message.error {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+}
+
+/* Empty plans message */
+.no-plans {
+    text-align: center;
+    padding: 40px;
+    background-color: var(--white);
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.no-plans p {
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .plans-container {
+        justify-content: center;
+    }
+    
+    .plan-card {
+        width: calc(50% - 20px);
+        min-width: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .subscription-container h1 {
+        font-size: 2.5rem;
+        margin-bottom: 30px;
+    }
+    
+    .plan-card {
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .plan-header h2 {
+        font-size: 1.6rem;
+    }
+    
+    .plan-price {
+        font-size: 2.2rem;
+    }
+    
+    .subscribe-plan-btn, 
+    .current-plan-btn, 
+    .return-btn {
+        padding: 10px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .subscription-section {
+        padding: 100px 15px 60px;
+    }
+    
+    .subscription-container h1 {
+        font-size: 2rem;
+    }
+    
+    .plan-card {
+        border-radius: 10px;
+    }
+    
+    .plan-header {
+        padding: 20px 15px;
+    }
+    
+    .plan-description,
+    .plan-action {
+        padding: 20px 15px;
+    }
+    
+    .plan-description {
+        min-height: 120px;
+    }
+}

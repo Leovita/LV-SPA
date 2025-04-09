@@ -10,10 +10,6 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
     path('profile/update-picture/', views.update_profile_picture, name='update_profile_picture'),
-    # piano abbonamento attivo
-    path('subscription-plans/', views.subscription_plans, name='subscription_plans'),
-    path('subscribe/<int:plan_id>/', views.subscribe_plan, name='subscribe_plan'),
-
 
     # path('profile/change-password/', views.change_password_view, name='change_password'),
     path('profile/delete_account/', views.delete_account, name='delete_account'),
