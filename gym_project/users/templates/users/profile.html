@@ -24,8 +24,8 @@
             <div class="header-actions">
                 {% if user.is_authenticated %}
                 <div class="dropdown">
-                    <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'users/imgs/def_pfp.png' %}{% endif %}" 
-                         alt="User Profile" class="user-profile-pic" onclick="toggleDropdown()">
+                    <img src="{% if user.profile_picture and user.profile_picture.url %}{{ user.profile_picture.url }}{% else %}/media/profile-pics/def_pfp.png{% endif %}" 
+                         alt="Profile Picture" class="user-profile-pic" onclick="toggleDropdown()">
                     <div class="dropdown-menu" id="dropdown-menu">
                         <a href="{% url 'profile' %}">Profilo</a>
                         <a href="{% url 'login' %}">Gestione Abbonamento</a>
@@ -76,7 +76,7 @@
                     </div>
                     {% endif %}
                     
-                    <form method="post" action="{% url 'login' %}"> 
+                    <form method="post" action="{% url 'update_profile' %}"> 
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="full_name">Nome Completo</label>

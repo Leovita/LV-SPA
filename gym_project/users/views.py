@@ -1,5 +1,8 @@
 from datetime import timezone
+import re
 from django.contrib import messages
+from django.core.validators import validate_email
+from django.forms import ValidationError
 from django.shortcuts import redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
 from spa.models import SpaService
@@ -9,6 +12,9 @@ from django.contrib.auth.decorators import login_required
 from users.models import ProfileUpdateForm, ProfilePictureForm
 
 def profile(request):
+    if not request.user.is_authenticated:
+        return redirect('register')  # oppure puoi aggiungere ?tab=register se hai i tab
+
     return render(request, 'users/profile.html')
 
 def login(request): 
@@ -86,21 +92,41 @@ def profile_view(request):
 @login_required
 def update_profile(request):
     """
-    Gestisce l'aggiornamento dei dati personali dell'utente.
+    Gestisce l'aggiornamento dei dati personali dell'utente con validazione.
     """
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, instance=request.user)
+        
         if form.is_valid():
+            cleaned_data = form.cleaned_data
+            full_name = cleaned_data.get('full_name', '').strip()
+            phone = cleaned_data.get('phone', '').strip()
+            email = cleaned_data.get('email', '').strip()
+
+            # Controllo nome completo (almeno 2 parole, solo lettere/spazi)
+            if not re.match(r'^[A-Za-zÀ-ÿ\s]{3,}$', full_name) or len(full_name.split()) < 2:
+                messages.error(request, "Il nome completo deve contenere almeno nome e cognome (solo lettere).")
+                return redirect('profile')
+
+            if phone and (not phone.isdigit() or len(phone) < 8):
+                messages.error(request, "Il numero di telefono deve contenere almeno 8 cifre numeriche.")
+                return redirect('profile')
+            try:
+                validate_email(email)
+            except ValidationError:
+                messages.error(request, "L'email inserita non è valida.")
+                return redirect('profile')
+
             form.save()
             messages.success(request, 'Il tuo profilo è stato aggiornato con successo!')
             return redirect('profile')
+        
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
-    
-    return redirect('profile')
 
+    return redirect('profile')
 @login_required
 def update_profile_picture(request):
     """
@@ -138,3 +164,9 @@ def delete_account(request):
         return redirect('home')
 
     return render(request, 'users/delete_account.html')
+
+@property
+def profile_picture_url(self):
+    if self.profile_picture and hasattr(self.profile_picture, 'url'):
+        return self.profile_picture.url
+    return static('users/imgs/def_pfp.png')
