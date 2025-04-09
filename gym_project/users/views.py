@@ -1,10 +1,11 @@
-from datetime import timezone
+from datetime import time, timezone
 import re
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.forms import ValidationError
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
+from subscriptions.models import SubscriptionPlan
 from spa.models import SpaService
 from users.models import User
 from palestra.models import GymClass
@@ -108,7 +109,7 @@ def update_profile(request):
                 messages.error(request, "Il nome completo deve contenere almeno nome e cognome (solo lettere).")
                 return redirect('profile')
 
-            if phone and (not phone.isdigit() or len(phone) < 8):
+            if phone and (not phone.isdigit() or len(phone) < 9) or len(phone) > 10:
                 messages.error(request, "Il numero di telefono deve contenere almeno 8 cifre numeriche.")
                 return redirect('profile')
             try:
@@ -170,3 +171,30 @@ def profile_picture_url(self):
     if self.profile_picture and hasattr(self.profile_picture, 'url'):
         return self.profile_picture.url
     return static('users/imgs/def_pfp.png')
+
+
+@login_required
+def subscription_plans(request):
+    """View to display all available subscription plans"""
+    subscription_plans = SubscriptionPlan.objects.all()
+    context = {
+        'subscription_plans': subscription_plans
+    }
+    return render(request, 'users/subscription.html', context)
+
+@login_required
+def subscribe_plan(request, plan_id):
+    """View to subscribe to a specific plan"""
+    if request.method == 'POST':
+        plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+        
+        # Update user's subscription plan
+        user = request.user
+        user.plan = plan
+        user.subscription = f"{plan.name} ({plan.duration} giorni)"
+        user.save()
+        
+        messages.success(request, f"Abbonamento '{plan.name}' sottoscritto con successo!")
+        return redirect('subscription_plans')
+    
+    return redirect('subscription_plans')

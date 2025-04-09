@@ -28,7 +28,7 @@
                          alt="Profile Picture" class="user-profile-pic" onclick="toggleDropdown()">
                     <div class="dropdown-menu" id="dropdown-menu">
                         <a href="{% url 'profile' %}">Profilo</a>
-                        <a href="{% url 'login' %}">Gestione Abbonamento</a>
+                        <a href="{% url 'subscription_plans' %}">Gestione Abbonamento</a>
                         <a href="{% url 'login' %}">Gestione Prenotazioni</a>
                         <a href="{% url 'logout' %}">Logout</a>
                     </div>
@@ -101,14 +101,14 @@
                 <div class="subscription-info">
                     <h2>Informazioni Abbonamento</h2>
                     <div class="subscription-details">
-                        {% if user.plan %}
-                        <p><strong>Piano attivo:</strong> {{ user.plan.name }}</p>
+                        {% if user.plan_id %}
+                        <p><strong>Piano attivo:</strong> {{ user.plan_id.name }}</p>
                         <p><strong>Tipo abbonamento:</strong> {{ user.subscription }}</p>
-                        <p class="subscription-description">{{ user.plan.description }}</p>
-                        <a href="{% url 'login' %}" class="manage-subscription-btn">Gestisci Abbonamento</a>
+                        <p class="subscription-description">{{ user.plan_id.description }}</p>
+                        <a href="{% url 'subscription_plans' %}" class="manage-subscription-btn">Gestisci Abbonamento</a>
                         {% else %}
                         <p>Non hai ancora sottoscritto alcun abbonamento.</p>
-                        <a href="{% url 'login' %}" class="subscribe-btn">Scopri i nostri abbonamenti</a>
+                        <a href="{% url 'subscription_plans' %}" class="subscribe-btn">Scopri i nostri abbonamenti</a>
                         {% endif %}
                     </div>
                 </div>
@@ -130,5 +130,6 @@
 
     <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
+    <script src="{% static 'users/js/subscription.js' %}?v={{ timestamp }}"></script>
 </body>
 </html>

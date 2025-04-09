@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abbonamenti | LV Spa Resort</title>
+    <link rel="stylesheet" href="{% static 'users/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'users/css/subscription.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}#home">Home</a></li>
+                <li><a href="{% url 'home' %}#about">Chi Siamo</a></li>
+                <li><a href="{% url 'home' %}#services">Servizi</a></li>
+                <li><a href="{% url 'home' %}#contact">Contatti</a></li>
+            </ul>
+
+            <div class="header-actions">
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <img src="{% if user.profile_picture and user.profile_picture.url %}{{ user.profile_picture.url }}{% else %}/media/profile-pics/def_pfp.png{% endif %}" 
+                         alt="Profile Picture" class="user-profile-pic" onclick="toggleDropdown()">
+                    <div class="dropdown-menu" id="dropdown-menu">
+                        <a href="{% url 'profile' %}">Profilo</a>
+                        <a href="{% url 'subscription_plans' %}">Gestione Abbonamento</a>
+                        <a href="{% url 'login' %}">Gestione Prenotazioni</a>
+                        <a href="{% url 'logout' %}">Logout</a>
+                    </div>
+                </div>
+                {% else %}
+                <button class="login-btn" onclick="window.location.href='{% url 'login' %}?tab=login'">Login</button>
+                <button class="register-btn" onclick="window.location.href='{% url 'register' %}?tab=register'">Registrati</button>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <!-- Subscription Plans Section -->
+    <section class="subscription-section">
+        <div class="subscription-container">
+            <h1>I Nostri Abbonamenti</h1>
+            
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="plans-container">
+                {% for plan in subscription_plans %}
+                <div class="plan-card {% if user.plan and user.plan.id == plan.id %}active-plan{% endif %}">
+                    <div class="plan-header">
+                        <h2>{{ plan.name }}</h2>
+                        <p class="plan-price">€{{ plan.price|floatformat:2 }}</p>
+                        <p class="plan-duration">{{ plan.duration }} giorni</p>
+                    </div>
+                    <div class="plan-description">
+                        <p>{{ plan.description }}</p>
+                    </div>
+                    <div class="plan-action">
+                        {% if user.plan and user.plan.id == plan.id %}
+                            <button class="current-plan-btn" disabled>Abbonamento Attivo</button>
+                        {% else %}
+                            <form method="post" action="{% url 'subscribe_plan' plan.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="subscribe-plan-btn">Scegli Questo Piano</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="no-plans">
+                    <p>Al momento non ci sono abbonamenti disponibili.</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="return-profile">
+                <a href="{% url 'profile' %}" class="return-btn">Torna al Profilo</a>
+            </div>
+        </div>
+    </section>
+
+    <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
+    <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
+    <script src="{% static 'users/js/subscription.js' %}?v={{ timestamp }}"></script>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
+    </footer>
+</body>
+</html>
