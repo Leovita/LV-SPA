@@ -1,10 +1,10 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
-from subscriptions.models import SubscriptionPlan
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 import os
+from subscriptions.models import SubscriptionPlan
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **xtra_F):
@@ -24,7 +24,6 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser):
     full_name = models.CharField(max_length=255, default="Nome Cognome")
     email = models.EmailField(unique=True)  
-    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     profile_picture = models.ImageField(upload_to="profile_pics/", default="def_pfp.png")    
     USERNAME_FIELD = 'email' 

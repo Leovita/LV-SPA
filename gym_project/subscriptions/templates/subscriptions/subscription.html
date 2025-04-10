@@ -23,10 +23,12 @@
             <div class="header-actions">
                 {% if user.is_authenticated %}
                     <div class="dropdown">
-                        <img src="{% if user.profile_picture and user.profile_picture.url %}{{ user.profile_picture.url }}{% else %}/media/profile-pics/def_pfp.png{% endif %}"
+                        <img src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.png{% elif user.profile_picture %}{{ user.profile_picture.url }}{% else %}/media/profile_pics/def_pfp.png{% endif %}"
                              alt="Profile Picture" class="user-profile-pic" onclick="toggleDropdown()">
                         <div class="dropdown-menu" id="dropdown-menu">
                             <a href="{% url 'profile' %}">Profilo</a>
+                            <a href="{% url 'subscription_plans' %}">Abbonamento</a>
+                            <a href="{% url 'login' %}">Gestisci Prenotazioni</a>
                             {% if user.is_superuser %}
                                 <a href="{% url 'login' %}">Aggiungi Corso</a>
                                 <a href="{% url 'login' %}">Gestisci Abbonamenti</a>
@@ -57,7 +59,7 @@
             
             <div class="plans-container">
                 {% for plan in subscription_plans %}
-                <div class="plan-card {% if user.plan and user.plan.id == plan.id %}active-plan{% endif %}">
+                <div class="plan-card {% if user_subscription and user_subscription.plan.id == plan.id %}active-plan{% endif %}">
                     <div class="plan-header">
                         <h2>{{ plan.name }}</h2>
                         <p class="plan-price">€{{ plan.price|floatformat:2 }}</p>
@@ -67,8 +69,9 @@
                         <p>{{ plan.description }}</p>
                     </div>
                     <div class="plan-action">
-                        {% if user.plan and user.plan.id == plan.id %}
+                        {% if user_subscription and user_subscription.plan.id == plan.id %}
                             <button class="current-plan-btn" disabled>Abbonamento Attivo</button>
+                            <p class="plan-validity">Valido fino al {{ user_subscription.end_date|date:"d/m/Y" }}</p>
                         {% else %}
                             <form method="post" action="{% url 'subscribe_plan' plan.id %}">
                                 {% csrf_token %}

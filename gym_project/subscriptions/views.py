@@ -1,15 +1,15 @@
 from pyexpat.errors import messages
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import SubscriptionPlan
+from .models import Subscription, SubscriptionPlan
 from django.contrib.auth.decorators import login_required
 
 @login_required
 def subscription_plans(request):
     """View to display all available subscription plans"""
-    subscription_plans = SubscriptionPlan.objects.all()
     context = {
-        'subscription_plans': subscription_plans
-    }
+    "subscription_plans": SubscriptionPlan.objects.all(),
+    "user_subscription": Subscription.objects.filter(user=request.user, is_active=True).first(),
+}
     return render(request, 'subscriptions/subscription.html', context)
 
 @login_required

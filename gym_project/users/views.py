@@ -173,3 +173,12 @@ def profile_picture_url(self):
     return static('users/imgs/def_pfp.png')
 
 
+from django.shortcuts import render
+from subscriptions.models import Subscription
+
+def subscription_plans(request):
+    user_subscription = Subscription.objects.filter(user=request.user, is_active=True).first()
+    message = "Non hai un abbonamento attivo." if not user_subscription else ""
+    print("CANNA")
+    return render(request, 'your_template.html', {'user_subscription': user_subscription, 'message': message})
+
