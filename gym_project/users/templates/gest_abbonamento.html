@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'users/css/gest_abb.css' %}">
+    <title>Gestione Abbonamenti - Dashboard</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>FitSpa</h1>
+            </div>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="servizi.html">Servizi</a></li>
+                <li><a href="gestioneabbonamenti.html" class="active">Abbonamenti</a></li>
+                <li><a href="contatti.html">Contatti</a></li>
+            </ul>
+            <div class="header-actions">
+                <div class="dropdown">
+                    <img src="/api/placeholder/45/45" alt="Profilo" class="user-profile-pic">
+                    <div class="dropdown-menu">
+                        <a href="profilo.html">Il mio profilo</a>
+                        <a href="prenotazioni.html">Le mie prenotazioni</a>
+                        <a href="logout.html">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Gestione Abbonamenti</h1>
+            <p>Visualizza e gestisci i tuoi corsi e trattamenti preferiti</p>
+        </div>
+
+        <div class="summary-boxes">
+            <div class="summary-box">
+                <h3>Corsi Palestra</h3>
+                <div class="number">12</div>
+            </div>
+            <div class="summary-box">
+                <h3>Trattamenti Spa</h3>
+                <div class="number">8</div>
+            </div>
+            <div class="summary-box">
+                <h3>Prenotazioni Attive</h3>
+                <div class="number">5</div>
+            </div>
+            <div class="summary-box">
+                <h3>Crediti Disponibili</h3>
+                <div class="number">20</div>
+            </div>
+        </div>
+
+        <div class="search-filter">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Cerca corsi e trattamenti...">
+            </div>
+            <div class="filter-options">
+                <select class="filter-select">
+                    <option value="">Tutti i giorni</option>
+                    <option value="today">Oggi</option>
+                    <option value="tomorrow">Domani</option>
+                    <option value="week">Questa settimana</option>
+                </select>
+                <select class="filter-select">
+                    <option value="">Tutti i servizi</option>
+                    <option value="gym">Solo Palestra</option>
+                    <option value="spa">Solo Spa</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="dashboard-tabs">
+            <button class="tab-btn active" data-tab="palestra">Corsi Palestra</button>
+            <button class="tab-btn" data-tab="spa">Trattamenti Spa</button>
+            <button class="tab-btn" data-tab="prenotazioni">Le mie prenotazioni</button>
+        </div>
+
+        <div id="palestra-tab" class="tab-content active">
+            <div class="card-grid">
+                <!-- Corso 1 -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Corso di Pilates">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Pilates Funzionale</h3>
+                        <p class="card-text">Un corso dedicato al rafforzamento del core e al miglioramento della postura.</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Istruttore: Marco Ros</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>15/04/2025 18:30</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-users"></i>
+                                <span>Posti: 8/20</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator available"></div>
+                            <span>Disponibile</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-primary">Prenota</a>
+                            <a href="#" class="btn btn-outline">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Corso 2 -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Corso di Yoga">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Power Yoga</h3>
+                        <p class="card-text">Yoga dinamico per aumentare forza e flessibilità del corpo.</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Istruttore: Laura Bianchi</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>16/04/2025 10:00</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-users"></i>
+                                <span>Posti: 12/15</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator limited"></div>
+                            <span>Posti limitati</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-primary">Prenota</a>
+                            <a href="#" class="btn btn-outline">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Corso 3 -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Corso di Spinning">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Spinning Extreme</h3>
+                        <p class="card-text">Allenamento intenso di ciclismo indoor con musica energizzante.</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Istruttore: Marco Ros</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>14/04/2025 19:00</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-users"></i>
+                                <span>Posti: 20/20</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator full"></div>
+                            <span>Completo</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-outline">Lista d'attesa</a>
+                            <a href="#" class="btn btn-outline">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Corso 4 -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Corso di HIIT">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">HIIT Training</h3>
+                        <p class="card-text">Allenamento ad intervalli ad alta intensità per bruciare calorie velocemente.</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Istruttore: Paolo Verdi</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>15/04/2025 20:00</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-users"></i>
+                                <span>Posti: 5/15</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator available"></div>
+                            <span>Disponibile</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-primary">Prenota</a>
+                            <a href="#" class="btn btn-outline">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="spa-tab" class="tab-content">
+            <div class="card-grid">
+                <!-- Trattamento 1 -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Massaggio rilassante">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Massaggio Rilassante</h3>
+                        <p class="card-text">Un massaggio completo del corpo per ridurre lo stress e rilassare la muscolatura.</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Operatore: Maria Gialli</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>13/04/2025 15:00</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-euro-sign"></i>
+                                <span>Prezzo: 70€</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator available"></div>
+                            <span>Disponibile</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-primary">Prenota</a>
+                            <a href="#" class="btn btn-outline">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trattamento 2 -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Trattamento viso">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Trattamento Viso Anti-Age</h3>
+                        <p class="card-text">Trattamento specifico per ridurre i segni dell'invecchiamento e rivitalizzare la pelle.</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Operatore: Anna Rossi</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>14/04/2025 11:30</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-euro-sign"></i>
+                                <span>Prezzo: 85€</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator limited"></div>
+                            <span>Posti limitati</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-primary">Prenota</a>
+                            <a href="#" class="btn btn-outline">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trattamento 3 -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Sauna finlandese">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Sauna Finlandese</h3>
+                        <p class="card-text">Un'esperienza di sauna tradizionale per purificare il corpo e rilassare la mente.</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Operatore: Luca Neri</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>15/04/2025 16:00</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-euro-sign"></i>
+                                <span>Prezzo: 45€</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator available"></div>
+                            <span>Disponibile</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-primary">Prenota</a>
+                            <a href="#" class="btn btn-outline">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trattamento 4 -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Percorso benessere">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Percorso Benessere Completo</h3>
+                        <p class="card-text">Un percorso completo che include sauna, bagno turco, idromassaggio e zona relax.</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Operatore: Marco Ros</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>16/04/2025 14:00</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-euro-sign"></i>
+                                <span>Prezzo: 120€</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator full"></div>
+                            <span>Completo</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-outline">Lista d'attesa</a>
+                            <a href="#" class="btn btn-outline">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="prenotazioni-tab" class="tab-content">
+            <div class="card-grid">
+                <!-- Prenotazione Palestra -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Prenotazione Corso">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Pilates Funzionale</h3>
+                        <p class="card-text">Prenotazione confermata</p>
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <i class="fas fa-user"></i>
+                                <span>Istruttore: Marco Ros</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>15/04/2025 18:30</span>
+                            </div>
+                            <div class="card-detail">
+                                <i class="fas fa-tag"></i>
+                                <span>Categoria: Palestra</span>
+                            </div>
+                        </div>
+                        <div class="card-availability">
+                            <div class="availability-indicator available"></div>
+                            <span>Confermato</span>
+                        </div>
+                        <div class="card-actions">
+                            <a href="#" class="btn btn-outline">Annulla</a>
+                            <a href="#" class="btn btn-outline">Modifica</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prenotazione Spa -->
+                <div class="card">
+                    <div class="card-img">
+                        <img src="/api/placeholder/300/180" alt="Prenot

@@ -79,18 +79,21 @@
                 <div class="subscription-info">
                     <h2>Informazioni Abbonamento</h2>
                     <div class="subscription-details">
-                        {% if user.plan_id %}
-                        <p><strong>Piano attivo:</strong> {{ user.plan_id.name }}</p>
-                        <p><strong>Tipo abbonamento:</strong> {{ user.subscription }}</p>
-                        <p class="subscription-description">{{ user.plan_id.description }}</p>
-                        <a href="{% url 'subscription_plans' %}" class="manage-subscription-btn">Gestisci Abbonamento</a>
+                      {% with active_sub=user.subscription_set.all|first %}
+                        {% if active_sub and active_sub.is_active %}
+                          <p><strong>Piano attivo:</strong> {{ active_sub.plan.name }}</p>
+                          <p><strong>Data inizio:</strong> {{ active_sub.start_date|date:"d/m/Y" }}</p>
+                          <p><strong>Data scadenza:</strong> {{ active_sub.end_date|date:"d/m/Y" }}</p>
+                          <p class="subscription-description">{{ active_sub.plan.description }}</p>
+                          <a href="{% url 'subscription_plans' %}" class="manage-subscription-btn">Gestisci Abbonamento</a>
                         {% else %}
-                        <p>Non hai ancora sottoscritto alcun abbonamento.</p>
-                        <a href="{% url 'subscription_plans' %}" class="subscribe-btn">Scopri i nostri abbonamenti</a>
+                          <p>Non hai ancora sottoscritto alcun abbonamento.</p>
+                          <a href="{% url 'subscription_plans' %}" class="subscribe-btn">Scopri i nostri abbonamenti</a>
                         {% endif %}
+                      {% endwith %}
                     </div>
-                </div>
-            </div>
+                  </div>
+                
 
             <!-- Account Security Section -->
             <div class="account-security">
