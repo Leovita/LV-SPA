@@ -1,4 +1,4 @@
-from datetime import time, timezone
+from datetime import datetime, time, timezone
 import re
 from django.contrib import messages
 from django.core.validators import validate_email
@@ -168,10 +168,71 @@ def delete_account(request):
 
 @login_required
 def gest_prenotazioni(request):
-    total_spa_bookings = SpaBooking.objects.count()
-    total_gym_bookings = GymBooking.objects.count()
+    gym_bookings = GymBooking.objects.select_related('user', 'class_id').all()    
+    spa_bookings = SpaBooking.objects.select_related('user', 'service_id').all()    
 
-    return render(request, 'users/gest_prenotazioni.html', {
-        'total_spa_bookings': total_spa_bookings,
-        'total_gym_bookings': total_gym_bookings,
-    })
+    # print(gym_bookings, spa_bookings)
+    gym_count = gym_bookings.count()
+    spa_count = spa_bookings.count()
+    
+    all_bookings = []
+    
+    for booking in gym_bookings:
+        all_bookings.append({
+            'id': booking.id,
+            'user': f"{booking.user.full_name}",
+            'service': f"{booking.class_id.name} (Palestra)",
+            'description': booking.description if booking.description else booking.class_id.description,
+            'date': booking.date,
+            'status': 'confirmed',  # Aggiungi logica per determinare lo stato se necessario
+            'type': 'gym'
+        })
+    
+    # Aggiungi prenotazioni spa
+    for booking in spa_bookings:
+        all_bookings.append({
+            'id': booking.id,
+            'user': f"{booking.user.full_name}",
+            'service': f"{booking.service_id.name} (Spa)",
+            'description': booking.description if booking.description else booking.service_id.description,
+            'date': booking.date,
+            'status': 'confirmed',  # Aggiungi logica per determinare lo stato se necessario
+            'type': 'spa'
+        })
+    
+    # Ordina tutte le prenotazioni per data
+    all_bookings.sort(key=lambda x: x['date'])
+    
+    # Prepara i dati specifici per la palestra
+    gym_bookings_data = []
+    for booking in gym_bookings:
+        gym_bookings_data.append({
+            'id': booking.id,
+            'user': f"{booking.user.full_name}",
+            'course': booking.class_id.name,
+            'description': booking.description if booking.description else booking.class_id.description,
+            'date': booking.date,
+            'status': 'confirmed', 
+        })
+    
+    spa_bookings_data = []
+    for booking in spa_bookings:
+        spa_bookings_data.append({
+            'id': booking.id,
+            'user': f"{booking.user.full_name}",
+            'treatment': booking.service_id.name,
+            'description': booking.description if booking.description else booking.service_id.description,
+            'date': booking.date,
+            'status': 'confirmed',  
+        })
+    
+    context = {
+        'total_gym_bookings': gym_count,
+        'total_spa_bookings': spa_count,
+        'all_bookings': all_bookings,
+        'gym_bookings': gym_bookings_data,
+        'spa_bookings': spa_bookings_data,
+        'timestamp': datetime.now().timestamp(),  
+    }
+    
+    return render(request, 'users/gest_prenotazioni.html', context)
