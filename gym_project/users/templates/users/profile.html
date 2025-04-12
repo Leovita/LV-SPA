@@ -1,4 +1,8 @@
+{% extends 'users/navbar_template.html' %}
+
 {% load static %}
+
+{% block content %}
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -11,35 +15,7 @@
 </head>
 <body>
 
-    <!-- Header -->
-    <header>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}#home">Home</a></li>
-                <li><a href="{% url 'home' %}#about">Chi Siamo</a></li>
-                <li><a href="{% url 'home' %}#services">Servizi</a></li>
-                <li><a href="{% url 'home' %}#contact">Contatti</a></li>
-            </ul>
-
-            <div class="header-actions">
-                {% if user.is_authenticated %}
-                <div class="dropdown">
-                    <img src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.png{% elif user.profile_picture %}{{ user.profile_picture.url }}{% else %}/media/profile_pics/def_pfp.png{% endif %}" 
-                         alt="Profile Picture" class="user-profile-pic" onclick="toggleDropdown()">
-                    <div class="dropdown-menu" id="dropdown-menu">
-                        <a href="{% url 'profile' %}">Profilo</a>
-                        <a href="{% url 'subscription_plans' %}">Gestione Abbonamento</a>
-                        <a href="{% url 'login' %}">Gestione Prenotazioni</a>
-                        <a href="{% url 'logout' %}">Logout</a>
-                    </div>
-                </div>
-                {% else %}
-                <button class="login-btn" onclick="window.location.href='{% url 'login' %}?tab=login'">Login</button>
-                <button class="register-btn" onclick="window.location.href='{% url 'register' %}?tab=register'">Registrati</button>
-                {% endif %}
-            </div>
-        </nav>
-    </header>
+    <!-- Header = -->
 
     <!-- Profile Management Section -->
     <section class="profile-section">
@@ -50,7 +26,9 @@
                 <!-- Profile Picture Section -->
                 <div class="profile-picture-section">
                     <div class="profile-picture-container">
-                        <img src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.png{% elif user.profile_picture %}{{ user.profile_picture.url }}{% else %}/media/profile_pics/def_pfp.png{% endif %}" 
+                        <img src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.png
+                        {% elif user.profile_picture %}{{ user.profile_picture.url }}
+                        {% else %}/media/profile_pics/def_pfp.png{% endif %}" 
                         alt="Profile Picture" class="current-profile-pic">
                         <div class="change-photo-overlay">
                             <span>Cambia Foto</span>
@@ -130,5 +108,6 @@
 
     <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
+{% endblock %}
 </body>
 </html>

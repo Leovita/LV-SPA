@@ -25,7 +25,7 @@ class User(AbstractBaseUser):
     full_name = models.CharField(max_length=255, default="Nome Cognome")
     email = models.EmailField(unique=True)  
     phone = models.CharField(max_length=20, blank=True)
-    profile_picture = models.ImageField(upload_to="profile_pics/", default="def_pfp.png")    
+    profile_picture = models.ImageField(upload_to="profile_pics/", default="profile_pics/def_pfp.png")    
     USERNAME_FIELD = 'email' 
 
     is_active = models.BooleanField(default=True)

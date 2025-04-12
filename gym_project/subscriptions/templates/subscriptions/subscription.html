@@ -1,4 +1,8 @@
+{% extends 'users/navbar_template.html' %}
+
 {% load static %}
+
+{% block content %}
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -100,5 +104,6 @@
 
     <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'subscriptions/js/subscription.js' %}?v={{ timestamp }}"></script>
+{% endblock %}
 </body>
 </html>
