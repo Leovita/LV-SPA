@@ -14,6 +14,11 @@ urlpatterns = [
     # path('profile/change-password/', views.change_password_view, name='change_password'),
     path('profile/delete_account/', views.delete_account, name='delete_account'),
     
+    # gestione abbonamenti
+    path('gest_prenotazioni/', views.gest_prenotazioni, name='gest_prenotazioni'),
+
+
+    #auth
     path('login/', views.login, name='login'), 
     path('register/', views.register, name='register'),
     path('logout/', views.user_logout, name='logout'),

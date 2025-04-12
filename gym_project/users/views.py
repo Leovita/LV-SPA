@@ -6,9 +6,9 @@ from django.forms import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
 from subscriptions.models import SubscriptionPlan
-from spa.models import SpaService
+from spa.models import SpaBooking, SpaService
 from users.models import User
-from palestra.models import GymClass
+from palestra.models import GymBooking, GymClass
 from django.contrib.auth.decorators import login_required
 from users.models import ProfileUpdateForm, ProfilePictureForm
 
@@ -166,5 +166,12 @@ def delete_account(request):
 
     return render(request, 'users/delete_account.html')
 
+@login_required
+def gest_prenotazioni(request):
+    total_spa_bookings = SpaBooking.objects.count()
+    total_gym_bookings = GymBooking.objects.count()
 
-
+    return render(request, 'users/gest_prenotazioni.html', {
+        'total_spa_bookings': total_spa_bookings,
+        'total_gym_bookings': total_gym_bookings,
+    })
