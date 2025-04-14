@@ -29,7 +29,7 @@
                 <p>{{ total_gym_bookings }}</p>
             </div>
             <div class="stat-card warning">
-                <h3>Prenotazioni Spa</h3>
+                <h3>Prenotazioni Totali</h3>
                 <p>{{ total_gym_bookings|add:total_spa_bookings }}</p>
             </div>
         </div>
@@ -45,15 +45,15 @@
                 <div class="filters">
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" placeholder="Cerca per nome, servizio o data...">
+                        <input type="text" id="search-all" placeholder="Cerca per nome, servizio o data...">
                     </div>
                     <div class="filter-group">
-                        <select>
+                        <select id="filter-service-all">
                             <option value="">Tutti i servizi</option>
                             <option value="gym">Palestra</option>
                             <option value="spa">Spa</option>
                         </select>
-                        <select>
+                        <select id="filter-date-all">
                             <option value="">Tutte le date</option>
                             <option value="today">Oggi</option>
                             <option value="tomorrow">Domani</option>
@@ -77,82 +77,39 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for booking in all_bookings %}
                             <tr>
-                                <td>1</td>
-                                <td>Mario Rossi</td>
-                                <td>Yoga Class (Palestra)</td>
-                                <td>Sessione di Yoga per principianti</td>
-                                <td>12 Apr 2025, 10:00</td>
-                                <td><span class="status confirmed">Confermata</span></td>
+                                <td>{{ booking.id }}</td>
+                                <td>{{ booking.user }}</td>
+                                <td>{{ booking.service }}</td>
+                                <td>{{ booking.description }}</td>
+                                <td>{{ booking.date|date:"d M Y, H:i" }}</td>
+                                <td><span class="status {{ booking.status }}">
+                                    {% if booking.status == 'confirmed' %}
+                                        Confermata
+                                    {% elif booking.status == 'pending' %}
+                                        In attesa
+                                    {% elif booking.status == 'cancelled' %}
+                                        Cancellata
+                                    {% endif %}
+                                </span></td>
                                 <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
+                                    <button class="btn btn-view" data-id="{{ booking.id }}" data-type="{{ booking.type }}">Visualizza</button>
+                                    <button class="btn btn-edit" data-id="{{ booking.id }}" data-type="{{ booking.type }}">Modifica</button>
+                                    <button class="btn btn-delete" data-id="{{ booking.id }}" data-type="{{ booking.type }}">Elimina</button>
                                 </td>
                             </tr>
+                            {% empty %}
                             <tr>
-                                <td>2</td>
-                                <td>Giulia Bianchi</td>
-                                <td>Massaggio rilassante (Spa)</td>
-                                <td>Massaggio schiena completo</td>
-                                <td>12 Apr 2025, 14:30</td>
-                                <td><span class="status confirmed">Confermata</span></td>
-                                <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
-                                </td>
+                                <td colspan="7" class="no-data">Nessuna prenotazione disponibile</td>
                             </tr>
-                            <tr>
-                                <td>3</td>
-                                <td>Luca Verdi</td>
-                                <td>Pilates (Palestra)</td>
-                                <td>Sessione di gruppo</td>
-                                <td>13 Apr 2025, 09:00</td>
-                                <td><span class="status pending">In attesa</span></td>
-                                <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>4</td>
-                                <td>Anna Neri</td>
-                                <td>Sauna (Spa)</td>
-                                <td>Sauna finlandese 60 min</td>
-                                <td>13 Apr 2025, 16:00</td>
-                                <td><span class="status confirmed">Confermata</span></td>
-                                <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>5</td>
-                                <td>Francesco Marino</td>
-                                <td>Personal Training (Palestra)</td>
-                                <td>Sessione individuale di allenamento</td>
-                                <td>14 Apr 2025, 11:00</td>
-                                <td><span class="status cancelled">Cancellata</span></td>
-                                <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 
                 <div class="pagination">
                     <div class="page-item active">1</div>
-                    <div class="page-item">2</div>
-                    <div class="page-item">3</div>
-                    <div class="page-item">4</div>
-                    <div class="page-item">5</div>
-                    <div class="page-item">»</div>
                 </div>
             </div>
             
@@ -160,17 +117,13 @@
                 <div class="filters">
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" placeholder="Cerca prenotazioni palestra...">
+                        <input type="text" id="search-gym" placeholder="Cerca prenotazioni palestra...">
                     </div>
                     <div class="filter-group">
-                        <select>
+                        <select id="filter-course">
                             <option value="">Tutti i corsi</option>
-                            <option value="yoga">Yoga</option>
-                            <option value="pilates">Pilates</option>
-                            <option value="training">Personal Training</option>
-                            <option value="fitness">Fitness</option>
                         </select>
-                        <select>
+                        <select id="filter-date-gym">
                             <option value="">Tutte le date</option>
                             <option value="today">Oggi</option>
                             <option value="tomorrow">Domani</option>
@@ -194,54 +147,40 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for booking in gym_bookings %}
                             <tr>
-                                <td>1</td>
-                                <td>Mario Rossi</td>
-                                <td>Yoga Class</td>
-                                <td>Sessione di Yoga per principianti</td>
-                                <td>12 Apr 2025, 10:00</td>
-                                <td><span class="status confirmed">Confermata</span></td>
+                                <td>{{ booking.id }}</td>
+                                <td>{{ booking.user }}</td>
+                                <td>{{ booking.course }}</td>
+                                <td>{{ booking.description }}</td>
+                                <td>{{ booking.date|date:"d M Y, H:i" }}</td>
+                                <td><span class="status {{ booking.status }}">
+                                    {% if booking.status == 'confirmed' %}
+                                        Confermata
+                                    {% elif booking.status == 'pending' %}
+                                        In attesa
+                                    {% elif booking.status == 'cancelled' %}
+                                        Cancellata
+                                    {% endif %}
+                                </span></td>
                                 <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
+                                    <button class="btn btn-view" data-id="{{ booking.id }}" data-type="gym">Visualizza</button>
+                                    <button class="btn btn-edit" data-id="{{ booking.id }}" data-type="gym">Modifica</button>
+                                    <button class="btn btn-delete" data-id="{{ booking.id }}" data-type="gym">Elimina</button>
                                 </td>
                             </tr>
+                            {% empty %}
                             <tr>
-                                <td>3</td>
-                                <td>Luca Verdi</td>
-                                <td>Pilates</td>
-                                <td>Sessione di gruppo</td>
-                                <td>13 Apr 2025, 09:00</td>
-                                <td><span class="status pending">In attesa</span></td>
-                                <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
-                                </td>
+                                <td colspan="7" class="no-data">Nessuna prenotazione palestra disponibile</td>
                             </tr>
-                            <tr>
-                                <td>5</td>
-                                <td>Francesco Marino</td>
-                                <td>Personal Training</td>
-                                <td>Sessione individuale di allenamento</td>
-                                <td>14 Apr 2025, 11:00</td>
-                                <td><span class="status cancelled">Cancellata</span></td>
-                                <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 
                 <div class="pagination">
+                    <!-- Pagination può essere implementata in seguito se necessario -->
                     <div class="page-item active">1</div>
-                    <div class="page-item">2</div>
-                    <div class="page-item">3</div>
-                    <div class="page-item">»</div>
                 </div>
             </div>
             
@@ -249,17 +188,14 @@
                 <div class="filters">
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" placeholder="Cerca prenotazioni spa...">
+                        <input type="text" id="search-spa" placeholder="Cerca prenotazioni spa...">
                     </div>
                     <div class="filter-group">
-                        <select>
+                        <select id="filter-treatment">
                             <option value="">Tutti i trattamenti</option>
-                            <option value="massage">Massaggi</option>
-                            <option value="facial">Trattamenti viso</option>
-                            <option value="sauna">Sauna</option>
-                            <option value="jacuzzi">Jacuzzi</option>
+                            <!-- Potresti aggiungere dinamicamente le opzioni dai dati disponibili -->
                         </select>
-                        <select>
+                        <select id="filter-date-spa">
                             <option value="">Tutte le date</option>
                             <option value="today">Oggi</option>
                             <option value="tomorrow">Domani</option>
@@ -283,40 +219,40 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for booking in spa_bookings %}
                             <tr>
-                                <td>2</td>
-                                <td>Giulia Bianchi</td>
-                                <td>Massaggio rilassante</td>
-                                <td>Massaggio schiena completo</td>
-                                <td>12 Apr 2025, 14:30</td>
-                                <td><span class="status confirmed">Confermata</span></td>
+                                <td>{{ booking.id }}</td>
+                                <td>{{ booking.user }}</td>
+                                <td>{{ booking.treatment }}</td>
+                                <td>{{ booking.description }}</td>
+                                <td>{{ booking.date|date:"d M Y, H:i" }}</td>
+                                <td><span class="status {{ booking.status }}">
+                                    {% if booking.status == 'confirmed' %}
+                                        Confermata
+                                    {% elif booking.status == 'pending' %}
+                                        In attesa
+                                    {% elif booking.status == 'cancelled' %}
+                                        Cancellata
+                                    {% endif %}
+                                </span></td>
                                 <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
+                                    <button class="btn btn-view" data-id="{{ booking.id }}" data-type="spa">Visualizza</button>
+                                    <button class="btn btn-edit" data-id="{{ booking.id }}" data-type="spa">Modifica</button>
+                                    <button class="btn btn-delete" data-id="{{ booking.id }}" data-type="spa">Elimina</button>
                                 </td>
                             </tr>
+                            {% empty %}
                             <tr>
-                                <td>4</td>
-                                <td>Anna Neri</td>
-                                <td>Sauna</td>
-                                <td>Sauna finlandese 60 min</td>
-                                <td>13 Apr 2025, 16:00</td>
-                                <td><span class="status confirmed">Confermata</span></td>
-                                <td class="actions">
-                                    <button class="btn btn-view">Visualizza</button>
-                                    <button class="btn btn-edit">Modifica</button>
-                                    <button class="btn btn-delete">Elimina</button>
-                                </td>
+                                <td colspan="7" class="no-data">Nessuna prenotazione spa disponibile</td>
                             </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 
                 <div class="pagination">
+                    <!-- Pagination può essere implementata in seguito se necessario -->
                     <div class="page-item active">1</div>
-                    <div class="page-item">2</div>
-                    <div class="page-item">»</div>
                 </div>
             </div>
         </div>
@@ -340,13 +276,70 @@
             });
         });
         
-        // Pagination functionality (simple demo)
-        document.querySelectorAll('.page-item').forEach(item => {
-            item.addEventListener('click', () => {
-                if (item.textContent !== '»') {
-                    document.querySelectorAll('.page-item').forEach(i => i.classList.remove('active'));
-                    item.classList.add('active');
+        // Funzione di filtro per la ricerca
+        function setupSearch(inputId, tableId, columns) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            input.addEventListener('keyup', function() {
+                const filter = this.value.toLowerCase();
+                const table = document.querySelector(`#${tableId} table`);
+                const rows = table.getElementsByTagName('tr');
+                
+                for (let i = 1; i < rows.length; i++) { // Skip header row
+                    let match = false;
+                    const row = rows[i];
+                    
+                    for (let col of columns) {
+                        const cell = row.getElementsByTagName('td')[col];
+                        if (cell) {
+                            const text = cell.textContent || cell.innerText;
+                            if (text.toLowerCase().indexOf(filter) > -1) {
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (match) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
                 }
+            });
+        }
+        
+        // Setup search functionality for each tab
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSearch('search-all', 'all', [1, 2, 3, 4]); // User, Service, Description, Date
+            setupSearch('search-gym', 'gym', [1, 2, 3, 4]); // User, Course, Description, Date
+            setupSearch('search-spa', 'spa', [1, 2, 3, 4]); // User, Treatment, Description, Date
+            
+            // Gestione bottoni azioni
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const type = this.getAttribute('data-type');
+                    const action = this.classList.contains('btn-view') ? 'view' : 
+                                  this.classList.contains('btn-edit') ? 'edit' : 'delete';
+                    
+                    console.log(`Azione: ${action}, ID: ${id}, Tipo: ${type}`);
+                    
+                    // Qui puoi implementare le azioni specifiche
+                    if (action === 'delete') {
+                        if (confirm('Sei sicuro di voler eliminare questa prenotazione?')) {
+                            // Invia richiesta AJAX per eliminare
+                            // Esempio: window.location.href = `/delete-booking/${type}/${id}/`;
+                        }
+                    } else if (action === 'edit') {
+                        // Reindirizza alla pagina di modifica
+                        // Esempio: window.location.href = `/edit-booking/${type}/${id}/`;
+                    } else if (action === 'view') {
+                        // Mostra dettagli
+                        // Esempio: window.location.href = `/view-booking/${type}/${id}/`;
+                    }
+                });
             });
         });
     </script>

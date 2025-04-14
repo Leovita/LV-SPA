@@ -1,105 +1,276 @@
 {% extends 'users/navbar_template.html' %}
 {% load static %}
-
 {% block content %}
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LV Spa Resort</title>
-    <link rel="stylesheet" href="{% static 'users/css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LV Spa Resort</title>
+<link rel="stylesheet" href="{% static 'users/css/styles.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
 </head>
 <body>
+<!-- Header = navbar_template-->
+<!-- Hero Section -->
+<section id="home" class="hero">
+<div class="hero-content">
+<h1>LV Spa</h1>
+<p>Rilassati, ricarica le energie e abbandona lo stress!</p>
+<a href="#services" class="btn">Scopri i Nostri Servizi</a>
+</div>
+</section>
+<!-- About Section -->
+<section id="about" class="about">
+<h2>Chi Siamo</h2>
+<p>Il nostro Spa Resort offre esperienze di benessere uniche, trattamenti esclusivi e un ambiente rilassante per aiutarti a ritrovare l'equilibrio.</p>
+</section>
+<!-- Servizi Section -->
+<section id="services">
+<!-- Servizi Palestra -->
+<div class="services-category">
+<h3>Servizi Palestra</h3>
+ {% for service in gym_services %}
+<div class="service-card" data-id="{{ service.id }}" data-type="gym" data-name="{{ service.name }}" data-description="{{ service.description }}" data-instructor="{{ service.instructor.username }}" data-max-participants="{{ service.max_partecipants }}" data-current-participants="{{ service.check_participants }}" data-available="{{ service.check_availability }}">
+    <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
+    <h3>{{ service.name }}</h3>
+    <p>{{ service.description }}</p>
+    <p><strong>Istruttore:</strong> {{ service.instructor.username }}</p>
+    <p><strong>Posti disponibili:</strong>
+     {% if service.check_availability %}
+     Disponibile
+     {% else %}
+     Esaurito
+     {% endif %}
+    </p>
+    <p><strong>Posti totali:</strong> {{ service.max_partecipants }}</p>
+    <p><strong>Partecipanti attuali:</strong> {{ service.check_participants }}</p>
+</div>
+ {% empty %}
+<p>Non ci sono servizi disponibili al momento.</p>
+ {% endfor %}
+</div>
+<!-- Servizi Spa -->
+<div class="services-category">
+<h3>Servizi Spa</h3>
+ {% for spa in spa_services %}
+<div class="service-card" data-id="{{ spa.id }}" data-type="spa" data-name="{{ spa.name }}" data-description="{{ spa.description }}" data-price="{{ spa.price }}" data-available="{{ service.check_availability }}">
+    <img src="{{ spa.imgs.url }}" alt="{{ spa.name }}">
+    <h3>{{ spa.name }}</h3>
+    <p>{{ spa.description }}</p>
+    <p><strong>Prezzo:</strong> €{{ spa.price }}</p>
+    <p><strong>Posti disponibili:</strong>
+     {% if service.check_availability %}
+     Disponibile
+     {% else %}
+     Esaurito
+     {% endif %}
+    </p>
+</div>
+ {% empty %}
+<p>Non ci sono servizi disponibili al momento.</p>
+ {% endfor %}
+</div>
+</section>
+<!-- Contact Section -->
+<section id="contact" class="contact">
+<h2>Contattaci</h2>
+<form id="contact-form">
+<input type="text" id="name" placeholder="Nome" required>
+<input type="email" id="email" placeholder="Email" required>
+<textarea id="message" placeholder="Messaggio" required></textarea>
+<button type="submit">Invia</button>
+</form>
+</section>
+<!-- Footer -->
+<footer>
+<p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
+</footer>
 
-    <!-- Header = navbar_template-->
-
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="hero-content">
-            <h1>LV Spa</h1>
-            <p>Rilassati, ricarica le energie e abbandona lo stress!</p>
-            <a href="#services" class="btn">Scopri i Nostri Servizi</a>
+<!-- Popup per la prenotazione -->
+<div class="popup-overlay" id="booking-popup">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h2 id="popup-title">Prenota Servizio</h2>
+            <button class="close-popup" onclick="closePopup()">&times;</button>
         </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="about">
-        <h2>Chi Siamo</h2>
-        <p>Il nostro Spa Resort offre esperienze di benessere uniche, trattamenti esclusivi e un ambiente rilassante per aiutarti a ritrovare l'equilibrio.</p>
-    </section>
-
-    <!-- Servizi Section -->
-    <section id="services">
-
-        <!-- Servizi Palestra -->
-        <div class="services-category">
-            <h3>Servizi Palestra</h3>
-            {% for service in gym_services %}
-            <a href="{% url 'login' %}" class="service-card">
-                <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
-                <h3>{{ service.name }}</h3> 
-                <p>{{ service.description }}</p>
-                <p><strong>Istruttore:</strong> {{ service.instructor.username }}</p>
-                <p><strong>Posti disponibili:</strong> 
-                    {% if service.check_availability %}
-                        Disponibile
-                    {% else %}
-                        Esaurito
-                    {% endif %}
-                </p>
-                <p><strong>Posti totali:</strong> {{ service.max_partecipants }}</p>
-                <p><strong>Partecipanti attuali:</strong> {{ service.check_participants }}</p>
-            </a>
-            {% empty %}
-                <p>Non ci sono servizi disponibili al momento.</p>
-            {% endfor %}
+        <div class="popup-details">
+            <div class="detail-row">
+                <div class="detail-label">Servizio:</div>
+                <div class="detail-value" id="popup-service-name"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Descrizione:</div>
+                <div class="detail-value" id="popup-description"></div>
+            </div>
+            <!-- Campi specifici per palestra -->
+            <div id="gym-specific-fields" style="display: none;">
+                <div class="detail-row">
+                    <div class="detail-label">Istruttore:</div>
+                    <div class="detail-value" id="popup-instructor"></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Posti disponibili:</div>
+                    <div class="detail-value" id="popup-availability"></div>
+                </div>
+            </div>
+            <!-- Campi specifici per spa -->
+            <div id="spa-specific-fields" style="display: none;">
+                <div class="detail-row">
+                    <div class="detail-label">Prezzo:</div>
+                    <div class="detail-value" id="popup-price"></div>
+                </div>
+            </div>
+            <!-- Campo data e ora -->
+            <div class="detail-row">
+                <div class="detail-label">Data e ora:</div>
+                <div class="detail-value">
+                    <input type="datetime-local" id="booking-datetime" required>
+                </div>
+            </div>
+            <!-- Note -->
+            <div class="detail-row">
+                <div class="detail-label">Note aggiuntive:</div>
+                <div class="detail-value">
+                    <textarea id="booking-notes" placeholder="Note opzionali per la prenotazione"></textarea>
+                </div>
+            </div>
         </div>
-
-        <!-- Servizi Spa -->
-        <div class="services-category">
-            <h3>Servizi Spa</h3>
-            {% for spa in spa_services %}
-            <a href="{% url 'login' %}" class="service-card">
-                <img src="{{ spa.imgs.url }}" alt="{{ spa.name }}">
-                <h3>{{ spa.name }}</h3>
-                <p>{{ spa.description }}</p>
-                <p><strong>Prezzo:</strong> €{{ spa.price }}</p>
-                <p><strong>Posti disponibili:</strong>
-                    {% if service.check_availability %}
-                        Disponibile
-                    {% else %}
-                        Esaurito
-                    {% endif %}
-                </p>
-            </a>
-            {% empty %}
-                <p>Non ci sono servizi disponibili al momento.</p>
-            {% endfor %}
+        <div class="popup-actions">
+            <button class="btn-cancel" onclick="closePopup()">Annulla</button>
+            <button class="btn-confirm" id="confirm-booking">Conferma Prenotazione</button>
         </div>
+    </div>
+</div>
 
-    </section>
+<script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
+<script>
+    // Variabili globali per il popup
+    let currentServiceId = null;
+    let currentServiceType = null;
+    
+    // Aggiungi listener a tutte le schede dei servizi
+    document.addEventListener('DOMContentLoaded', function() {
+        const serviceCards = document.querySelectorAll('.service-card');
+        
+        serviceCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const serviceId = this.getAttribute('data-id');
+                const serviceType = this.getAttribute('data-type');
+                console.log(serviceType)
+                const serviceName = this.getAttribute('data-name');
+                const serviceDescription = this.getAttribute('data-description');
+                
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <h2>Contattaci</h2>
-        <form id="contact-form">
-            <input type="text" id="name" placeholder="Nome" required>
-            <input type="email" id="email" placeholder="Email" required>
-            <textarea id="message" placeholder="Messaggio" required></textarea>
-            <button type="submit">Invia</button>
-        </form>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
-    </footer>
-
-    <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
+                currentServiceId = serviceId;
+                currentServiceType = serviceType;
+                
+                //auto fill dati
+                document.getElementById('popup-title').textContent = 'Prenota ' + serviceName;
+                document.getElementById('popup-service-name').textContent = serviceName;
+                document.getElementById('popup-description').textContent = serviceDescription;
+                
+                document.getElementById('gym-specific-fields').style.display = 'none';
+                document.getElementById('spa-specific-fields').style.display = 'none';
+                
+                if (serviceType === 'gym') {
+                    document.getElementById('gym-specific-fields').style.display = 'block';
+                    document.getElementById('popup-instructor').textContent = this.getAttribute('data-instructor');
+                    
+                    const maxParticipants = this.getAttribute('data-max-participants');
+                    const currentParticipants = this.getAttribute('data-current-participants');
+                    document.getElementById('popup-availability').textContent = 
+                        `${maxParticipants - currentParticipants} su ${maxParticipants}`;
+                } else if (serviceType === 'spa') {
+                    document.getElementById('spa-specific-fields').style.display = 'block';
+                    document.getElementById('popup-price').textContent = '€' + this.getAttribute('data-price');
+                }
+                const today = new Date();
+                const formattedDate = today.toISOString().slice(0, 16);
+                document.getElementById('booking-datetime').min = formattedDate;
+                
+                document.getElementById('booking-popup').style.display = 'flex';
+            });
+        });
+        
+        document.getElementById('confirm-booking').addEventListener('click', function() {
+            const dateTime = document.getElementById('booking-datetime').value;
+            const notes = document.getElementById('booking-notes').value;
+            
+            if (!dateTime) {
+                alert('Per favore seleziona una data e ora per la prenotazione.');
+                return;
+            }
+            
+            const isAuth = {{ user.is_authenticated|yesno:"true,false" }};
+            
+            if (!isAuth) {
+                window.location.href = "{% url 'login' %}";
+                return;
+            }
+            
+            submitBooking(currentServiceId, currentServiceType, dateTime, notes);
+        });
+    });
+    
+    // Funzione per chiudere il popup
+    function closePopup() {
+        document.getElementById('booking-popup').style.display = 'none';
+        // Reset dei campi
+        document.getElementById('booking-datetime').value = '';
+        document.getElementById('booking-notes').value = '';
+    }
+    
+    // Funzione per inviare la prenotazione
+    function submitBooking(serviceId, serviceType, dateTime, notes) {
+        const bookingUrl = serviceType === 'gym' 
+            ? "{% url 'book_gym' 0 %}".replace('0', serviceId)
+            : "{% url 'book_spa' 0 %}".replace('0', serviceId);
+        
+        fetch(bookingUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                service_id: serviceId,
+                date_time: dateTime,
+                notes: notes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Prenotazione effettuata con successo!');
+                closePopup();
+                window.location.reload();
+            } else {
+                alert('Errore nella prenotazione: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Errore:', error);
+            alert('Si è verificato un errore durante la prenotazione. Riprova più tardi.');
+        });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock %}
 </body>
 </html>
-

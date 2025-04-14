@@ -1,8 +1,10 @@
 from datetime import datetime, time, timezone
+import json
 import re
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.forms import ValidationError
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
 from subscriptions.models import SubscriptionPlan
@@ -236,3 +238,73 @@ def gest_prenotazioni(request):
     }
     
     return render(request, 'users/gest_prenotazioni.html', context)
+
+
+
+@login_required
+def book_gym_class(request, class_id):
+    """Vista per prenotare una classe palestra"""
+    try:
+        gym_class = GymClass.objects.get(id=class_id)
+        
+        if not gym_class.check_availability:
+            return JsonResponse({'success': False, 'error': 'Classe esaurita. Non ci sono posti disponibili.'})
+        
+        data = json.loads(request.body)
+        date_time = datetime.fromisoformat(data.get('date_time'))
+        notes = data.get('notes', '')
+        
+        #creo obj db
+        booking = GymBooking.objects.create(
+            user=request.user,
+            class_id=gym_class,
+            date=date_time,
+            description=notes
+        )
+        
+        return JsonResponse({
+            'success': True, 
+            'booking_id': booking.id,
+            'message': f'Prenotazione per {gym_class.name} confermata!'
+        })
+    
+    except GymClass.DoesNotExist:
+        return JsonResponse({'success': False, 
+                             'error': 'Classe non trovata.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 
+                             'error': str(e)})
+
+@login_required
+def book_spa_service(request, service_id):
+    """Vista per prenotare un servizio spa"""
+    try:
+        spa_service = SpaService.objects.get(id=service_id)
+    
+        if not spa_service.check_availability:
+            return JsonResponse({'success': False, 
+                                 'error': 'Servizio non disponibile al momento.'})
+        
+        data = json.loads(request.body)
+        date_time = datetime.fromisoformat(data.get('date_time'))
+        notes = data.get('notes', '')
+        
+        booking = SpaBooking.objects.create(
+            user=request.user,
+            service_id=spa_service,
+            date=date_time,
+            description=notes
+        )
+        
+        return JsonResponse({
+            'success': True, 
+            'booking_id': booking.id,
+            'message': f'Prenotazione per {spa_service.name} confermata!'
+        })
+    
+    except SpaService.DoesNotExist:
+        return JsonResponse({'success': False, 
+                             'error': 'Servizio non trovato.'})
+    except Exception as e:
+        return JsonResponse({'success': False,
+                              'error': str(e)})

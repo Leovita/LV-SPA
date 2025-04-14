@@ -17,6 +17,9 @@ urlpatterns = [
     # gestione abbonamenti
     path('gest_prenotazioni/', views.gest_prenotazioni, name='gest_prenotazioni'),
 
+    #viste dinamiche servizi
+    path('book-gym/<int:class_id>/', views.book_gym_class, name='book_gym'),
+    path('book-spa/<int:service_id>/', views.book_spa_service, name='book_spa'),
 
     #auth
     path('login/', views.login, name='login'), 
