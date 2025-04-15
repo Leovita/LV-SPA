@@ -1,0 +1,235 @@
+{% extends 'users/navbar_template.html' %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le mie prenotazioni - LV Spa Resort</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="{% static 'users/css/styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header = navbar_template-->
+    
+    <!-- Hero Section più piccolo per le pagine interne -->
+    <section class="hero" style="padding: 150px 20px;">
+        <div class="hero-content">
+            <h1>Le Mie Prenotazioni</h1>
+            <p>Gestisci facilmente i tuoi appuntamenti e sessioni</p>
+        </div>
+    </section>
+
+    <!-- Sezione Prenotazioni -->
+    <section class="bookings-section">
+        <div class="container">
+            <div class="bookings-tabs">
+                <button class="tab-btn active" onclick="openTab('gym-bookings')">Prenotazioni Palestra</button>
+                <button class="tab-btn" onclick="openTab('spa-bookings')">Prenotazioni Spa</button>
+            </div>
+
+            <!-- Tab Prenotazioni Palestra -->
+            <div id="gym-bookings" class="booking-content active">
+                <h2>Prenotazioni Palestra</h2>
+                {% if gym_bookings %}
+                    <div class="bookings-container">
+                        {% for booking in gym_bookings %}
+                        <div class="booking-card">
+                            <div class="booking-header">
+                                <h3>{{ booking.class_id.name }}</h3>
+                            </div>
+                            <div class="booking-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Data:</span>
+                                    <span class="detail-value">{{ booking.date|date:"d/m/Y" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Ora:</span>
+                                    <span class="detail-value">{{ booking.date|date:"H:i" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Istruttore:</span>
+                                    <span class="detail-value">{{ booking.class_id.instructor.name }}</span>
+                                </div>
+                                {% if booking.description %}
+                                <div class="detail-item">
+                                    <span class="detail-label">Note:</span>
+                                    <span class="detail-value">{{ booking.description }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="booking-actions">
+                                <button class="btn-cancel-booking" data-id="{{ booking.id }}" data-type="gym">Cancella Prenotazione</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-bookings">
+                        <p>Non hai ancora prenotazioni per i servizi palestra.</p>
+                        <a href="{% url 'home' %}#services" class="btn">Scopri i nostri servizi</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Tab Prenotazioni Spa -->
+            <div id="spa-bookings" class="booking-content">
+                <h2>Prenotazioni Spa</h2>
+                {% if spa_bookings %}
+                    <div class="bookings-container">
+                        {% for booking in spa_bookings %}
+                        <div class="booking-card">
+                            <div class="booking-header">
+                                <h3>{{ booking.service_id.name }}</h3>
+                            </div>
+                            <div class="booking-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Data:</span>
+                                    <span class="detail-value">{{ booking.date|date:"d/m/Y" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Ora:</span>
+                                    <span class="detail-value">{{ booking.date|date:"H:i" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Prezzo:</span>
+                                    <span class="detail-value">€{{ booking.service_id.price }}</span>
+                                </div>
+                                {% if booking.description %}
+                                <div class="detail-item">
+                                    <span class="detail-label">Note:</span>
+                                    <span class="detail-value">{{ booking.description }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="booking-actions">
+                                <button class="btn-cancel-booking" data-id="{{ booking.id }}" data-type="spa">Cancella Prenotazione</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-bookings">
+                        <p>Non hai ancora prenotazioni per i servizi spa.</p>
+                        <a href="{% url 'home' %}#services" class="btn">Scopri i nostri servizi</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Popup di conferma cancellazione -->
+    <div class="popup-overlay" id="cancel-booking-popup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2>Conferma Cancellazione</h2>
+                <button class="close-popup" onclick="closeConfirmPopup()">&times;</button>
+            </div>
+            <div class="popup-details">
+                <p>Sei sicuro di voler cancellare questa prenotazione?</p>
+                <p>Questa azione non può essere annullata.</p>
+            </div>
+            <div class="popup-actions">
+                <button class="btn-cancel" onclick="closeConfirmPopup()">Annulla</button>
+                <button class="btn-confirm" id="confirm-cancel-booking">Conferma Cancellazione</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let currentBookingId = null;
+        let currentBookingType = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab navigation
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Cancellazione prenotazione
+            document.querySelectorAll('.btn-cancel-booking').forEach(button => {
+                button.addEventListener('click', function() {
+                    currentBookingId = this.getAttribute('data-id');
+                    currentBookingType = this.getAttribute('data-type');
+                    document.getElementById('cancel-booking-popup').style.display = 'flex';
+                });
+            });
+
+            document.getElementById('confirm-cancel-booking').addEventListener('click', function() {
+                if (currentBookingId && currentBookingType) {
+                    cancelBooking(currentBookingId, currentBookingType);
+                }
+            });
+        });
+
+        function openTab(tabId) {
+            document.querySelectorAll('.booking-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function closeConfirmPopup() {
+            document.getElementById('cancel-booking-popup').style.display = 'none';
+            currentBookingId = null;
+            currentBookingType = null;
+        }
+
+        function cancelBooking(bookingId, bookingType) {
+            const cancelUrl = bookingType === 'gym' 
+                ? "{% url 'cancel_gym_booking' 0 %}".replace('0', bookingId)
+                : "{% url 'cancel_spa_booking' 0 %}".replace('0', bookingId);
+            
+            fetch(cancelUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Prenotazione cancellata con successo!');
+                    window.location.reload();
+                } else {
+                    alert('Errore nella cancellazione: ' + data.error);
+                }
+                closeConfirmPopup();
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Si è verificato un errore durante la cancellazione. Riprova più tardi.');
+                closeConfirmPopup();
+            });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
+{% endblock %}

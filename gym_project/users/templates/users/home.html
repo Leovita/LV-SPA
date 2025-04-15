@@ -7,6 +7,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LV Spa Resort</title>
+<link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="{% static 'users/css/styles.css' %}">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
@@ -146,11 +148,9 @@
 
 <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
 <script>
-    // Variabili globali per il popup
     let currentServiceId = null;
     let currentServiceType = null;
     
-    // Aggiungi listener a tutte le schede dei servizi
     document.addEventListener('DOMContentLoaded', function() {
         const serviceCards = document.querySelectorAll('.service-card');
         
@@ -214,15 +214,13 @@
         });
     });
     
-    // Funzione per chiudere il popup
     function closePopup() {
         document.getElementById('booking-popup').style.display = 'none';
-        // Reset dei campi
+        // reset campi
         document.getElementById('booking-datetime').value = '';
         document.getElementById('booking-notes').value = '';
     }
     
-    // Funzione per inviare la prenotazione
     function submitBooking(serviceId, serviceType, dateTime, notes) {
         const bookingUrl = serviceType === 'gym' 
             ? "{% url 'book_gym' 0 %}".replace('0', serviceId)

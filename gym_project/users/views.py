@@ -16,36 +16,26 @@ from users.models import ProfileUpdateForm, ProfilePictureForm
 
 def profile(request):
     if not request.user.is_authenticated:
-        return redirect('register')  # oppure puoi aggiungere ?tab=register se hai i tab
-
+        return redirect('login') 
     return render(request, 'users/profile.html')
 
 def login(request): 
     if request.method == "POST":
-        print("post request")
-        email = request.POST["email"]
-        password = request.POST["login-password"]
+        email = request.POST.get("email")
+        password = request.POST.get("login-password")
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            print("user non esiste")
-            user = None
+        if not email or not password:
+            messages.error(request, "Inserisci email e password.")
+            return render(request, "users/login.html")
 
+        user = authenticate(request, username=email, password=password)
         if user is not None:
-            authenticated_user = authenticate(request, username=email, password=password)
-            if authenticated_user is not None:
-                print("OTTIMO SEI DENTRO!!")
-                auth_login(request, authenticated_user)  
-                messages.success(request, "Login effettuato con successo!")
-                return redirect('home')
-            else:
-                print("Credenziali non valide")
-                messages.error(request, "Credenziali non valide. Riprova.")
+            auth_login(request, user)
+            messages.success(request, "Login effettuato con successo!")
+            return redirect('home')
         else:
-            print("User non esiste")
-            messages.error(request, "Credenziali non valide. Riprova.")
-
+            messages.error(request, "Email o password non validi.")
+    
     return render(request, "users/login.html")
 
 def home(request):
@@ -59,26 +49,54 @@ def home(request):
 
 def register(request):
     if request.method == "POST":
-        full_name = request.POST.get("register-name")
-        email = request.POST.get("register-email")
-        password = request.POST.get("register-password")
-        password_confirm = request.POST.get("register-confirm")
+        full_name = request.POST.get("register-name", "").strip()
+        email = request.POST.get("register-email", "").strip().lower()
+        password = request.POST.get("register-password", "")
+        password_confirm = request.POST.get("register-confirm", "")
 
-        print(full_name, email, password, password_confirm)
-        if not full_name or not email or not password or not password_confirm:
-            return render(request, "login.html/tab=register", {"error": "Tutti i campi devono essere compilati."})
-
-        if User.objects.filter(email=email).exists():
-            return render(request, "login.html/tab=register", {"error": "Un utente con questa email esiste già."})
+        if not all([full_name, email, password, password_confirm]):
+            messages.error(request, "Tutti i campi devono essere compilati.")
+            return render(request, "users/login.html", {"tab": "register"})
 
         if password != password_confirm:
-            return render(request, "register.html", {"error": "Le password non coincidono."})
-   
-        user = User.objects.create_user(email=email, password=password, full_name=full_name)
+            messages.error(request, "Le password non coincidono.")
+            return render(request, "users/login.html", {"tab": "register"})
 
-        return redirect('login') 
-    return render(request, "users/login.html")
+        if User.objects.filter(email__iexact=email).exists():
+            messages.error(request, "Un utente con questa email esiste già.")
+            return render(request, "users/login.html", {"tab": "register"})
 
+        errors = []
+        if len(password) < 8:
+            errors.append("La password deve avere almeno 8 caratteri.")
+        if not re.search(r'[A-Z]', password):
+            errors.append("La password deve contenere almeno una lettera maiuscola.")
+        if not re.search(r'[a-z]', password):
+            errors.append("La password deve contenere almeno una lettera minuscola.")
+        if not re.search(r'[0-9]', password):
+            errors.append("La password deve contenere almeno un numero.")
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            errors.append("La password deve contenere almeno un carattere speciale (!@#$%^&* etc.).")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, "users/login.html", {"tab": "register"})
+
+        # Creazione utente
+        try:
+            user = User.objects.create_user(
+                email=email,
+                password=password,
+                full_name=full_name
+            )
+            messages.success(request, "Registrazione completata! Ora puoi effettuare il login.")
+            return redirect('login')
+        except Exception as e:
+            messages.error(request, f"Errore durante la registrazione: {str(e)}")
+            return render(request, "users/login.html", {"tab": "register"})
+
+    return render(request, "users/login.html", {"tab": "register"})
 
 def user_logout(request):
     """Effettua il logout dell'utente e lo reindirizza alla homepage."""
@@ -130,6 +148,7 @@ def update_profile(request):
                     messages.error(request, f"{field}: {error}")
 
     return redirect('profile')
+
 @login_required
 def update_profile_picture(request):
     """
@@ -186,11 +205,10 @@ def gest_prenotazioni(request):
             'service': f"{booking.class_id.name} (Palestra)",
             'description': booking.description if booking.description else booking.class_id.description,
             'date': booking.date,
-            'status': 'confirmed',  # Aggiungi logica per determinare lo stato se necessario
+            'status': 'confirmed',  
             'type': 'gym'
         })
     
-    # Aggiungi prenotazioni spa
     for booking in spa_bookings:
         all_bookings.append({
             'id': booking.id,
@@ -198,14 +216,13 @@ def gest_prenotazioni(request):
             'service': f"{booking.service_id.name} (Spa)",
             'description': booking.description if booking.description else booking.service_id.description,
             'date': booking.date,
-            'status': 'confirmed',  # Aggiungi logica per determinare lo stato se necessario
+            'status': 'confirmed',
             'type': 'spa'
         })
     
-    # Ordina tutte le prenotazioni per data
+    #sort
     all_bookings.sort(key=lambda x: x['date'])
     
-    # Prepara i dati specifici per la palestra
     gym_bookings_data = []
     for booking in gym_bookings:
         gym_bookings_data.append({
@@ -308,3 +325,36 @@ def book_spa_service(request, service_id):
     except Exception as e:
         return JsonResponse({'success': False,
                               'error': str(e)})
+    
+def my_bookings(request):
+    gym_bookings = GymBooking.objects.filter(user=request.user).order_by('-date')
+    spa_bookings = SpaBooking.objects.filter(user=request.user).order_by('-date')
+    
+    context = {
+        'gym_bookings': gym_bookings,
+        'spa_bookings': spa_bookings,
+    }
+    
+    return render(request, 'users/my_bookings.html', context)
+
+@login_required
+def cancel_gym_booking(request, booking_id):
+    try:
+        booking = GymBooking.objects.get(id=booking_id, user_id=request.user.id)
+        booking.delete()
+        return JsonResponse({'success': True})
+    except GymBooking.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Prenotazione non trovata'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def cancel_spa_booking(request, booking_id):
+    try:
+        booking = SpaBooking.objects.get(id=booking_id, user_id=request.user.id)
+        booking.delete()
+        return JsonResponse({'success': True})
+    except SpaBooking.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Prenotazione non trovata'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

@@ -25,6 +25,11 @@ urlpatterns = [
     path('login/', views.login, name='login'), 
     path('register/', views.register, name='register'),
     path('logout/', views.user_logout, name='logout'),
+
+    #bookings
+    path('my-bookings/', views.my_bookings, name='my_bookings'),
+    path('cancel-gym-booking/<int:booking_id>/', views.cancel_gym_booking, name='cancel_gym_booking'),
+    path('cancel-spa-booking/<int:booking_id>/', views.cancel_spa_booking, name='cancel_spa_booking'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -37,7 +37,7 @@
                         <div class="dropdown-menu" id="dropdown-menu">
                             <a href="{% url 'profile' %}">Profilo</a>
                             <a href="{% url 'subscription_plans' %}">Abbonamento</a>
-
+                            <a href="{% url 'my_bookings' %}">Le mie prenotazioni</a>
                             {% if user.is_superuser %}
                                 <a href="{% url 'gest_prenotazioni' %}">Gestisci Prenotazioni</a>
                                 <a href="{% url 'login' %}">Aggiungi Corso</a>
@@ -48,8 +48,8 @@
                         </div>
                     </div>
                 {% else %}
-                    <button class="login-btn" onclick="window.location.href="{% url 'login' %}?tab=login">Login</button>
-                    <button class="register-btn" onclick="window.location.href="{% url 'register' %}?tab=register">Registrati</button>
+                    <button class="login-btn" onclick="window.location.href='{% url 'login' %}?tab=login'">Login</button>
+                    <button class="register-btn" onclick="window.location.href='{% url 'login' %}?tab=register'">Registrati</button>
                 {% endif %}
             </div>
         </nav>
