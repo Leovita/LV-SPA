@@ -34,13 +34,16 @@
             </div>
         </div>
         
-        <div class="bookings-container">
-            <div class="tabs">
-                <div class="tab active" data-tab="all">Tutte le prenotazioni</div>
-                <div class="tab" data-tab="gym">Prenotazioni Palestra</div>
-                <div class="tab" data-tab="spa">Prenotazioni Spa</div>
-            </div>
-            
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="all">Tutte le prenotazioni</div>
+            <div class="tab" data-tab="gym">Prenotazioni Palestra</div>
+            <div class="tab" data-tab="spa">Prenotazioni Spa</div>
+        </div>
+        
+        <!-- Tab Content -->
+        <div class="tab-content-container">
+            <!-- All Bookings -->
             <div id="all" class="tab-content active">
                 <div class="filters">
                     <div class="search-box">
@@ -107,12 +110,9 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <div class="pagination">
-                    <div class="page-item active">1</div>
-                </div>
             </div>
             
+            <!-- Gym Bookings -->
             <div id="gym" class="tab-content">
                 <div class="filters">
                     <div class="search-box">
@@ -177,13 +177,9 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <div class="pagination">
-                    <!-- Pagination può essere implementata in seguito se necessario -->
-                    <div class="page-item active">1</div>
-                </div>
             </div>
             
+            <!-- Spa Bookings -->
             <div id="spa" class="tab-content">
                 <div class="filters">
                     <div class="search-box">
@@ -193,7 +189,6 @@
                     <div class="filter-group">
                         <select id="filter-treatment">
                             <option value="">Tutti i trattamenti</option>
-                            <!-- Potresti aggiungere dinamicamente le opzioni dai dati disponibili -->
                         </select>
                         <select id="filter-date-spa">
                             <option value="">Tutte le date</option>
@@ -249,11 +244,6 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <div class="pagination">
-                    <!-- Pagination può essere implementata in seguito se necessario -->
-                    <div class="page-item active">1</div>
-                </div>
             </div>
         </div>
     </main>
@@ -261,87 +251,107 @@
     <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
     <script>
         // Tab switching functionality
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs and contents
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked tab
-                tab.classList.add('active');
-                
-                // Show corresponding content
-                const tabId = tab.getAttribute('data-tab');
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
+        // Tab switching functionality
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        // Remove active class from all tabs and contents
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         
-        // Funzione di filtro per la ricerca
-        function setupSearch(inputId, tableId, columns) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
+        // Add active class to clicked tab
+        tab.classList.add('active');
+        
+        // Show corresponding content
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(tabId).classList.add('active');
+    });
+});
+
+// Funzione di filtro per la ricerca
+function setupSearch(inputId, tableId, columns) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    input.addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        const table = document.querySelector(`#${tableId} table`);
+        const rows = table.getElementsByTagName('tr');
+        
+        for (let i = 1; i < rows.length; i++) { // Skip header row
+            let match = false;
+            const row = rows[i];
             
-            input.addEventListener('keyup', function() {
-                const filter = this.value.toLowerCase();
-                const table = document.querySelector(`#${tableId} table`);
-                const rows = table.getElementsByTagName('tr');
-                
-                for (let i = 1; i < rows.length; i++) { // Skip header row
-                    let match = false;
-                    const row = rows[i];
-                    
-                    for (let col of columns) {
-                        const cell = row.getElementsByTagName('td')[col];
-                        if (cell) {
-                            const text = cell.textContent || cell.innerText;
-                            if (text.toLowerCase().indexOf(filter) > -1) {
-                                match = true;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (match) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
+            for (let col of columns) {
+                const cell = row.getElementsByTagName('td')[col];
+                if (cell) {
+                    const text = cell.textContent || cell.innerText;
+                    if (text.toLowerCase().indexOf(filter) > -1) {
+                        match = true;
+                        break;
                     }
                 }
-            });
-        }
-        
-        // Setup search functionality for each tab
-        document.addEventListener('DOMContentLoaded', function() {
-            setupSearch('search-all', 'all', [1, 2, 3, 4]); // User, Service, Description, Date
-            setupSearch('search-gym', 'gym', [1, 2, 3, 4]); // User, Course, Description, Date
-            setupSearch('search-spa', 'spa', [1, 2, 3, 4]); // User, Treatment, Description, Date
+            }
             
-            // Gestione bottoni azioni
-            document.querySelectorAll('.btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    const type = this.getAttribute('data-type');
-                    const action = this.classList.contains('btn-view') ? 'view' : 
-                                  this.classList.contains('btn-edit') ? 'edit' : 'delete';
-                    
-                    console.log(`Azione: ${action}, ID: ${id}, Tipo: ${type}`);
-                    
-                    // Qui puoi implementare le azioni specifiche
-                    if (action === 'delete') {
-                        if (confirm('Sei sicuro di voler eliminare questa prenotazione?')) {
-                            // Invia richiesta AJAX per eliminare
-                            // Esempio: window.location.href = `/delete-booking/${type}/${id}/`;
-                        }
-                    } else if (action === 'edit') {
-                        // Reindirizza alla pagina di modifica
-                        // Esempio: window.location.href = `/edit-booking/${type}/${id}/`;
-                    } else if (action === 'view') {
-                        // Mostra dettagli
-                        // Esempio: window.location.href = `/view-booking/${type}/${id}/`;
+            if (match) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Setup search functionality for each tab
+document.addEventListener('DOMContentLoaded', function() {
+    setupSearch('search-all', 'all', [1, 2, 3, 4]); // User, Service, Description, Date
+    setupSearch('search-gym', 'gym', [1, 2, 3, 4]); // User, Course, Description, Date
+    setupSearch('search-spa', 'spa', [1, 2, 3, 4]); // User, Treatment, Description, Date
+    
+    // Gestione bottoni azioni
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const type = this.getAttribute('data-type');
+            const action = this.classList.contains('btn-view') ? 'view' : 
+                          this.classList.contains('btn-edit') ? 'edit' : 'delete';
+            
+            if (action === 'delete') {
+                if (confirm('Sei sicuro di voler eliminare questa prenotazione?')) {
+                    let url;
+                    if (type === 'gym') {
+                        url = `/cancel-gym-booking/${id}/`;
+                    } else if (type === 'spa') {
+                        url = `/cancel-spa-booking/${id}/`;
+                    } else {
+                        console.error('Tipo di prenotazione non valido.');
+                        return;
                     }
-                });
-            });
+
+                    fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken, 
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Prenotazione eliminata con successo.');
+                            window.location.reload();
+                        } else {
+                            response.json().then(data => {
+                                alert('Errore durante l\'eliminazione della prenotazione: ' + data.error);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Errore:', error);
+                    });
+                }
+            }
         });
+    });
+});
     </script>
 {% endblock %}
 

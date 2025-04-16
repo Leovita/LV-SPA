@@ -128,9 +128,15 @@
 /* Booking content */
 .booking-content {
     display: none;
-    opacity: d0;
+    opacity: 0;
     transition: opacity 0.3s ease;
 }
+
+:focus {
+    outline: 2px dashed var(--accent-color);
+    outline-offset: 4px;
+}
+
 
 .booking-content.active {
     display: block;
@@ -238,6 +244,10 @@
     cursor: pointer;
     font-weight: 600;
     transition: background-color 0.3s ease;
+    position: fixed;
+    bottom: 20px; 
+    right: 20px; 
+    z-index: 1000;
 }
 
 .btn-cancel-booking:hover {
@@ -492,12 +502,13 @@ header nav ul li a:hover::after {
     }
     
     .popup-content {
-        background-color: white;
-        padding: 30px;
-        border-radius: 10px;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    .popup-overlay.show .popup-content {
+        transform: scale(1);
+        opacity: 1;
     }
     
     .popup-header {
