@@ -13,11 +13,20 @@
 <link rel="stylesheet" href="{% static 'users/css/home.css' %}">
 <link rel="stylesheet" href="{% static 'users/css/popup.css' %}">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </head>
 <body>
-<!-- Header = navbar_template-->
-<!-- Hero Section -->
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+        <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <section id="home" class="hero">
 <div class="hero-content">
 <h1>LV Spa</h1>
@@ -25,14 +34,13 @@
 <a href="#services" class="btn">Scopri i Nostri Servizi</a>
 </div>
 </section>
-<!-- About Section -->
+
 <section id="about" class="about">
 <h2>Chi Siamo</h2>
 <p>Il nostro Spa Resort offre esperienze di benessere uniche, trattamenti esclusivi e un ambiente rilassante per aiutarti a ritrovare l'equilibrio.</p>
 </section>
-<!-- Servizi Section -->
+
 <section id="services">
-<!-- Servizi Palestra -->
 <div class="services-category">
     <h3>Servizi Palestra</h3>
     {% for service in gym_services %}
@@ -44,7 +52,7 @@
         <p><strong>Data:</strong>
             {% with booking_date=gym_service_booking_dates|get_item:service.id %}
                 {% if booking_date %}
-                    <span class="detail-value">{{ booking_date|date:"d/m/Y" }}</span>
+                    <span class="detail-value">{{ booking_date|date:"Y-m-d" }}</span>
                 {% else %}
                     Nessuna data disponibile
                 {% endif %}
@@ -65,7 +73,6 @@
     {% endfor %}
 </div>
 
-<!-- Servizi Spa -->
 <div class="services-category">
     <h3>Servizi Spa</h3>
     {% for service in spa_services %}
@@ -77,7 +84,7 @@
         <p><strong>Data:</strong>
             {% with booking_date=spa_service_booking_dates|get_item:service.id %}
                 {% if booking_date %}
-                    <span class="detail-value">{{ booking_date|date:"d/m/Y" }}</span>
+                    <span class="detail-value">{{ booking_date|date:"Y-m-d" }}</span>
                 {% else %}
                     Nessuna data disponibile
                 {% endif %}
@@ -95,24 +102,23 @@
     <p>Non ci sono servizi disponibili al momento.</p>
     {% endfor %}
 </div>
-</div>
 </section>
-<!-- Contact Section -->
+
 <section id="contact" class="contact">
 <h2>Contattaci</h2>
-<form id="contact-form">
-<input type="text" id="name" placeholder="Nome" required>
-<input type="email" id="email" placeholder="Email" required>
-<textarea id="message" placeholder="Messaggio" required></textarea>
+<form id="contact-form" method="POST" action="{% url 'login' %}">
+{% csrf_token %}
+<input type="text" name="name" placeholder="Nome" required>
+<input type="email" name="email" placeholder="Email" required>
+<textarea name="message" placeholder="Messaggio" required></textarea>
 <button type="submit">Invia</button>
 </form>
 </section>
-<!-- Footer -->
+
 <footer>
 <p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
 </footer>
 
-<!-- Popup per la prenotazione -->
 <div class="popup-overlay" id="booking-popup">
     <div class="popup-content">
         <div class="popup-header">
@@ -128,7 +134,6 @@
                 <div class="detail-label">Descrizione:</div>
                 <div class="detail-value" id="popup-description"></div>
             </div>
-            <!-- Campi specifici per palestra -->
             <div id="gym-specific-fields" style="display: none;">
                 <div class="detail-row">
                     <div class="detail-label">Istruttore:</div>
@@ -139,24 +144,15 @@
                     <div class="detail-value" id="popup-availability"></div>
                 </div>
             </div>
-            <!-- Campi specifici per spa -->
             <div id="spa-specific-fields" style="display: none;">
                 <div class="detail-row">
                     <div class="detail-label">Prezzo:</div>
                     <div class="detail-value" id="popup-price"></div>
                 </div>
             </div>
-            <!-- Campo data e ora -->
             <div class="detail-row">
                 <div class="detail-label">Data e ora:</div>
                 <div class="detail-value" id="booking-datetime"></div>
-            </div>
-            <!-- Note -->
-            <div class="detail-row">
-                <div class="detail-label">Note aggiuntive:</div>
-                <div class="detail-value">
-                    <textarea id="booking-notes" placeholder="Note opzionali per la prenotazione"></textarea>
-                </div>
             </div>
         </div>
         <div class="popup-actions">
@@ -166,124 +162,124 @@
     </div>
 </div>
 
-<script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
 <script>
-    let currentServiceId = null;
-    let currentServiceType = null;
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const serviceCards = document.querySelectorAll('.service-card');
-        
-        serviceCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const serviceId = this.getAttribute('data-id');
-                const serviceType = this.getAttribute('data-type');
-                console.log(serviceType)
-                const serviceName = this.getAttribute('data-name');
-                const serviceDescription = this.getAttribute('data-description');
-                
+let currentServiceId = null;
+let currentServiceType = null;
 
-                currentServiceId = serviceId;
-                currentServiceType = serviceType;
-                
-                //auto fill dati
-                document.getElementById('popup-title').textContent = 'Prenota ' + serviceName;
-                document.getElementById('popup-service-name').textContent = serviceName;
-                document.getElementById('popup-description').textContent = serviceDescription;
-                
-                document.getElementById('gym-specific-fields').style.display = 'none';
-                document.getElementById('spa-specific-fields').style.display = 'none';
-                
-                if (serviceType === 'gym') {
-                    document.getElementById('gym-specific-fields').style.display = 'block';
-                    document.getElementById('popup-instructor').textContent = this.getAttribute('data-instructor');
-                    
-                    const maxParticipants = this.getAttribute('data-max-participants');
-                    const currentParticipants = this.getAttribute('data-current-participants');
-                    document.getElementById('popup-availability').textContent = 
-                        `${maxParticipants - currentParticipants} su ${maxParticipants}`;
-                } else if (serviceType === 'spa') {
-                    document.getElementById('spa-specific-fields').style.display = 'block';
-                    document.getElementById('popup-price').textContent = '€' + this.getAttribute('data-price');
-                }
-                const today = new Date();
-                const bookingDate = this.querySelector('.detail-value')?.textContent || 'Non disponibile';
-                document.getElementById('booking-datetime').textContent = bookingDate;
-                
-                document.getElementById('booking-popup').style.display = 'flex';
-            });
-        });
-        
-        document.getElementById('confirm-booking').addEventListener('click', function() {
-            const dateTime = document.getElementById('booking-datetime').value;
-            const notes = document.getElementById('booking-notes').value;
-            
-            const isAuth = {{ user.is_authenticated|yesno:"true,false" }};
-            
-            if (!isAuth) {
-                window.location.href = "{% url 'login' %}";
-                return;
+document.addEventListener('DOMContentLoaded', function() {
+    const serviceCards = document.querySelectorAll('.service-card');
+
+    serviceCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const serviceId = this.dataset.id;
+            const serviceType = this.dataset.type;
+            const serviceName = this.dataset.name;
+            const serviceDescription = this.dataset.description;
+
+            currentServiceId = serviceId;
+            currentServiceType = serviceType;
+
+            document.getElementById('popup-title').textContent = 'Prenota ' + serviceName;
+            document.getElementById('popup-service-name').textContent = serviceName;
+            document.getElementById('popup-description').textContent = serviceDescription;
+
+            document.getElementById('gym-specific-fields').style.display = 'none';
+            document.getElementById('spa-specific-fields').style.display = 'none';
+
+            if (serviceType === 'gym') {
+                document.getElementById('gym-specific-fields').style.display = 'block';
+                document.getElementById('popup-instructor').textContent = this.dataset.instructor;
+                const max = parseInt(this.dataset.maxParticipants);
+                const current = parseInt(this.dataset.currentParticipants);
+                document.getElementById('popup-availability').textContent = `${max - current} su ${max}`;
+            } else if (serviceType === 'spa') {
+                document.getElementById('spa-specific-fields').style.display = 'block';
+                document.getElementById('popup-price').textContent = '€' + this.dataset.price;
             }
-            
-            submitBooking(currentServiceId, currentServiceType, dateTime, notes);
+
+            const bookingDate = this.querySelector('.detail-value')?.textContent || 'Non disponibile';
+            document.getElementById('booking-datetime').textContent = bookingDate;
+
+            document.getElementById('booking-popup').style.display = 'flex';
         });
     });
-    
-    function closePopup() {
-        document.getElementById('booking-popup').style.display = 'none';
-        // reset campi
-        document.getElementById('booking-datetime').value = '';
-        document.getElementById('booking-notes').value = '';
-    }
-    
-    function submitBooking(serviceId, serviceType, dateTime, notes) {
-        const bookingUrl = serviceType === 'gym' 
-            ? "{% url 'book_gym' 0 %}".replace('0', serviceId)
-            : "{% url 'book_spa' 0 %}".replace('0', serviceId);
-        
-        fetch(bookingUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({
-                service_id: serviceId,
-                date_time: dateTime,
-                notes: notes
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Prenotazione effettuata con successo!');
-                closePopup();
-                window.location.reload();
-            } else {
-                alert('Errore nella prenotazione: ' + data.error);
+
+    document.getElementById('confirm-booking').addEventListener('click', function() {
+        const dateTimeElement = document.getElementById('booking-datetime');
+        const dateTime = dateTimeElement.textContent.trim();
+        const isAuth = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
+
+        if (!isAuth) {
+            window.location.href = "{% url 'login' %}";
+            return;
+        }
+
+        let dateTimeObj;
+        try {
+            dateTimeObj = moment(dateTime, "YYYY-MM-DD").toDate();
+            if (isNaN(dateTimeObj.getTime())) {
+                throw new Error("La data non è in un formato riconoscibile.");
             }
+        } catch (error) {
+            alert('Errore: ' + error.message);
+            return;
+        }
+
+        const dateTimeISO = dateTimeObj.toISOString();
+
+        submitBooking(currentServiceId, currentServiceType, dateTimeISO);
+    });
+});
+
+function closePopup() {
+    document.getElementById('booking-popup').style.display = 'none';
+}
+
+function submitBooking(serviceId, serviceType, dateTime) {
+    const bookingUrl = serviceType === 'gym'
+        ? "{% url 'book_gym' 0 %}".replace('0', serviceId)
+        : "{% url 'book_spa' 0 %}".replace('0', serviceId);
+
+    fetch(bookingUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            service_id: serviceId,
+            date_time: dateTime,
         })
-        .catch(error => {
-            console.error('Errore:', error);
-            alert('Si è verificato un errore durante la prenotazione. Riprova più tardi.');
-        });
-    }
-    
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = "?success=1";
+        } else {
+            alert('Errore: ' + (data.error || 'Prenotazione non riuscita'));
+        }
+    })
+    .catch(error => {
+        alert('Errore durante la richiesta.');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
         }
-        return cookieValue;
     }
+    return cookieValue;
+}
 </script>
+
 <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
 {% endblock %}
 </body>

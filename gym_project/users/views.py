@@ -11,6 +11,7 @@ from spa.models import SpaBooking, SpaService
 from users.models import User
 from palestra.models import GymBooking, GymClass
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.http import require_http_methods
 from users.models import ProfileUpdateForm, ProfilePictureForm
 from django.contrib.auth.models import Group
 
@@ -59,6 +60,7 @@ def home(request):
         'spa_services': spa_services,
         'gym_service_booking_dates': gym_dates,
         'spa_service_booking_dates': spa_dates,
+        'timestamp': datetime.now().timestamp(),  
     })
 
 def validate_password(password):
@@ -125,7 +127,7 @@ def profile_view(request):
     """
     Visualizza la pagina del profilo utente.
     """
-    return render(request, 'users/profile.html')
+    return redirect('profile')
 
 @login_required
 def update_profile(request):
@@ -281,10 +283,9 @@ def gest_prenotazioni(request):
     return render(request, 'users/gest_prenotazioni.html', context)
 
 
-
 @login_required
+@require_http_methods(["POST"])
 def book_gym_class(request, class_id):
-    """Vista per prenotare una classe palestra"""
     try:
         gym_class = GymClass.objects.get(id=class_id)
         
@@ -292,15 +293,21 @@ def book_gym_class(request, class_id):
             return JsonResponse({'success': False, 'error': 'Classe esaurita. Non ci sono posti disponibili.'})
         
         data = json.loads(request.body)
-        date_time = datetime.fromisoformat(data.get('date_time'))
-        notes = data.get('notes', '')
+        date_time_str = data.get('date_time')
         
-        #creo obj db
+        if not date_time_str:
+            return JsonResponse({'success': False, 'error': 'Data/ora mancante.'})
+        
+        try:
+            date_time = datetime.fromisoformat(date_time_str)
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Formato data/ora non valido.'})
+        
+        # Create booking object
         booking = GymBooking.objects.create(
             user=request.user,
             class_id=gym_class,
             date=date_time,
-            description=notes
         )
         
         return JsonResponse({
@@ -310,24 +317,30 @@ def book_gym_class(request, class_id):
         })
     
     except GymClass.DoesNotExist:
-        return JsonResponse({'success': False, 
-                             'error': 'Classe non trovata.'})
+        return JsonResponse({'success': False, 'error': 'Classe non trovata.'})
     except Exception as e:
-        return JsonResponse({'success': False, 
-                             'error': str(e)})
+        return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
+@require_http_methods(["POST"])
 def book_spa_service(request, service_id):
-    """Vista per prenotare un servizio spa"""
     try:
         spa_service = SpaService.objects.get(id=service_id)
-    
+        
         if not spa_service.check_availability:
-            return JsonResponse({'success': False, 
-                                 'error': 'Servizio non disponibile al momento.'})
+            return JsonResponse({'success': False, 'error': 'Servizio non disponibile al momento.'})
         
         data = json.loads(request.body)
-        date_time = datetime.fromisoformat(data.get('date_time'))
+        date_time_str = data.get('date_time')
+        
+        if not date_time_str:
+            return JsonResponse({'success': False, 'error': 'Data/ora mancante.'})
+        
+        try:
+            date_time = datetime.fromisoformat(date_time_str)
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Formato data/ora non valido.'})
+        
         notes = data.get('notes', '')
         
         booking = SpaBooking.objects.create(
@@ -342,14 +355,11 @@ def book_spa_service(request, service_id):
             'booking_id': booking.id,
             'message': f'Prenotazione per {spa_service.name} confermata!'
         })
-    
     except SpaService.DoesNotExist:
-        return JsonResponse({'success': False, 
-                             'error': 'Servizio non trovato.'})
+        return JsonResponse({'success': False, 'error': 'Servizio non trovato.'})
     except Exception as e:
-        return JsonResponse({'success': False,
-                              'error': str(e)})
-    
+        return JsonResponse({'success': False, 'error': str(e)})
+
 def my_bookings(request):
     gym_bookings = GymBooking.objects.filter(user=request.user).order_by('-date')
     spa_bookings = SpaBooking.objects.filter(user=request.user).order_by('-date')
