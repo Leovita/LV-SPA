@@ -5,9 +5,8 @@ from django.contrib import messages
 from django.core.validators import validate_email
 from django.forms import ValidationError
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
-from subscriptions.models import SubscriptionPlan
 from spa.models import SpaBooking, SpaService
 from users.models import User
 from palestra.models import GymBooking, GymClass
@@ -62,6 +61,20 @@ def home(request):
         'spa_service_booking_dates': spa_dates,
     })
 
+def validate_password(password):
+    errors = []
+    if len(password) < 8:
+        errors.append("La password deve avere almeno 8 caratteri.")
+    if not re.search(r'[A-Z]', password):
+        errors.append("La password deve contenere almeno una lettera maiuscola.")
+    if not re.search(r'[a-z]', password):
+        errors.append("La password deve contenere almeno una lettera minuscola.")
+    if not re.search(r'[0-9]', password):
+        errors.append("La password deve contenere almeno un numero.")
+    if not re.search(r'[!@#$%^&*(),.?\":{}|<>]', password):
+        errors.append("La password deve contenere almeno un carattere speciale (!@#$%^&* etc.).")
+    return errors
+
 def register(request):
     if request.method == "POST":
         full_name = request.POST.get("register-name", "").strip()
@@ -71,34 +84,21 @@ def register(request):
 
         if not all([full_name, email, password, password_confirm]):
             messages.error(request, "Tutti i campi devono essere compilati.")
-            return render(request, "users/login.html", {"tab": "register"})
+            return redirect('/login/?tab=register')
 
         if password != password_confirm:
             messages.error(request, "Le password non coincidono.")
-            return render(request, "users/login.html", {"tab": "register"})
+            return redirect('/login/?tab=register')
 
         if User.objects.filter(email__iexact=email).exists():
             messages.error(request, "Un utente con questa email esiste già.")
-            return render(request, "users/login.html", {"tab": "register"})
+            return redirect('/login/?tab=register')
 
-        errors = []
-        if len(password) < 8:
-            errors.append("La password deve avere almeno 8 caratteri.")
-        if not re.search(r'[A-Z]', password):
-            errors.append("La password deve contenere almeno una lettera maiuscola.")
-        if not re.search(r'[a-z]', password):
-            errors.append("La password deve contenere almeno una lettera minuscola.")
-        if not re.search(r'[0-9]', password):
-            errors.append("La password deve contenere almeno un numero.")
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            errors.append("La password deve contenere almeno un carattere speciale (!@#$%^&* etc.).")
-
-        if errors:
-            for error in errors:
+        password_errors = validate_password(password)
+        if password_errors:
+            for error in password_errors:
                 messages.error(request, error)
-            return render(request, "users/login.html", {"tab": "register"})
-
-        # Creazione utente
+            return redirect('/login/?tab=register')
         try:
             user = User.objects.create_user(
                 email=email,
@@ -106,12 +106,14 @@ def register(request):
                 full_name=full_name
             )
             messages.success(request, "Registrazione completata! Ora puoi effettuare il login.")
-            return redirect('login')
+            return redirect("login")
         except Exception as e:
-            messages.error(request, f"Errore durante la registrazione: {str(e)}")
-            return render(request, "users/login.html", {"tab": "register"})
+            messages.error(request, f"Errore durante la registrazione. Riprova più tardi.")
+            print(f"[Register Error]: {e}")
+            return redirect('/login/?tab=register')
 
-    return render(request, "users/login.html", {"tab": "register"})
+
+    return redirect('/login/?tab=register')
 
 def user_logout(request):
     """Effettua il logout dell'utente e lo reindirizza alla homepage."""

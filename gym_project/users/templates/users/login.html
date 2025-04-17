@@ -8,6 +8,7 @@
     
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'users/css/auth.css' %}">
+    <link rel="stylesheet" href="{% static 'users/css/messages.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -28,8 +29,17 @@
                 <div class="tab-btn" data-tab="register" onclick="showTab('register')">Register</div>
             </div>
 
-            <!-- Login Form -->
             <div class="form-container active" id="login-form">
+                {% if messages %}
+                  <div class="messages">
+                    {% for message in messages %}
+                      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+            
                 <form method="POST" action="{% url 'login' %}">
                     {% csrf_token %}
                     <div class="form-group">
@@ -48,20 +58,21 @@
                         <a href="#" class="forgot-password">Forgot Password?</a>
                     </div>
                     <button type="submit" class="submit-btn">Login</button>
-                </form>
-
-                <div class="social-login">
-                    <p>Or login with</p>
-                    <div class="social-btns">
-                        <a href="#" class="social-btn" aria-label="Login with Google"><i class="fab fa-google"></i></a>
-                        <a href="#" class="social-btn" aria-label="Login with Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-btn" aria-label="Login with Apple"><i class="fab fa-apple"></i></a>
-                    </div>
-                </div>
+                </form> 
             </div>
-
+            
             <!-- Register Form -->
             <div class="form-container" id="register-form">
+                {% if messages %}
+                  <div class="messages">
+                    {% for message in messages %}
+                      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+            
                 <form method="POST" action="{% url 'register' %}">
                     {% csrf_token %}
                     <div class="form-group">
@@ -101,6 +112,7 @@
 
     <!-- Script -->
     <script>
+        // funzionalita' tab
         function getTabFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('tab');
@@ -118,6 +130,22 @@
             const tab = getTabFromURL();
             showTab(tab || 'login');
         });
+    
+        // funzionalita' messaggi
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const messages = document.querySelectorAll('.message, .alert');
+
+            messages.forEach((message) => {
+            setTimeout(() => {
+                message.style.opacity = '0';
+                setTimeout(() => {
+                message.remove();
+                }, 500); // aspetta che la transizione finisca prima di rimuovere
+            }, 4000); // 4 secondi visibili
+            });
+        });
+
     </script>
 </body>
 </html>
