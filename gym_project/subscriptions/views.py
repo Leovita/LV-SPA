@@ -1,7 +1,7 @@
 from pyexpat.errors import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Subscription, SubscriptionPlan
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required 
 
 @login_required
 def subscription_plans(request):

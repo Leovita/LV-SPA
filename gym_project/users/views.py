@@ -11,8 +11,9 @@ from subscriptions.models import SubscriptionPlan
 from spa.models import SpaBooking, SpaService
 from users.models import User
 from palestra.models import GymBooking, GymClass
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from users.models import ProfileUpdateForm, ProfilePictureForm
+from django.contrib.auth.models import Group
 
 def profile(request):
     if not request.user.is_authenticated:
@@ -41,10 +42,24 @@ def login(request):
 def home(request):
     gym_services = GymClass.objects.all()
     spa_services = SpaService.objects.all()
-    
+
+    gym_dates = {}
+    spa_dates = {}
+
+    # date gym calss
+    for service in gym_services:
+        booking_date = GymBooking.objects.filter(class_id=service).values_list('date', flat=True).first()
+        gym_dates[service.id] = booking_date
+    # date servizi spa
+    for service in spa_services:
+        booking_date = SpaBooking.objects.filter(service_id=service).values_list('date', flat=True).first()
+        spa_dates[service.id] = booking_date
+
     return render(request, 'users/home.html', {
         'gym_services': gym_services,
         'spa_services': spa_services,
+        'gym_service_booking_dates': gym_dates,
+        'spa_service_booking_dates': spa_dates,
     })
 
 def register(request):
@@ -187,8 +202,15 @@ def delete_account(request):
 
     return render(request, 'users/delete_account.html')
 
+
+#fix groups!
+def is_admin(user):
+    return user.is_superuser
+
 @login_required
+@user_passes_test(is_admin)
 def gest_prenotazioni(request):
+    print(request.user)
     gym_bookings = GymBooking.objects.select_related('user', 'class_id').all()    
     spa_bookings = SpaBooking.objects.select_related('user', 'service_id').all()    
 

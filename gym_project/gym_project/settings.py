@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'palestra',
     'spa',
     'subscriptions',
+
 ]
 
 MIDDLEWARE = [

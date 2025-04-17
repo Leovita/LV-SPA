@@ -1,5 +1,6 @@
 {% extends 'users/navbar_template.html' %}
 {% load static %}
+{% load custom_filter %}
 {% block content %}
 <!DOCTYPE html>
 <html lang="it">
@@ -33,47 +34,67 @@
 <section id="services">
 <!-- Servizi Palestra -->
 <div class="services-category">
-<h3>Servizi Palestra</h3>
- {% for service in gym_services %}
-<div class="service-card" data-id="{{ service.id }}" data-type="gym" data-name="{{ service.name }}" data-description="{{ service.description }}" data-instructor="{{ service.instructor.username }}" data-max-participants="{{ service.max_partecipants }}" data-current-participants="{{ service.check_participants }}" data-available="{{ service.check_availability }}">
-    <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
-    <h3>{{ service.name }}</h3>
-    <p>{{ service.description }}</p>
-    <p><strong>Istruttore:</strong> {{ service.instructor.username }}</p>
-    <p><strong>Posti disponibili:</strong>
-     {% if service.check_availability %}
-     Disponibile
-     {% else %}
-     Esaurito
-     {% endif %}
-    </p>
-    <p><strong>Posti totali:</strong> {{ service.max_partecipants }}</p>
-    <p><strong>Partecipanti attuali:</strong> {{ service.check_participants }}</p>
+    <h3>Servizi Palestra</h3>
+    {% for service in gym_services %}
+    <div class="service-card" data-id="{{ service.id }}" data-type="gym" data-name="{{ service.name }}" data-description="{{ service.description }}" data-instructor="{{ service.instructor.full_name }}" data-max-participants="{{ service.max_partecipants }}" data-current-participants="{{ service.check_participants }}" data-available="{{ service.check_availability }}">
+        <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
+        <h3>{{ service.name }}</h3>
+        <p>{{ service.description }}</p>
+        <p><strong>Istruttore:</strong> {{ service.instructor.full_name }}</p>
+        <p><strong>Data:</strong>
+            {% with booking_date=gym_service_booking_dates|get_item:service.id %}
+                {% if booking_date %}
+                    <span class="detail-value">{{ booking_date|date:"d/m/Y" }}</span>
+                {% else %}
+                    Nessuna data disponibile
+                {% endif %}
+            {% endwith %}
+        </p>
+        <p><strong>Posti disponibili:</strong>
+         {% if service.check_availability %}
+            Disponibile
+         {% else %}
+            Esaurito
+         {% endif %}
+        </p>
+        <p><strong>Posti totali:</strong> {{ service.max_partecipants }}</p>
+        <p><strong>Partecipanti attuali:</strong> {{ service.check_participants }}</p>
+    </div>
+    {% empty %}
+    <p>Non ci sono servizi disponibili al momento.</p>
+    {% endfor %}
 </div>
- {% empty %}
-<p>Non ci sono servizi disponibili al momento.</p>
- {% endfor %}
-</div>
+
 <!-- Servizi Spa -->
 <div class="services-category">
-<h3>Servizi Spa</h3>
- {% for spa in spa_services %}
-<div class="service-card" data-id="{{ spa.id }}" data-type="spa" data-name="{{ spa.name }}" data-description="{{ spa.description }}" data-price="{{ spa.price }}" data-available="{{ service.check_availability }}">
-    <img src="{{ spa.imgs.url }}" alt="{{ spa.name }}">
-    <h3>{{ spa.name }}</h3>
-    <p>{{ spa.description }}</p>
-    <p><strong>Prezzo:</strong> €{{ spa.price }}</p>
-    <p><strong>Posti disponibili:</strong>
-     {% if service.check_availability %}
-     Disponibile
-     {% else %}
-     Esaurito
-     {% endif %}
-    </p>
+    <h3>Servizi Spa</h3>
+    {% for service in spa_services %}
+    <div class="service-card" data-id="{{ service.id }}" data-type="spa" data-name="{{ service.name }}" data-description="{{ service.description }}" data-price="{{ service.price }}" data-available="{{ service.check_availability }}">
+        <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
+        <h3>{{ service.name }}</h3>
+        <p>{{ service.description }}</p>
+        <p><strong>Prezzo:</strong> €{{ service.price }}</p>
+        <p><strong>Data:</strong>
+            {% with booking_date=spa_service_booking_dates|get_item:service.id %}
+                {% if booking_date %}
+                    <span class="detail-value">{{ booking_date|date:"d/m/Y" }}</span>
+                {% else %}
+                    Nessuna data disponibile
+                {% endif %}
+            {% endwith %}
+        </p>
+        <p><strong>Posti disponibili:</strong>
+         {% if service.check_availability %}
+         Disponibile
+         {% else %}
+         Esaurito
+         {% endif %}
+        </p>
+    </div>
+    {% empty %}
+    <p>Non ci sono servizi disponibili al momento.</p>
+    {% endfor %}
 </div>
- {% empty %}
-<p>Non ci sono servizi disponibili al momento.</p>
- {% endfor %}
 </div>
 </section>
 <!-- Contact Section -->
@@ -128,9 +149,7 @@
             <!-- Campo data e ora -->
             <div class="detail-row">
                 <div class="detail-label">Data e ora:</div>
-                <div class="detail-value">
-                    <input type="datetime-local" id="booking-datetime" required>
-                </div>
+                <div class="detail-value" id="booking-datetime"></div>
             </div>
             <!-- Note -->
             <div class="detail-row">
@@ -188,8 +207,8 @@
                     document.getElementById('popup-price').textContent = '€' + this.getAttribute('data-price');
                 }
                 const today = new Date();
-                const formattedDate = today.toISOString().slice(0, 16);
-                document.getElementById('booking-datetime').min = formattedDate;
+                const bookingDate = this.querySelector('.detail-value')?.textContent || 'Non disponibile';
+                document.getElementById('booking-datetime').textContent = bookingDate;
                 
                 document.getElementById('booking-popup').style.display = 'flex';
             });
@@ -198,11 +217,6 @@
         document.getElementById('confirm-booking').addEventListener('click', function() {
             const dateTime = document.getElementById('booking-datetime').value;
             const notes = document.getElementById('booking-notes').value;
-            
-            if (!dateTime) {
-                alert('Per favore seleziona una data e ora per la prenotazione.');
-                return;
-            }
             
             const isAuth = {{ user.is_authenticated|yesno:"true,false" }};
             

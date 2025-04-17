@@ -14,40 +14,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}#home">Home</a></li>
-                <li><a href="{% url 'home' %}#about">Chi Siamo</a></li>
-                <li><a href="{% url 'home' %}#services">Servizi</a></li>
-                <li><a href="{% url 'home' %}#contact">Contatti</a></li>
-            </ul>
-
-            <div class="header-actions">
-                {% if user.is_authenticated %}
-                    <div class="dropdown">
-                        <img src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.png{% elif user.profile_picture %}{{ user.profile_picture.url }}{% else %}/media/profile_pics/def_pfp.png{% endif %}"
-                             alt="Profile Picture" class="user-profile-pic" onclick="toggleDropdown()">
-                        <div class="dropdown-menu" id="dropdown-menu">
-                            <a href="{% url 'profile' %}">Profilo</a>
-                            <a href="{% url 'subscription_plans' %}">Abbonamento</a>
-                            <a href="{% url 'login' %}">Gestisci Prenotazioni</a>
-                            {% if user.is_superuser %}
-                                <a href="{% url 'login' %}">Aggiungi Corso</a>
-                                <a href="{% url 'login' %}">Gestisci Abbonamenti</a>
-                            {% endif %}
-                            <a href="{% url 'logout' %}">Logout</a>
-                        </div>
-                    </div>
-                {% else %}
-                    <button class="login-btn" onclick="window.location.href='{% url 'login' %}?tab=login'">Login</button>
-                    <button class="register-btn" onclick="window.location.href='{% url 'register' %}?tab=register'">Registrati</button>
-                {% endif %}
-            </div>
-        </nav>
-    </header>
-
     <!-- Subscription Plans Section -->
     <section class="subscription-section">
         <div class="subscription-container">
