@@ -38,7 +38,7 @@
                             <a href="{% url 'profile' %}">Profilo</a>
                             {% if user.is_superuser %}
                                 <a href="{% url 'gest_prenotazioni' %}">Gestisci Prenotazioni</a>
-                                <a href="{% url 'login' %}">Aggiungi Corso</a>
+                                <a href="{% url 'gest_corsi' %}">Aggiungi Corso</a>
                                 <a href="{% url 'login' %}">Gestisci Abbonamenti</a>
                             {% else %}
                                 <a href="{% url 'subscription_plans' %}">Abbonamento</a>

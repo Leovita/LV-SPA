@@ -31,6 +31,8 @@ urlpatterns = [
     #cancer
     path('cancel-gym-booking/<int:booking_id>/', views.cancel_gym_booking, name='cancel_gym_booking'),
     path('cancel-spa-booking/<int:booking_id>/', views.cancel_spa_booking, name='cancel_spa_booking'),
+    # gestione corsu
+    path('gest_corsi/', views.gest_corsi, name='gest_corsi'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

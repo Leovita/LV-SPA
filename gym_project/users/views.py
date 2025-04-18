@@ -15,6 +15,22 @@ from django.views.decorators.http import require_http_methods
 from users.models import ProfileUpdateForm, ProfilePictureForm
 from django.contrib.auth.models import Group
 
+
+def gest_corsi(request):
+    gym_courses = GymClass.objects.all()
+    spa_services = SpaService.objects.all()
+    all_courses = list(gym_courses) + list(spa_services)
+    total_gym_courses = gym_courses.count()
+    total_spa_services = spa_services.count()
+
+    return render(request, 'users/gest_corsi.html', {
+        'gym_courses': gym_courses,
+        'spa_services': spa_services,
+        'all_courses': all_courses,
+        'total_gym_courses': total_gym_courses,
+        'total_spa_services': total_spa_services,
+    })
+
 def profile(request):
     if not request.user.is_authenticated:
         return redirect('login') 

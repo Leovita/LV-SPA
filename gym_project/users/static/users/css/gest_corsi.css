@@ -1,0 +1,201 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #2C3E50;
+    --secondary-color: #34495E;
+    --accent-color: #3498DB;
+    --background-color: #F4F6F7;
+    --text-color: #2C3E50;
+    --white: #FFFFFF;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.admin-courses {
+    padding: 100px 20px;
+    background-color: var(--white);
+}
+
+.admin-courses h2 {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    margin-bottom: 50px;
+    color: var(--primary-color);
+}
+
+.course-actions {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.btn {
+    display: inline-block;
+    background-color: var(--accent-color);
+    color: var(--white);
+    padding: 15px 40px;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.courses-list {
+    background-color: var(--white);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+}
+
+.courses-list h3 {
+    font-size: 2.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 20px;
+}
+
+.courses-list table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.courses-list th, .courses-list td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--secondary-color);
+}
+
+.courses-list th {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+.courses-list td button {
+    background-color: var(--accent-color);
+    color: var(--white);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.courses-list td button:hover {
+    background-color: var(--secondary-color);
+}
+
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    background-color: var(--white);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+    width: 500px;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.popup-form .form-group {
+    margin-bottom: 20px;
+}
+
+.popup-form label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.popup-form input, .popup-form textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid var(--primary-color);
+    border-radius: 10px;
+    font-size: 1rem;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: border-color 0.3s ease;
+}
+
+.popup-form input:focus, .popup-form textarea:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
+.popup-form textarea {
+    height: 150px;
+    resize: none;
+}
+
+.popup-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.popup-form .btn-cancel, .popup-form .btn-confirm {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.popup-form .btn-cancel {
+    background-color: #f44336;
+    color: white;
+}
+
+.popup-form .btn-cancel:hover {
+    background-color: #c0392b;
+}
+
+.popup-form .btn-confirm {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.popup-form .btn-confirm:hover {
+    background-color: #3e8e41;
+}
+
+@media (max-width: 768px) {
+    .courses-list th, .courses-list td {
+        padding: 10px;
+    }
+
+    .popup-content {
+        width: 90%;
+    }
+}
