@@ -702,7 +702,37 @@ header nav ul li a:hover::after {
     border-radius: 5px;
 }
 
-/*footer*/
+/* Booking logic*/
+
+.service-card.booked {
+    border: 2px solid #00cc66;
+    background-color: #f0fff5;
+    position: relative;
+}
+
+.service-card.booked::after {
+    content: "Prenotato ✔";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #00cc66;
+    color: white;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+.service-card.no-click {
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+.already-booked {
+    font-weight: bold;
+    color: #009944;
+    margin-top: 10px;
+}
+
 
 /* Footer */
 footer {
@@ -745,3 +775,6 @@ footer::before {
     border-radius: 50px;
     margin-bottom: 10px;
 }
+
+
+

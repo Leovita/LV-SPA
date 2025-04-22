@@ -1,4 +1,3 @@
-from datetime import datetime, time, timezone
 import json
 import re
 from django.contrib import messages
@@ -14,6 +13,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods
 from users.models import ProfileUpdateForm, ProfilePictureForm
 from django.contrib.auth.models import Group
+from django.utils import timezone
+from dateutil import parser
+from datetime import datetime
 
 
 def gest_corsi(request):
@@ -62,36 +64,48 @@ def home(request):
     gym_dates = {}
     spa_dates = {}
 
-    # date gym calss
     for service in gym_services:
         booking_date = GymBooking.objects.filter(class_id=service).values_list('date', flat=True).first()
         gym_dates[service.id] = booking_date
-    # date servizi spa
+
     for service in spa_services:
         booking_date = SpaBooking.objects.filter(service_id=service).values_list('date', flat=True).first()
         spa_dates[service.id] = booking_date
 
-    return render(request, 'users/home.html', {
+    user_gym_bookings = []
+    user_spa_bookings = []
+    
+    if request.user.is_authenticated:
+        user_gym_bookings = list(
+            GymBooking.objects.filter(user=request.user).values_list('class_id', flat=True)
+        )
+        user_spa_bookings = list(
+            SpaBooking.objects.filter(user=request.user).values_list('service_id', flat=True)
+        )
+
+    context = {
         'gym_services': gym_services,
         'spa_services': spa_services,
         'gym_service_booking_dates': gym_dates,
         'spa_service_booking_dates': spa_dates,
+        'user_gym_bookings': user_gym_bookings,
+        'user_spa_bookings': user_spa_bookings,
         'timestamp': datetime.now().timestamp(),  
-    })
+    }
 
-def validate_password(password):
-    errors = []
-    if len(password) < 8:
-        errors.append("La password deve avere almeno 8 caratteri.")
-    if not re.search(r'[A-Z]', password):
-        errors.append("La password deve contenere almeno una lettera maiuscola.")
-    if not re.search(r'[a-z]', password):
-        errors.append("La password deve contenere almeno una lettera minuscola.")
-    if not re.search(r'[0-9]', password):
-        errors.append("La password deve contenere almeno un numero.")
-    if not re.search(r'[!@#$%^&*(),.?\":{}|<>]', password):
-        errors.append("La password deve contenere almeno un carattere speciale (!@#$%^&* etc.).")
-    return errors
+    return render(request, 'users/home.html', context)
+
+
+def validate_password(pwd):
+    PASSWORD_RULES = [
+        (r'.{8,}', "La password deve avere almeno 8 caratteri."),
+        (r'[A-Z]', "La password deve contenere almeno una lettera maiuscola."),
+        (r'[a-z]', "La password deve contenere almeno una lettera minuscola."),
+        (r'\d', "La password deve contenere almeno un numero."),
+        (r'[!@#$%^&*(),.?\":{}|<>]', "La password deve contenere almeno un carattere speciale.")
+    ]
+    
+    return [msg for rgx, msg in PASSWORD_RULES if not re.search(rgx, pwd)]
 
 def register(request):
     if request.method == "POST":
@@ -230,7 +244,7 @@ def is_admin(user):
 @login_required
 @user_passes_test(is_admin)
 def gest_prenotazioni(request):
-    print(request.user)
+    # print(request.user)
     gym_bookings = GymBooking.objects.select_related('user', 'class_id').all()    
     spa_bookings = SpaBooking.objects.select_related('user', 'service_id').all()    
 
@@ -298,14 +312,13 @@ def gest_prenotazioni(request):
     
     return render(request, 'users/gest_prenotazioni.html', context)
 
-
 @login_required
 @require_http_methods(["POST"])
 def book_gym_class(request, class_id):
     try:
         gym_class = GymClass.objects.get(id=class_id)
         
-        if not gym_class.check_availability:
+        if not gym_class.check_availability():
             return JsonResponse({'success': False, 'error': 'Classe esaurita. Non ci sono posti disponibili.'})
         
         data = json.loads(request.body)
@@ -315,11 +328,12 @@ def book_gym_class(request, class_id):
             return JsonResponse({'success': False, 'error': 'Data/ora mancante.'})
         
         try:
-            date_time = datetime.fromisoformat(date_time_str)
+            date_time = parser.isoparse(date_time_str)
+            if timezone.is_naive(date_time):
+                date_time = timezone.make_aware(date_time)
         except ValueError:
             return JsonResponse({'success': False, 'error': 'Formato data/ora non valido.'})
         
-        # Create booking object
         booking = GymBooking.objects.create(
             user=request.user,
             class_id=gym_class,
@@ -343,7 +357,7 @@ def book_spa_service(request, service_id):
     try:
         spa_service = SpaService.objects.get(id=service_id)
         
-        if not spa_service.check_availability:
+        if not spa_service.check_availability():
             return JsonResponse({'success': False, 'error': 'Servizio non disponibile al momento.'})
         
         data = json.loads(request.body)
@@ -353,7 +367,9 @@ def book_spa_service(request, service_id):
             return JsonResponse({'success': False, 'error': 'Data/ora mancante.'})
         
         try:
-            date_time = datetime.fromisoformat(date_time_str)
+            date_time = parser.isoparse(date_time_str)
+            if timezone.is_naive(date_time):
+                date_time = timezone.make_aware(date_time)
         except ValueError:
             return JsonResponse({'success': False, 'error': 'Formato data/ora non valido.'})
         

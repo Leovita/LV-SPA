@@ -41,33 +41,46 @@
 </section>
 
 <section id="services">
-<div class="services-category">
-    <h3>Servizi Palestra</h3>
-    {% for service in gym_services %}
-    <div class="service-card" data-id="{{ service.id }}" data-type="gym" data-name="{{ service.name }}" data-description="{{ service.description }}" data-instructor="{{ service.instructor.full_name }}" data-max-participants="{{ service.max_partecipants }}" data-current-participants="{{ service.check_participants }}" data-available="{{ service.check_availability }}">
+    <div class="services-category">
+        <h3>Servizi Palestra</h3>
+        {% for service in gym_services %}
+        <div class="service-card {% if service.id in user_gym_bookings %}booked no-click{% endif %}"
+        data-id="{{ service.id }}"
+        data-type="gym"
+        data-name="{{ service.name }}"
+        data-description="{{ service.description }}"
+        data-instructor="{{ service.instructor.full_name }}"
+        data-max-participants="{{ service.max_partecipants }}"
+        data-current-participants="{{ service.check_participants }}"
+        data-available="{{ service.check_availability }}">
+        
         <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
         <h3>{{ service.name }}</h3>
         <p>{{ service.description }}</p>
         <p><strong>Istruttore:</strong> {{ service.instructor.full_name }}</p>
-        <p><strong>Data:</strong>
+        <p><strong>Data e ora:</strong>
             {% with booking_date=gym_service_booking_dates|get_item:service.id %}
                 {% if booking_date %}
-                    <span class="detail-value">{{ booking_date|date:"Y-m-d" }}</span>
+                    <span class="detail-value">{{ booking_date|date:"Y-m-d H:i" }}</span>
                 {% else %}
                     Nessuna data disponibile
                 {% endif %}
             {% endwith %}
         </p>
         <p><strong>Posti disponibili:</strong>
-         {% if service.check_availability %}
+        {% if service.check_availability %}
             Disponibile
-         {% else %}
+        {% else %}
             Esaurito
-         {% endif %}
+        {% endif %}
         </p>
         <p><strong>Posti totali:</strong> {{ service.max_partecipants }}</p>
         <p><strong>Partecipanti attuali:</strong> {{ service.check_participants }}</p>
+        {% if service.id in user_gym_bookings %}
+            <p class="already-booked">Hai già prenotato questo corso</p>
+        {% endif %}
     </div>
+
     {% empty %}
     <p>Non ci sono servizi disponibili al momento.</p>
     {% endfor %}
@@ -76,27 +89,37 @@
 <div class="services-category">
     <h3>Servizi Spa</h3>
     {% for service in spa_services %}
-    <div class="service-card" data-id="{{ service.id }}" data-type="spa" data-name="{{ service.name }}" data-description="{{ service.description }}" data-price="{{ service.price }}" data-available="{{ service.check_availability }}">
-        <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
-        <h3>{{ service.name }}</h3>
-        <p>{{ service.description }}</p>
-        <p><strong>Prezzo:</strong> €{{ service.price }}</p>
-        <p><strong>Data:</strong>
-            {% with booking_date=spa_service_booking_dates|get_item:service.id %}
-                {% if booking_date %}
-                    <span class="detail-value">{{ booking_date|date:"Y-m-d" }}</span>
-                {% else %}
-                    Nessuna data disponibile
-                {% endif %}
-            {% endwith %}
-        </p>
-        <p><strong>Posti disponibili:</strong>
-         {% if service.check_availability %}
-         Disponibile
-         {% else %}
-         Esaurito
-         {% endif %}
-        </p>
+    <div class="service-card {% if service.id in user_spa_bookings %}booked no-click{% endif %}"
+     data-id="{{ service.id }}"
+     data-type="spa"
+     data-name="{{ service.name }}"
+     data-description="{{ service.description }}"
+     data-price="{{ service.price }}"
+     data-available="{{ service.check_availability }}">
+
+    <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
+    <h3>{{ service.name }}</h3>
+    <p>{{ service.description }}</p>
+    <p><strong>Prezzo:</strong> €{{ service.price }}</p>
+    <p><strong>Data e ora:</strong>
+        {% with booking_date=spa_service_booking_dates|get_item:service.id %}
+            {% if booking_date %}
+                <span class="detail-value">{{ booking_date|date:"Y-m-d H:i" }}</span>
+            {% else %}
+                Nessuna data disponibile
+            {% endif %}
+        {% endwith %}
+    </p>
+    <p><strong>Posti disponibili:</strong>
+     {% if service.check_availability %}
+     Disponibile
+     {% else %}
+     Esaurito
+     {% endif %}
+    </p>
+    {% if service.id in user_spa_bookings %}
+        <p class="already-booked">Hai già prenotato questo servizio</p>
+    {% endif %}
     </div>
     {% empty %}
     <p>Non ci sono servizi disponibili al momento.</p>
@@ -123,7 +146,7 @@
     <div class="popup-content">
         <div class="popup-header">
             <h2 id="popup-title">Prenota Servizio</h2>
-            <button class="close-popup" onclick="closePopup()">&times;</button>
+            <button class="close-popup" onclick="closePopup()" aria-label="Close">&times;</button>
         </div>
         <div class="popup-details">
             <div class="detail-row">
@@ -205,27 +228,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('confirm-booking').addEventListener('click', function() {
-        const dateTimeElement = document.getElementById('booking-datetime');
-        const dateTime = dateTimeElement.textContent.trim();
         const isAuth = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
 
         if (!isAuth) {
             window.location.href = "{% url 'login' %}";
             return;
         }
-
-        let dateTimeObj;
-        try {
-            dateTimeObj = moment(dateTime, "YYYY-MM-DD").toDate();
-            if (isNaN(dateTimeObj.getTime())) {
-                throw new Error("La data non è in un formato riconoscibile.");
-            }
-        } catch (error) {
-            alert('Errore: ' + error.message);
-            return;
-        }
-
-        const dateTimeISO = dateTimeObj.toISOString();
+        const dateTimeObj = moment();  
+        const dateTimeISO = dateTimeObj.toISOString();  
 
         submitBooking(currentServiceId, currentServiceType, dateTimeISO);
     });
@@ -254,6 +264,7 @@ function submitBooking(serviceId, serviceType, dateTime) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            alert(data.message)
             window.location.href = "?success=1";
         } else {
             alert('Errore: ' + (data.error || 'Prenotazione non riuscita'));
