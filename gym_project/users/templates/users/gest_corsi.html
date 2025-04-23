@@ -76,7 +76,7 @@
 <td>{{ course.id }}</td>
 <td>{{ course.name }}</td>
 <td>{% if course in gym_courses %}Palestra{% else %}Spa{% endif %}</td>
-<td>{{ course.instructor }}</td>
+<td>{{ course.instructor.full_name }}</td>
 <td>{{ course.description }}</td>
 <td>{{ course.duration }} min</td>
 <td><span class="status {{ course.status }}">
@@ -138,10 +138,10 @@
 <tr>
 <td>{{ course.id }}</td>
 <td>{{ course.name }}</td>
-<td>{{ course.instructor }}</td>
+<td>{{ course.instructor.full_name }}</td>
 <td>{{ course.description }}</td>
 <td>{{ course.duration }} min</td>
-<td>{{ course.capacity }} persone</td>
+<td>{{ course.max_partecipants }} persone</td>
 <td><span class="status {{ course.status }}">
  {% if course.status == 'active' %}
  Attivo

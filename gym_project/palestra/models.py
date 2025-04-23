@@ -7,6 +7,7 @@ class GymClass(models.Model):
     name = models.CharField(max_length=100, default="Marco Ros")
     description = models.TextField()
     scheduled = models.DateTimeField(default=timezone.now)
+    duration = models.IntegerField(default=45)
     instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='instructor_classes')
     max_partecipants = models.IntegerField()
     imgs = models.ImageField(upload_to='palestra/', blank=True, null=True, help_text="Carica un'immagine del corso")
@@ -15,8 +16,7 @@ class GymClass(models.Model):
         return GymBooking.objects.filter(class_id=self.id).count()
 
     def check_availability(self):
-        current_participants = self.check_participants()
-        return current_participants < self.max_partecipants
+        return self.check_participants() < self.max_partecipants
 
     def __str__(self):
         return f"{self.name} - {self.scheduled.strftime('%d/%m/%Y %H:%M')}"

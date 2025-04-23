@@ -260,7 +260,7 @@ def gest_prenotazioni(request):
             'user': f"{booking.user.full_name}",
             'service': f"{booking.class_id.name} (Palestra)",
             'description': booking.description if booking.description else booking.class_id.description,
-            'date': booking.date,
+            'date': booking.class_id.scheduled,
             'status': 'confirmed',  
             'type': 'gym'
         })
@@ -271,7 +271,7 @@ def gest_prenotazioni(request):
             'user': f"{booking.user.full_name}",
             'service': f"{booking.service_id.name} (Spa)",
             'description': booking.description if booking.description else booking.service_id.description,
-            'date': booking.date,
+            'date': booking.service_id.scheduled,
             'status': 'confirmed',
             'type': 'spa'
         })
@@ -286,7 +286,7 @@ def gest_prenotazioni(request):
             'user': f"{booking.user.full_name}",
             'course': booking.class_id.name,
             'description': booking.description if booking.description else booking.class_id.description,
-            'date': booking.date,
+            'date': booking.class_id.scheduled,
             'status': 'confirmed', 
         })
     
@@ -297,7 +297,7 @@ def gest_prenotazioni(request):
             'user': f"{booking.user.full_name}",
             'treatment': booking.service_id.name,
             'description': booking.description if booking.description else booking.service_id.description,
-            'date': booking.date,
+            'date': booking.service_id.scheduled,
             'status': 'confirmed',  
         })
     

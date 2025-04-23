@@ -6,8 +6,11 @@ class SpaService(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     operator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='operator_services')
+    duration = models.IntegerField(default=45)
     scheduled = models.DateTimeField(default=timezone.now)
     price = models.IntegerField()
+
+
     max_partecipants = models.IntegerField(default=1)
     imgs = models.ImageField(upload_to='spa/', blank=True, null=True, help_text="Carica un'immagine del trattamento")
 
