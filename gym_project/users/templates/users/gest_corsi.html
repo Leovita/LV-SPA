@@ -111,6 +111,9 @@
 <div class="filter-group">
 <select id="filter-instructor-gym">
 <option value="">Tutti gli istruttori</option>
+{% for instructor in instructors %}
+<option value="{{ instructor.id }}">{{ instructor.full_name }}</option>
+{% endfor %}
 </select>
 <select id="filter-status-gym">
 <option value="">Tutti gli stati</option>
@@ -204,8 +207,8 @@
 <tr>
 <td>{{ service.id }}</td>
 <td>{{ service.name }}</td>
-<td>{{ service.type }}</td>
-<td>{{ service.operator }}</td>
+<td>{{ service.get_type_display }}</td>
+<td>{{ service.operator.full_name }}</td>
 <td>{{ service.description }}</td>
 <td>{{ service.duration }} min</td>
 <td>€{{ service.price }}</td>
@@ -283,57 +286,86 @@ function setupSearch(inputId, tableId, columns) {
   });
 }
 
-// Setup search functionality for each tab
-document.addEventListener('DOMContentLoaded', function() {
-  setupSearch('search-all', 'all', [1, 2, 3, 4]); // Name, Type, Instructor, Description
-  setupSearch('search-gym', 'gym', [1, 2, 3]); // Name, Instructor, Description
-  setupSearch('search-spa', 'spa', [1, 2, 3, 4]); // Name, Type, Operator, Description
-  
-  // Gestione bottoni azioni
-  document.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const id = this.getAttribute('data-id');
-      const type = this.getAttribute('data-type');
-      const action = this.classList.contains('btn-view') ? 'view' : 
-                     this.classList.contains('btn-edit') ? 'edit' : 'delete';
-      
-      if (action === 'view') {
-        window.location.href = `/course-details/${type}/${id}/`;
-      } else if (action === 'edit') {
-        window.location.href = `/edit-course/${type}/${id}/`;
-      } else if (action === 'delete') {
-        if (confirm('Sei sicuro di voler eliminare questo corso?')) {
-          const url = `/delete-course/${type}/${id}/`;
-          
-          fetch(url, {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCsrfToken(),
-            },
-          })
-          .then(response => {
-            if (response.ok) {
-              alert('Corso eliminato con successo.');
-              window.location.reload();
-            } else {
-              response.json().then(data => {
-                alert('Errore durante l\'eliminazione del corso: ' + data.error);
-              });
-            }
-          })
-          .catch(error => {
-            console.error('Errore:', error);
-          });
+  document.addEventListener('DOMContentLoaded', function() {
+    setupSearch('search-all', 'all', [1, 2, 3, 4]); // Name, Type, Instructor, Description
+    setupSearch('search-gym', 'gym', [1, 2, 3]); // Name, Instructor, Description
+    setupSearch('search-spa', 'spa', [1, 2, 3, 4]); // Name, Type, Operator, Description
+    
+    // Gestione bottoni azioni
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        const type = this.getAttribute('data-type');
+        const action = this.classList.contains('btn-view') ? 'view' : 
+                      this.classList.contains('btn-edit') ? 'edit' : 'delete';
+        
+        if (action === 'view') {
+          window.location.href = `/course-details/${type}/${id}/`;
+        } else if (action === 'edit') {
+          window.location.href = `/edit-course/${type}/${id}/`;
         }
-      }
+      });
     });
+    
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          const type = this.getAttribute('data-type');
+          
+          if (confirm('Sei sicuro di voler eliminare questo corso?')) {
+              fetch(`/delete-course/${type}/${id}/`, {
+                  method: 'DELETE',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': getCsrfToken(),
+                      'X-Requested-With': 'XMLHttpRequest'
+                  },
+              })
+              .then(response => {
+                  if (!response.ok) {
+                      return response.json().then(err => { throw err; });
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  alert(data.message || 'Corso eliminato con successo');
+                  window.location.reload();
+              })
+              .catch(error => {
+                  console.error('Errore:', error);
+                  alert(error.error || 'Errore durante l\'eliminazione del corso');
+              });
+          }
+      });
   });
-  
-  // Add Course Button
+
+
   document.getElementById('add-course-btn').addEventListener('click', function() {
     window.location.href = '/add-course/';
   });
+  
+  // Filter functionality for gym instructors
+  const instructorFilter = document.getElementById('filter-instructor-gym');
+  if (instructorFilter) {
+    instructorFilter.addEventListener('change', function() {
+      const selectedInstructor = this.value;
+      const table = document.querySelector('#gym table');
+      const rows = table.getElementsByTagName('tr');
+      
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const instructorCell = row.getElementsByTagName('td')[2]; // Instructor is in 3rd column
+        if (!instructorCell) continue;
+        
+        const instructorId = instructorCell.getAttribute('data-instructor-id') || '';
+        if (!selectedInstructor || instructorId === selectedInstructor) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      }
+    });
+  }
 });
 
 // Get CSRF token

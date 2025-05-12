@@ -2,36 +2,36 @@ from django.urls import path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
-from palestra.views import all_services_view 
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 
 urlpatterns = [
-    #url specifiche per user
+    # url specifiche per user
     path('', views.home, name='home'),  
     path('profile/', views.profile, name='profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
     path('profile/update-picture/', views.update_profile_picture, name='update_profile_picture'),
-
-    # path('profile/change-password/', views.change_password_view, name='change_password'),
     path('profile/delete_account/', views.delete_account, name='delete_account'),
     
     # gestione abbonamenti
     path('gest_prenotazioni/', views.gest_prenotazioni, name='gest_prenotazioni'),
 
-    #viste dinamiche servizi
+    # viste dinamiche servizi
     path('book_gym/<int:class_id>/', views.book_gym_class, name='book_gym'),
     path('book_spa/<int:service_id>/', views.book_spa_service, name='book_spa'),
 
-    #auth
+    # auth
     path('login/', views.login, name='login'), 
     path('register/', views.register, name='register'),
     path('logout/', views.user_logout, name='logout'),
 
-    #bookings
+    # bookings
     path('my-bookings/', views.my_bookings, name='my_bookings'),
-    #cancer
-    path('cancel-gym-booking/<int:booking_id>/', views.cancel_gym_booking, name='cancel_gym_booking'),
-    path('cancel-spa-booking/<int:booking_id>/', views.cancel_spa_booking, name='cancel_spa_booking'),
-    # gestione corsu
+    
+    # delete bookings (not courses)
+    # In urls.py
+    path('delete-course/<str:type>/<int:id>/', views.delete_course, name='delete_course'),
+    # gestione corsi (admin)
     path('gest_corsi/', views.gest_corsi, name='gest_corsi'),
 ]
 

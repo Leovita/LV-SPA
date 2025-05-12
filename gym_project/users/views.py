@@ -3,8 +3,8 @@ import re
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.forms import ValidationError
-from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.http import HttpResponseNotAllowed, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
 from spa.models import SpaBooking, SpaService
 from users.models import User
@@ -14,138 +14,120 @@ from django.views.decorators.http import require_http_methods
 from users.models import ProfileUpdateForm, ProfilePictureForm
 from django.contrib.auth.models import Group
 from django.utils import timezone
+from django.contrib.admin.views.decorators import staff_member_required
 from dateutil import parser
 from datetime import datetime
 
+def gest_corsi(req):
+    gym = GymClass.objects.all()
+    spa = SpaService.objects.all()
+    all_corsi = list(gym) + list(spa)
 
-def gest_corsi(request):
-    gym_courses = GymClass.objects.all()
-    spa_services = SpaService.objects.all()
-    all_courses = list(gym_courses) + list(spa_services)
-    total_gym_courses = gym_courses.count()
-    total_spa_services = spa_services.count()
-
-    return render(request, 'users/gest_corsi.html', {
-        'gym_courses': gym_courses,
-        'spa_services': spa_services,
-        'all_courses': all_courses,
-        'total_gym_courses': total_gym_courses,
-        'total_spa_services': total_spa_services,
-    })
+    ctx = {
+        'gym_courses': gym,
+        'spa_services': spa,
+        'all_courses': all_corsi,
+        'total_gym_courses': gym.count(),
+        'total_spa_services': spa.count(),
+    }
+    return render(req, 'users/gest_corsi.html', ctx)
 
 def profile(request):
     if not request.user.is_authenticated:
         return redirect('login') 
     return render(request, 'users/profile.html')
 
-def login(request): 
-    if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("login-password")
+def login(req): 
+    if req.method == "POST":
+        mail = req.POST.get("email")
+        pwd = req.POST.get("login-password")
 
-        if not email or not password:
-            messages.error(request, "Inserisci email e password.")
-            return render(request, "users/login.html")
+        if not mail or not pwd:
+            messages.error(req, "Inserisci email e password.")
+            return render(req, "users/login.html")
 
-        user = authenticate(request, username=email, password=password)
-        if user is not None:
-            auth_login(request, user)
-            messages.success(request, "Login effettuato con successo!")
+        user = authenticate(req, username=mail, password=pwd)
+        if user:
+            auth_login(req, user)
+            messages.success(req, "Login effettuato!")
             return redirect('home')
         else:
-            messages.error(request, "Email o password non validi.")
+            messages.error(req, "Email o password errati.")
     
-    return render(request, "users/login.html")
+    return render(req, "users/login.html")
 
-def home(request):
-    gym_services = GymClass.objects.all()
-    spa_services = SpaService.objects.all()
+def home(req):
+    gym_srv = GymClass.objects.all()
+    spa_srv = SpaService.objects.all()
 
-    gym_dates = {}
-    spa_dates = {}
+    gym_date = {s.id: GymBooking.objects.filter(class_id=s).values_list('date', flat=True).first() for s in gym_srv}
+    spa_date = {s.id: SpaBooking.objects.filter(service_id=s).values_list('date', flat=True).first() for s in spa_srv}
 
-    for service in gym_services:
-        booking_date = GymBooking.objects.filter(class_id=service).values_list('date', flat=True).first()
-        gym_dates[service.id] = booking_date
-
-    for service in spa_services:
-        booking_date = SpaBooking.objects.filter(service_id=service).values_list('date', flat=True).first()
-        spa_dates[service.id] = booking_date
-
-    user_gym_bookings = []
-    user_spa_bookings = []
+    user_gym = []
+    user_spa = []
     
-    if request.user.is_authenticated:
-        user_gym_bookings = list(
-            GymBooking.objects.filter(user=request.user).values_list('class_id', flat=True)
-        )
-        user_spa_bookings = list(
-            SpaBooking.objects.filter(user=request.user).values_list('service_id', flat=True)
-        )
+    if req.user.is_authenticated:
+        user_gym = list(GymBooking.objects.filter(user=req.user).values_list('class_id', flat=True))
+        user_spa = list(SpaBooking.objects.filter(user=req.user).values_list('service_id', flat=True))
 
-    context = {
-        'gym_services': gym_services,
-        'spa_services': spa_services,
-        'gym_service_booking_dates': gym_dates,
-        'spa_service_booking_dates': spa_dates,
-        'user_gym_bookings': user_gym_bookings,
-        'user_spa_bookings': user_spa_bookings,
+    ctx = {
+        'gym_services': gym_srv,
+        'spa_services': spa_srv,
+        'gym_service_booking_dates': gym_date,
+        'spa_service_booking_dates': spa_date,
+        'user_gym_bookings': user_gym,
+        'user_spa_bookings': user_spa,
         'timestamp': datetime.now().timestamp(),  
     }
 
-    return render(request, 'users/home.html', context)
+    return render(req, 'users/home.html', ctx)
 
 
 def validate_password(pwd):
-    PASSWORD_RULES = [
-        (r'.{8,}', "La password deve avere almeno 8 caratteri."),
-        (r'[A-Z]', "La password deve contenere almeno una lettera maiuscola."),
-        (r'[a-z]', "La password deve contenere almeno una lettera minuscola."),
-        (r'\d', "La password deve contenere almeno un numero."),
-        (r'[!@#$%^&*(),.?\":{}|<>]', "La password deve contenere almeno un carattere speciale.")
+    RULES = [
+        (r'.{8,}', "Minimo 8 caratteri."),
+        (r'[A-Z]', "Almeno una MAIUSCOLA."),
+        (r'[a-z]', "Almeno una minuscola."),
+        (r'\d', "Almeno un numero."),
+        (r'[!@#$%^&*(),.?\":{}|<>]', "Almeno un simbolo speciale.")
     ]
-    
-    return [msg for rgx, msg in PASSWORD_RULES if not re.search(rgx, pwd)]
+    return [msg for rgx, msg in RULES if not re.search(rgx, pwd)]
 
-def register(request):
-    if request.method == "POST":
-        full_name = request.POST.get("register-name", "").strip()
-        email = request.POST.get("register-email", "").strip().lower()
-        password = request.POST.get("register-password", "")
-        password_confirm = request.POST.get("register-confirm", "")
+def register(req):
+    if req.method == "POST":
+        name = req.POST.get("register-name", "").strip()
+        mail = req.POST.get("register-email", "").strip().lower()
+        pwd = req.POST.get("register-password", "")
+        pwd2 = req.POST.get("register-confirm", "")
 
-        if not all([full_name, email, password, password_confirm]):
-            messages.error(request, "Tutti i campi devono essere compilati.")
+        if not all([name, mail, pwd, pwd2]):
+            messages.error(req, "Compila tutti i campi.")
             return redirect('/login/?tab=register')
 
-        if password != password_confirm:
-            messages.error(request, "Le password non coincidono.")
+        if pwd != pwd2:
+            messages.error(req, "Le password non coincidono.")
             return redirect('/login/?tab=register')
 
-        if User.objects.filter(email__iexact=email).exists():
-            messages.error(request, "Un utente con questa email esiste già.")
+        if User.objects.filter(email__iexact=mail).exists():
+            messages.error(req, "Utente già esistente con questa email.")
             return redirect('/login/?tab=register')
 
-        password_errors = validate_password(password)
-        if password_errors:
-            for error in password_errors:
-                messages.error(request, error)
+        pwd_err = validate_password(pwd)
+        if pwd_err:
+            for err in pwd_err:
+                messages.error(req, err)
             return redirect('/login/?tab=register')
         try:
-            user = User.objects.create_user(
-                email=email,
-                password=password,
-                full_name=full_name
-            )
-            messages.success(request, "Registrazione completata! Ora puoi effettuare il login.")
+            user = User.objects.create_user(email=mail, password=pwd, full_name=name)
+            messages.success(req, "Registrazione completata!")
             return redirect("login")
         except Exception as e:
-            messages.error(request, f"Errore durante la registrazione. Riprova più tardi.")
+            messages.error(req, "Errore durante la registrazione.")
             print(f"[Register Error]: {e}")
             return redirect('/login/?tab=register')
 
-
     return redirect('/login/?tab=register')
+
 
 def user_logout(request):
     """Effettua il logout dell'utente e lo reindirizza alla homepage."""
@@ -403,24 +385,20 @@ def my_bookings(request):
     
     return render(request, 'users/my_bookings.html', context)
 
+@require_http_methods(["DELETE"])
 @login_required
-def cancel_gym_booking(request, booking_id):
+def delete_course(request, type, id):
     try:
-        booking = GymBooking.objects.get(id=booking_id, user_id=request.user.id)
-        booking.delete()
-        return JsonResponse({'success': True})
-    except GymBooking.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Prenotazione non trovata'})
+        if type == 'gym':
+            course = GymClass.objects.get(id=id)
+        elif type == 'spa':
+            course = SpaService.objects.get(id=id)
+        else:
+            return JsonResponse({'error': 'Tipo non valido'}, status=400)
+        
+        course.delete()
+        return JsonResponse({'message': 'Corso eliminato con successo'})
+    except (GymClass.DoesNotExist, SpaService.DoesNotExist):
+        return JsonResponse({'error': 'Corso non trovato'}, status=404)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-@login_required
-def cancel_spa_booking(request, booking_id):
-    try:
-        booking = SpaBooking.objects.get(id=booking_id, user_id=request.user.id)
-        booking.delete()
-        return JsonResponse({'success': True})
-    except SpaBooking.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Prenotazione non trovata'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        return JsonResponse({'error': str(e)}, status=500)
