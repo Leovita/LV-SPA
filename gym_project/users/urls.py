@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 urlpatterns = [
     # url specifiche per user
@@ -28,11 +29,13 @@ urlpatterns = [
     # bookings
     path('my-bookings/', views.my_bookings, name='my_bookings'),
     
-    # delete bookings (not courses)
-    # In urls.py
-    path('delete-course/<str:type>/<int:id>/', views.delete_course, name='delete_course'),
     # gestione corsi (admin)
     path('gest_corsi/', views.gest_corsi, name='gest_corsi'),
+    #cancella prenotazione
+    path('cancel-gym-booking/<int:booking_id>/', views.cancel_gym_booking, name='cancel_gym_booking'),
+    path('cancel-spa-booking/<int:booking_id>/', views.cancel_spa_booking, name='cancel_spa_booking'),
+    #admin cancella prenotazione
+    path('admin-delete-booking/', views.admin_delete_booking, name='admin_delete_booking'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -35,7 +35,7 @@ def gest_corsi(req):
 def profile(request):
     if not request.user.is_authenticated:
         return redirect('login') 
-    return render(request, 'users/profile.html')
+    return render(request, 'users/profile.html') 
 
 def login(req): 
     if req.method == "POST":
@@ -283,7 +283,7 @@ def gest_prenotazioni(request):
             'status': 'confirmed',  
         })
     
-    context = {
+    ctx = {
         'total_gym_bookings': gym_count,
         'total_spa_bookings': spa_count,
         'all_bookings': all_bookings,
@@ -292,7 +292,7 @@ def gest_prenotazioni(request):
         'timestamp': datetime.now().timestamp(),  
     }
     
-    return render(request, 'users/gest_prenotazioni.html', context)
+    return render(request, 'users/gest_prenotazioni.html', ctx)
 
 @login_required
 @require_http_methods(["POST"])
@@ -378,12 +378,12 @@ def my_bookings(request):
     gym_bookings = GymBooking.objects.filter(user=request.user).order_by('-date')
     spa_bookings = SpaBooking.objects.filter(user=request.user).order_by('-date')
     
-    context = {
+    ctx = {
         'gym_bookings': gym_bookings,
         'spa_bookings': spa_bookings,
     }
     
-    return render(request, 'users/my_bookings.html', context)
+    return render(request, 'users/my_bookings.html', ctx)
 
 @require_http_methods(["DELETE"])
 @login_required
@@ -402,3 +402,54 @@ def delete_course(request, type, id):
         return JsonResponse({'error': 'Corso non trovato'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from palestra.models import GymBooking
+from spa.models import SpaBooking
+from django.contrib.admin.views.decorators import staff_member_required
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def admin_delete_booking(request):
+    """
+    Permette all'admin di eliminare una prenotazione (gym o spa) tramite AJAX.
+    """
+    booking_id = request.POST.get('booking_id')
+    booking_type = request.POST.get('type')
+    if not booking_id or not booking_type:
+        return JsonResponse({'success': False, 'error': 'Dati mancanti.'}, status=400)
+    try:
+        if booking_type == 'gym':
+            booking = GymBooking.objects.get(id=booking_id)
+        elif booking_type == 'spa':
+            booking = SpaBooking.objects.get(id=booking_id)
+        else:
+            return JsonResponse({'success': False, 'error': 'Tipo non valido.'}, status=400)
+        booking.delete()
+        return JsonResponse({'success': True})
+    except (GymBooking.DoesNotExist, SpaBooking.DoesNotExist):
+        return JsonResponse({'success': False, 'error': 'Prenotazione non trovata.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+def delete_booking(model, user, booking_id):
+    try:
+        booking = model.objects.get(id=booking_id, user=user)
+        booking.delete()
+        return JsonResponse({'success': True, 'message': 'Prenotazione annullata con successo'})
+    except model.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Prenotazione non trovata'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def cancel_gym_booking(request, booking_id):
+    return delete_booking(GymBooking, request.user, booking_id)
+
+@login_required
+@require_http_methods(["POST"])
+def cancel_spa_booking(request, booking_id):
+    return delete_booking(SpaBooking, request.user, booking_id)    

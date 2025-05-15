@@ -3,18 +3,6 @@
 {% load static %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abbonamenti | LV Spa Resort</title>
-    <link rel="stylesheet" href="{% static 'users/css/styles.css' %}">
-    <link rel="stylesheet" href="{% static 'subscriptions/css/subscriptions.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Subscription Plans Section -->
     <section class="subscription-section">
         <div class="subscription-container">
             <h1>I Nostri Abbonamenti</h1>
@@ -41,12 +29,9 @@
                     <div class="plan-action">
                         {% if user_subscription and user_subscription.plan.id == plan.id %}
                             <button class="current-plan-btn" disabled>Abbonamento Attivo</button>
-                            <p class="plan-validity">Valido fino al {{ user_subscription.end_date|date:"d/m/Y" }}</p>
+                            <p class="plan-validity">Valido fino al {{ user_subscription.end_date|date:'d/m/Y' }}</p>
                         {% else %}
-                            <form method="post" action="{% url 'subscribe_plan' plan.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="subscribe-plan-btn">Scegli Questo Piano</button>
-                            </form>
+                            <button type="button" class="subscribe-plan-btn" onclick="openFakePaymentModal({{ plan.id }})">Scegli Questo Piano</button>
                         {% endif %}
                     </div>
                 </div>
@@ -63,13 +48,64 @@
         </div>
     </section>
 
+    <!-- Modal per dati fittizi pagamento -->
+    <div id="fakePaymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeModalBtn">&times;</span>
+            <h2>Completa i dati per l'abbonamento</h2>
+            <form id="fakePaymentForm" method="post" action="{% url 'subscribe_plan' 0 %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan_id" id="modalPlanId">
+                <label>Nome intestatario</label>
+                <input type="text" name="card_name" required>
+                <label>Numero carta</label>
+                <input type="text" name="card_number" maxlength="16" required>
+                <label>Scadenza</label>
+                <input type="text" name="card_expiry" placeholder="MM/AA" required>
+                <label>CVV</label>
+                <input type="text" name="card_cvv" maxlength="3" required>
+                <button type="submit" class="subscribe-plan-btn">Conferma Abbonamento</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         <p>&copy; 2025 LV Spa Resort. All rights reserved.</p>
     </footer>
 
+    <style>
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.4); }
+        .modal-content { background: #fff; margin: 10% auto; padding: 30px 20px; border-radius: 8px; width: 90%; max-width: 400px; position: relative; }
+        .close { position: absolute; right: 15px; top: 10px; font-size: 28px; font-weight: bold; color: #888; cursor: pointer; }
+        .modal-content label { display: block; margin-top: 10px; font-weight: 600; }
+        .modal-content input { width: 100%; padding: 7px 10px; margin-top: 3px; border-radius: 4px; border: 1px solid #ccc; margin-bottom: 10px; }
+        .modal-content button { width: 100%; margin-top: 10px; }
+    </style>
     <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'subscriptions/js/subscription.js' %}?v={{ timestamp }}"></script>
+    <link rel="stylesheet" href="{% static 'subscriptions/css/subscriptions.css' %}?v={{ timestamp }}">
+
+    <script>
+    function openFakePaymentModal(planId) {
+        document.getElementById('fakePaymentModal').style.display = 'block';
+        document.getElementById('modalPlanId').value = planId;
+    }
+    document.getElementById('closeModalBtn').onclick = function() {
+        document.getElementById('fakePaymentModal').style.display = 'none';
+    };
+    window.onclick = function(event) {
+        var modal = document.getElementById('fakePaymentModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+        var fakePaymentForm = document.getElementById('fakePaymentForm');
+        fakePaymentForm.addEventListener('submit', function(e) {
+            var planId = document.getElementById('modalPlanId').value;
+            fakePaymentForm.action = "{% url 'subscribe_plan' 0 %}".replace('/0/', '/' + planId + '/');
+        });
+    });
+    </script>
 {% endblock %}
-</body>
-</html>
