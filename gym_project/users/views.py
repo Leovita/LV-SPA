@@ -1,22 +1,20 @@
 import json
 import re
+from datetime import datetime
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.forms import ValidationError
-from django.http import HttpResponseNotAllowed, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate, login as auth_login, logout
-from spa.models import SpaBooking, SpaService
-from users.models import User
-from palestra.models import GymBooking, GymClass
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.http import require_http_methods
-from users.models import ProfileUpdateForm, ProfilePictureForm
-from django.contrib.auth.models import Group
+from django.views.decorators.http import require_http_methods, require_POST
 from django.utils import timezone
-from django.contrib.admin.views.decorators import staff_member_required
+from users.models import User, ProfileUpdateForm, ProfilePictureForm
+from palestra.models import GymBooking, GymClass
+from spa.models import SpaBooking, SpaService
+from django.contrib.auth.models import Group
 from dateutil import parser
-from datetime import datetime
 
 def gest_corsi(req):
     gym = GymClass.objects.all()
@@ -403,11 +401,6 @@ def delete_course(request, type, id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-from django.views.decorators.http import require_POST
-from django.http import JsonResponse
-from palestra.models import GymBooking
-from spa.models import SpaBooking
-from django.contrib.admin.views.decorators import staff_member_required
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -433,7 +426,9 @@ def admin_delete_booking(request):
         return JsonResponse({'success': False, 'error': 'Prenotazione non trovata.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
-    
+
+#booking sempre cancellato con user=request.user per fare in modo
+# che un utente non possa cancellare una prenotazione di un altro utente
 def delete_booking(model, user, booking_id):
     try:
         booking = model.objects.get(id=booking_id, user=user)

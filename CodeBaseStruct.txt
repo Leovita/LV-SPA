@@ -1,0 +1,31 @@
+.
+└── gym_project
+    ├── admin_panel
+    │   └── migrations
+    ├── gym_project
+    │   └── __pycache__
+    ├── media
+    │   ├── palestra
+    │   ├── profile_pics
+    │   └── spa
+    ├── palestra
+    │   ├── __pycache__
+    │   └── migrations
+    ├── spa
+    │   ├── __pycache__
+    │   └── migrations
+    ├── staticfiles
+    │   └── admin
+    ├── subscriptions
+    │   ├── __pycache__
+    │   ├── migrations
+    │   ├── static
+    │   └── templates
+    └── users
+        ├── __pycache__
+        ├── migrations
+        ├── static
+        ├── templates
+        └── templatetags
+
+29 directories

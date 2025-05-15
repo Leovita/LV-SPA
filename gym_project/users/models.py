@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django import forms
 from django.core.exceptions import ValidationError
@@ -21,7 +21,7 @@ class UserManager(BaseUserManager):
         xtra_F.setdefault('is_superuser', True)
         return self.create_user(email, password, **xtra_F)
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     full_name = models.CharField(max_length=255, default="Nome Cognome")
     email = models.EmailField(unique=True)  
     phone = models.CharField(max_length=20, blank=True)
