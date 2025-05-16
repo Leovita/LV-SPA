@@ -22,19 +22,9 @@ document.querySelector(".register-btn").addEventListener("click", function() {
     showTab('register');
 });
 
-
 document.addEventListener('DOMContentLoaded', function() {
     const discoverServicesBtn = document.querySelector('.hero .btn');
-    
     const servicesSection = document.getElementById('services');
-    // -------------------
-    const profilePic = document.querySelector('.user-profile-pic');
-    const dropdown = document.querySelector('.dropdown');
-
-    profilePic.addEventListener('click', function() {
-        dropdown.classList.toggle('active');
-    });
-    // -------------------
 
     if (discoverServicesBtn && servicesSection) {
         discoverServicesBtn.addEventListener('click', function(event) {
@@ -71,8 +61,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-function toggleDropdown() {
-    const dropdown = document.querySelector('.dropdown');
-    dropdown.classList.toggle('active');
-}

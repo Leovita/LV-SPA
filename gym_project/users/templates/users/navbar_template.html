@@ -32,9 +32,8 @@
                             {% else %}/media/profile_pics/def_pfp.png{% endif %}"
                             alt="Immagine profilo utente"
                             class="user-profile-pic"
-                            onclick="toggleDropdown()"
                         >
-                        <div class="dropdown-menu" id="dropdown-menu">
+                        <div class="dropdown-menu">
                             <a href="{% url 'profile' %}">Profilo</a>
                             {% if user.is_superuser %}
                                 <a href="{% url 'gest_prenotazioni' %}">Gestisci Prenotazioni</a>
@@ -56,5 +55,6 @@
 
 {% block content %}{% endblock %}
 
+<script src="{% static 'users/js/dropdown.js' %}"></script>
 </body>
 </html>

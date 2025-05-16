@@ -1,0 +1,45 @@
+<script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
+<script src="{% static 'users/js/notifications.js' %}?v={{ timestamp }}"></script>
+<script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // User dropdown functionality
+    const dropdown = document.querySelector('.dropdown');
+    const profilePic = document.querySelector('.user-profile-pic');
+
+    if (profilePic && dropdown) {
+        profilePic.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('active');
+            
+            // Add click outside listener only when dropdown is active
+            if (dropdown.classList.contains('active')) {
+                document.addEventListener('click', closeDropdownOutside);
+            }
+        });
+    }
+
+    function closeDropdownOutside(e) {
+        const dropdown = document.querySelector('.dropdown');
+        const profilePic = document.querySelector('.user-profile-pic');
+        
+        if (dropdown && !dropdown.contains(e.target) && e.target !== profilePic) {
+            dropdown.classList.remove('active');
+            document.removeEventListener('click', closeDropdownOutside);
+        }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const dropdown = document.querySelector('.dropdown');
+        const profilePic = document.querySelector('.user-profile-pic');
+        
+        if (dropdown && dropdown.classList.contains('active') && 
+            !dropdown.contains(e.target) && e.target !== profilePic) {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    // ... rest of the existing code ...
+});
+</script> 

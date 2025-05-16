@@ -246,89 +246,195 @@
                 </div>
             </div>
         </div>
+        <div id="notification" class="notification" style="display: none;"></div>
     </main>
+    <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+
+        .notification.success {
+            background-color: #28a745;
+        }
+
+        .notification.error {
+            background-color: #dc3545;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
     <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
     <script>
-        // Tab switching functionality
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs and contents
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.addEventListener('DOMContentLoaded', function() {
+            function showNotification(message, type = 'success') {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.style.display = 'block';
                 
-                // Add active class to clicked tab
-                tab.classList.add('active');
-                
-                // Show corresponding content
-                const tabId = tab.getAttribute('data-tab');
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
+                setTimeout(() => {
+                    notification.classList.add('show');
+                }, 10);
 
-        // Funzione di filtro per la ricerca
-        function setupSearch(inputId, tableId, columns) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            
-            input.addEventListener('keyup', function() {
-                const filter = this.value.toLowerCase();
-                const table = document.querySelector(`#${tableId} table`);
-                const rows = table.getElementsByTagName('tr');
-                
-                for (let i = 1; i < rows.length; i++) { // Skip header row
-                    let match = false;
-                    const row = rows[i];
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                    }, 300);
+                }, 3000);
+            }
+
+            // Tab switching functionality
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     
-                    for (let col of columns) {
-                        const cell = row.getElementsByTagName('td')[col];
-                        if (cell) {
-                            const text = cell.textContent || cell.innerText;
-                            if (text.toLowerCase().indexOf(filter) > -1) {
-                                match = true;
-                                break;
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Search functionality
+            function setupSearch(inputId, tableId, columns) {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                
+                input.addEventListener('keyup', function() {
+                    const filter = this.value.toLowerCase();
+                    const table = document.querySelector(`#${tableId} table`);
+                    const rows = table.getElementsByTagName('tr');
+                    
+                    for (let i = 1; i < rows.length; i++) {
+                        let match = false;
+                        const row = rows[i];
+                        
+                        for (let col of columns) {
+                            const cell = row.getElementsByTagName('td')[col];
+                            if (cell) {
+                                const text = cell.textContent || cell.innerText;
+                                if (text.toLowerCase().indexOf(filter) > -1) {
+                                    match = true;
+                                    break;
+                                }
                             }
                         }
+                        
+                        row.style.display = match ? '' : 'none';
                     }
-                    
-                    if (match) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                }
-            });
-        }
+                });
+            }
 
-        // Setup search functionality for each tab
-        document.addEventListener('DOMContentLoaded', function() {
+            // Setup search functionality
             setupSearch('search-all', 'all', [1, 2, 3, 4]); // User, Service, Description, Date
             setupSearch('search-gym', 'gym', [1, 2, 3, 4]); // User, Course, Description, Date
             setupSearch('search-spa', 'spa', [1, 2, 3, 4]); // User, Treatment, Description, Date
-        });
 
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (!confirm('Sei sicuro di voler eliminare questa prenotazione?')) return;
-                const bookingId = this.getAttribute('data-id');
-                const bookingType = this.getAttribute('data-type');
-                fetch("{% url 'admin_delete_booking' %}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `booking_id=${bookingId}&type=${bookingType}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        this.closest('.booking-row').remove(); // Assicurati che il container abbia questa classe
-                    } else {
-                        alert(data.error || 'Errore durante l\'eliminazione.');
+            // Delete booking functionality
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookingId = this.getAttribute('data-id');
+                    const bookingType = this.getAttribute('data-type');
+                    const userName = this.closest('tr').querySelector('td:nth-child(2)').textContent;
+                    const serviceName = this.closest('tr').querySelector('td:nth-child(3)').textContent;
+
+                    if (confirm(`Sei sicuro di voler eliminare la prenotazione di ${userName} per ${serviceName}?`)) {
+                        fetch("{% url 'admin_delete_booking' %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: `booking_id=${bookingId}&type=${bookingType}`
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw err; });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            showSuccess('Prenotazione eliminata con successo', true, 'bookings');
+                            
+                            // Remove the row from both specific and all tabs with animation
+                            const id = bookingId;
+                            const type = bookingType;
+                            
+                            // Function to animate and remove a row
+                            const removeRowWithAnimation = (row) => {
+                                if (row) {
+                                    row.style.transition = 'all 0.3s ease';
+                                    row.style.opacity = '0';
+                                    setTimeout(() => {
+                                        row.remove();
+                                        // Check if table is empty and add no-data row if needed
+                                        const tbody = row.closest('tbody');
+                                        if (tbody && tbody.querySelectorAll('tr:not(.no-data)').length === 0) {
+                                            const noDataRow = document.createElement('tr');
+                                            noDataRow.className = 'no-data';
+                                            const noDataCell = document.createElement('td');
+                                            noDataCell.colSpan = '8';
+                                            noDataCell.textContent = type === 'gym' ? 
+                                                'Nessuna prenotazione palestra disponibile' : 
+                                                'Nessuna prenotazione spa disponibile';
+                                            noDataRow.appendChild(noDataCell);
+                                            tbody.appendChild(noDataRow);
+                                        }
+                                    }, 300);
+                                }
+                            };
+
+                            // Remove from specific tab
+                            const specificTab = document.querySelector(`#${type} tbody`);
+                            const specificRow = specificTab?.querySelector(`tr td:first-child[data-id="${id}"]`)?.closest('tr') || 
+                                              specificTab?.querySelector(`tr td:first-child:contains("${id}")`)?.closest('tr');
+                            removeRowWithAnimation(specificRow);
+
+                            // Remove from all tab
+                            const allTab = document.querySelector('#all tbody');
+                            const allRow = allTab?.querySelector(`tr td:first-child[data-id="${id}"]`)?.closest('tr') || 
+                                          allTab?.querySelector(`tr td:first-child:contains("${id}")`)?.closest('tr');
+                            removeRowWithAnimation(allRow);
+
+                            // Update counters after animation
+                            setTimeout(() => {
+                                updateBookingCounters();
+                            }, 350);
+                        })
+                        .catch(error => {
+                            console.error('Errore:', error);
+                            showError(error.error || 'Errore durante l\'eliminazione della prenotazione', true, 'bookings');
+                        });
                     }
                 });
             });
+
+            function updateBookingCounters() {
+                const totalGym = document.querySelectorAll('#gym tbody tr:not(.no-data)').length;
+                const totalSpa = document.querySelectorAll('#spa tbody tr:not(.no-data)').length;
+                const total = totalGym + totalSpa;
+
+                // Aggiorna i contatori nelle stat cards
+                document.querySelector('.stat-card:nth-child(1) p').textContent = totalSpa;
+                document.querySelector('.stat-card:nth-child(2) p').textContent = totalGym;
+                document.querySelector('.stat-card:nth-child(3) p').textContent = total;
+            }
         });
     </script>
 {% endblock %}

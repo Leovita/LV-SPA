@@ -1,3 +1,4 @@
+from curses import window
 import json
 import re
 from datetime import datetime
@@ -15,18 +16,21 @@ from palestra.models import GymBooking, GymClass
 from spa.models import SpaBooking, SpaService
 from django.contrib.auth.models import Group
 from dateutil import parser
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 def gest_corsi(req):
     gym = GymClass.objects.all()
     spa = SpaService.objects.all()
     all_corsi = list(gym) + list(spa)
-
+    instructors = User.objects.filter(is_staff=True)
     ctx = {
         'gym_courses': gym,
         'spa_services': spa,
         'all_courses': all_corsi,
         'total_gym_courses': gym.count(),
         'total_spa_services': spa.count(),
+        'instructors': instructors,
     }
     return render(req, 'users/gest_corsi.html', ctx)
 
@@ -153,7 +157,6 @@ def update_profile(request):
             phone = cleaned_data.get('phone', '').strip()
             email = cleaned_data.get('email', '').strip()
 
-            # Controllo nome completo (almeno 2 parole, solo lettere/spazi)
             if not re.match(r'^[A-Za-zÀ-ÿ\s]{3,}$', full_name) or len(full_name.split()) < 2:
                 messages.error(request, "Il nome completo deve contenere almeno nome e cognome (solo lettere).")
                 return redirect('profile')
@@ -224,11 +227,9 @@ def is_admin(user):
 @login_required
 @user_passes_test(is_admin)
 def gest_prenotazioni(request):
-    # print(request.user)
     gym_bookings = GymBooking.objects.select_related('user', 'class_id').all()    
     spa_bookings = SpaBooking.objects.select_related('user', 'service_id').all()    
 
-    # print(gym_bookings, spa_bookings)
     gym_count = gym_bookings.count()
     spa_count = spa_bookings.count()
     
@@ -393,9 +394,12 @@ def delete_course(request, type, id):
             course = SpaService.objects.get(id=id)
         else:
             return JsonResponse({'error': 'Tipo non valido'}, status=400)
-        
-        course.delete()
-        return JsonResponse({'message': 'Corso eliminato con successo'})
+        try:
+            course.delete()
+            return JsonResponse({'message': 'Corso eliminato con successo'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
     except (GymClass.DoesNotExist, SpaService.DoesNotExist):
         return JsonResponse({'error': 'Corso non trovato'}, status=404)
     except Exception as e:
@@ -447,4 +451,176 @@ def cancel_gym_booking(request, booking_id):
 @login_required
 @require_http_methods(["POST"])
 def cancel_spa_booking(request, booking_id):
-    return delete_booking(SpaBooking, request.user, booking_id)    
+    return delete_booking(SpaBooking, request.user, booking_id)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+@require_http_methods(["POST"])
+def add_course(request):
+    """Aggiunge un nuovo corso palestra o servizio spa (solo admin, solo POST)."""
+    try:
+        course_type = request.POST.get('type')
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        duration = request.POST.get('duration')
+        instructor_id = request.POST.get('instructor')
+        image = request.FILES.get('image')
+        max_partecipants = request.POST.get('max_partecipants')
+        scheduled = request.POST.get('scheduled')
+        
+        # Verifica se è una richiesta AJAX
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        if not all([course_type, name, description, duration, instructor_id, image, scheduled]):
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': "Tutti i campi obbligatori devono essere compilati."
+                })
+            messages.error(request, "Tutti i campi obbligatori devono essere compilati.")
+            return redirect('gest_corsi')
+
+        instructor = User.objects.filter(id=instructor_id).first()
+        if not instructor:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': "Istruttore/Operatore non valido."
+                })
+            messages.error(request, "Istruttore/Operatore non valido.")
+            return redirect('gest_corsi')
+
+        # Convert scheduled string to datetime
+        try:
+            scheduled_dt = timezone.make_aware(datetime.strptime(scheduled, '%Y-%m-%dT%H:%M'))
+        except ValueError:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': "Formato data e ora non valido."
+                })
+            messages.error(request, "Formato data e ora non valido.")
+            return redirect('gest_corsi')
+
+        if course_type == 'gym':
+            if not max_partecipants:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': "Capacità massima richiesta per i corsi palestra."
+                    })
+                messages.error(request, "Capacità massima richiesta per i corsi palestra.")
+                return redirect('gest_corsi')
+            
+            new_course = GymClass.objects.create(
+                name=name,
+                description=description,
+                duration=duration,
+                instructor=instructor,
+                max_partecipants=max_partecipants,
+                imgs=image,
+                scheduled=scheduled_dt
+            )
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': f"Corso palestra '{name}' aggiunto con successo.",
+                    'course': {
+                        'id': new_course.id,
+                        'name': new_course.name,
+                        'description': new_course.description,
+                        'duration': new_course.duration,
+                        'instructor': instructor.full_name if instructor else '',
+                        'instructor_id': instructor.id if instructor else '',
+                        'max_partecipants': new_course.max_partecipants,
+                        'scheduled': new_course.scheduled.strftime('%Y-%m-%dT%H:%M'),
+                        'type': 'gym',
+                        'status': 'active',
+                        'image_url': new_course.imgs.url if new_course.imgs else '',
+                    }
+                })
+            messages.success(request, f"Corso palestra '{name}' aggiunto con successo.")
+        
+        elif course_type == 'spa':
+            price = request.POST.get('price')
+            spa_type = request.POST.get('spa_type')
+            if not price:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': "Prezzo richiesto per i servizi spa."
+                    })
+                messages.error(request, "Prezzo richiesto per i servizi spa.")
+                return redirect('gest_corsi')
+            
+            new_service = SpaService.objects.create(
+                name=name,
+                description=description,
+                operator=instructor,
+                duration=duration,
+                price=price,
+                imgs=image,
+                max_partecipants=max_partecipants if max_partecipants else 1,
+                scheduled=scheduled_dt
+            )
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': f"Servizio spa '{name}' aggiunto con successo.",
+                    'service': {
+                        'id': new_service.id,
+                        'name': new_service.name,
+                        'description': new_service.description,
+                        'duration': new_service.duration,
+                        'operator': instructor.full_name if instructor else '',
+                        'operator_id': instructor.id if instructor else '',
+                        'price': new_service.price,
+                        'scheduled': new_service.scheduled.strftime('%Y-%m-%dT%H:%M'),
+                        'type': spa_type or '',
+                        'status': 'active',
+                        'image_url': new_service.imgs.url if new_service.imgs else '',
+                    }
+                })
+            messages.success(request, f"Servizio spa '{name}' aggiunto con successo.")
+        
+        else:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': "Tipo corso/servizio non valido."
+                })
+            messages.error(request, "Tipo corso/servizio non valido.")
+            return redirect('gest_corsi')
+        
+        if not is_ajax:
+            return redirect('gest_corsi')
+        return JsonResponse({'success': True})
+    
+    except Exception as e:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'error': f"Errore durante l'aggiunta: {str(e)}"
+            })
+        messages.error(request, f"Errore durante l'aggiunta: {str(e)}")
+        return redirect('gest_corsi')
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def course_details(request, type, id):
+    """Visualizza i dettagli di un corso palestra o servizio spa."""
+    try:
+        if type == 'gym':
+            course = get_object_or_404(GymClass, id=id)
+            template = 'users/courses/gym_course_details.html'
+        elif type == 'spa':
+            course = get_object_or_404(SpaService, id=id)
+            template = 'users/courses/spa_service_details.html'
+        else:
+            messages.error(request, "Tipo di corso non valido")
+            return redirect('gest_corsi')
+        
+        return render(request, template, {'course': course})
+    except Exception as e:
+        messages.error(request, f"Errore nel caricamento dei dettagli: {str(e)}")
+        return redirect('gest_corsi')    
