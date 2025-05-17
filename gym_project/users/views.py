@@ -478,7 +478,7 @@ def add_course(request):
                     'error': "Tutti i campi obbligatori devono essere compilati."
                 })
             messages.error(request, "Tutti i campi obbligatori devono essere compilati.")
-            return redirect('gest_corsi')
+            return redirect('gest-corsi')
 
         instructor = User.objects.filter(id=instructor_id).first()
         if not instructor:
@@ -488,7 +488,7 @@ def add_course(request):
                     'error': "Istruttore/Operatore non valido."
                 })
             messages.error(request, "Istruttore/Operatore non valido.")
-            return redirect('gest_corsi')
+            return redirect('gest-corsi')
 
         # Convert scheduled string to datetime
         try:
@@ -500,7 +500,7 @@ def add_course(request):
                     'error': "Formato data e ora non valido."
                 })
             messages.error(request, "Formato data e ora non valido.")
-            return redirect('gest_corsi')
+            return redirect('gest-corsi')
 
         if course_type == 'gym':
             if not max_partecipants:
@@ -510,7 +510,7 @@ def add_course(request):
                         'error': "Capacità massima richiesta per i corsi palestra."
                     })
                 messages.error(request, "Capacità massima richiesta per i corsi palestra.")
-                return redirect('gest_corsi')
+                return redirect('gest-corsi')
             
             new_course = GymClass.objects.create(
                 name=name,
@@ -551,7 +551,7 @@ def add_course(request):
                         'error': "Prezzo richiesto per i servizi spa."
                     })
                 messages.error(request, "Prezzo richiesto per i servizi spa.")
-                return redirect('gest_corsi')
+                return redirect('gest-corsi')
             
             new_service = SpaService.objects.create(
                 name=name,
@@ -590,10 +590,10 @@ def add_course(request):
                     'error': "Tipo corso/servizio non valido."
                 })
             messages.error(request, "Tipo corso/servizio non valido.")
-            return redirect('gest_corsi')
+            return redirect('gest-corsi')
         
         if not is_ajax:
-            return redirect('gest_corsi')
+            return redirect('gest-corsi')
         return JsonResponse({'success': True})
     
     except Exception as e:
@@ -603,7 +603,7 @@ def add_course(request):
                 'error': f"Errore durante l'aggiunta: {str(e)}"
             })
         messages.error(request, f"Errore durante l'aggiunta: {str(e)}")
-        return redirect('gest_corsi')
+        return redirect('gest-corsi')
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -618,9 +618,9 @@ def course_details(request, type, id):
             template = 'users/courses/spa_service_details.html'
         else:
             messages.error(request, "Tipo di corso non valido")
-            return redirect('gest_corsi')
+            return redirect('gest-corsi')
         
         return render(request, template, {'course': course})
     except Exception as e:
         messages.error(request, f"Errore nel caricamento dei dettagli: {str(e)}")
-        return redirect('gest_corsi')    
+        return redirect('gest-corsi')    

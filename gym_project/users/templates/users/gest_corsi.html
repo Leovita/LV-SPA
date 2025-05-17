@@ -700,7 +700,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.course || data.service) {
                         const isGym = !!data.course;
                         const d = isGym ? data.course : data.service;
-                        // Costruisci la riga per la tabella "Tutti"
                         const allRow = document.createElement('tr');
                         allRow.innerHTML = `
                             <td>${d.id}</td>
@@ -722,7 +721,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (noData) noData.remove();
                             allTbody.appendChild(allRow);
                         }
-                        // Costruisci la riga per la tabella specifica
                         if (isGym) {
                             const gymRow = document.createElement('tr');
                             gymRow.innerHTML = `
@@ -794,7 +792,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Delete course functionality
     document.addEventListener('click', function(e) {
         if (e.target && e.target.classList.contains('btn-delete')) {
             const btn = e.target;
@@ -803,6 +800,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = btn.closest('tr');
             const courseName = row.querySelector('td:nth-child(2)').textContent;
             if (confirm(`Sei sicuro di voler eliminare il corso "${courseName}"?`)) {
+                //eliminazione del corso tramite delete-course view
                 fetch(`/delete-course/${type}/${id}/`, {
                     method: 'DELETE',
                     headers: {
