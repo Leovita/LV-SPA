@@ -509,6 +509,22 @@ justify-content: center;
 <script src="{% static 'users/js/notifications.js' %}?v={{ timestamp }}"></script>
 <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
 <script>
+function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Setup tab switching
     document.querySelectorAll('.tab').forEach(tab => {
@@ -657,86 +673,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Delete course functionality
-    document.addEventListener('click', function(e) {
-        if (e.target && e.target.classList.contains('btn-delete')) {
-            const btn = e.target;
-            const id = btn.getAttribute('data-id');
-            const type = btn.getAttribute('data-type');
-            const row = btn.closest('tr');
-            const courseName = row.querySelector('td:nth-child(2)').textContent;
-            if (confirm(`Sei sicuro di voler eliminare il corso "${courseName}"?`)) {
-                fetch(`/delete-course/${type}/${id}/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCsrfToken(),
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { throw err; });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Rimuovi prima le righe
-                    if (row && row.parentNode) {
-                        row.remove();
-                    }
-
-                    // Rimuovi dalla tabella "Tutti"
-                    const allTbody = document.querySelector('#all tbody');
-                    if (allTbody) {
-                        const allRow = Array.from(allTbody.querySelectorAll('tr')).find(r => {
-                            const idCell = r.querySelector('td');
-                            return idCell && idCell.textContent === id;
-                        });
-                        if (allRow) {
-                            allRow.remove();
-                        }
-                    }
-
-                    // Aggiorna i contatori DOPO aver rimosso tutte le righe
-                    aggiornaContatoriCorsi();
-
-                    // Gestisci i messaggi no-data
-                    const specificTbody = document.querySelector(`#${type} tbody`);
-                    const allTableBody = document.querySelector('#all tbody');
-                    
-                    if (specificTbody && !specificTbody.querySelector('tr:not(.no-data)')) {
-                        const noDataRow = document.createElement('tr');
-                        noDataRow.className = 'no-data';
-                        noDataRow.innerHTML = `<td colspan="8" class="no-data">${type === 'gym' ? 'Nessun corso palestra disponibile' : 'Nessun servizio spa disponibile'}</td>`;
-                        specificTbody.appendChild(noDataRow);
-                    }
-                    
-                    if (allTableBody && !allTableBody.querySelector('tr:not(.no-data)')) {
-                        const noDataRow = document.createElement('tr');
-                        noDataRow.className = 'no-data';
-                        noDataRow.innerHTML = '<td colspan="8" class="no-data">Nessun corso disponibile</td>';
-                        allTableBody.appendChild(noDataRow);
-                    }
-
-                    showSuccess('Corso eliminato con successo', true, 'courses');
-                })
-                .catch(error => {
-                    showError(error.error || 'Errore durante l\'eliminazione del corso', true, 'courses');
-                });
-            }
-        }
-    });
-
-    // View course functionality
-    document.querySelectorAll('.btn-view').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            const type = this.getAttribute('data-type');
-            window.location.href = `/course-details/${type}/${id}/`;
-        });
-    });
-
     // Add course form submission
     if (addCourseForm) {
         addCourseForm.addEventListener('submit', function(e) {
@@ -814,7 +750,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             spaRow.innerHTML = `
                                 <td>${d.id}</td>
                                 <td>${d.name}</td>
-                                <td>${d.type ? (d.type === 'massage' ? 'Massaggio' : d.type === 'treatment' ? 'Trattamento' : 'Rituale') : ''}</td>
+                                <td>${d.get_type_display || d.type}</td>
                                 <td>${d.operator}</td>
                                 <td>${d.description}</td>
                                 <td>${d.duration} min</td>
@@ -832,107 +768,75 @@ document.addEventListener('DOMContentLoaded', function() {
                                 spaTbody.appendChild(spaRow);
                             }
                         }
-                        aggiornaContatoriCorsi();
+                        // Aggiorna i contatori
+                        window.location.reload();
                     }
                 } else {
                     if (data.errors) {
-                        for (const [field, msg] of Object.entries(data.errors)) {
-                            const fieldEl = addCourseForm.querySelector(`[name="${field}"]`);
-                            if (fieldEl) {
-                                const err = document.createElement('div');
-                                err.className = 'field-error';
-                                err.textContent = msg;
-                                fieldEl.parentNode.appendChild(err);
+                        Object.entries(data.errors).forEach(([field, errors]) => {
+                            const input = this.querySelector(`[name="${field}"]`);
+                            if (input) {
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'field-error';
+                                errorDiv.textContent = errors[0];
+                                input.parentNode.appendChild(errorDiv);
                             }
-                        }
-                    } else {
-                        showError(data.error || 'Errore durante l\'aggiunta del corso');
+                        });
                     }
+                    showError(data.error || 'Errore durante l\'aggiunta del corso', true, 'courses');
                 }
             })
             .catch(error => {
                 submitBtn.disabled = false;
                 formLoader.style.display = 'none';
-                showError('Errore durante l\'aggiunta del corso');
+                showError('Errore durante l\'aggiunta del corso', true, 'courses');
             });
         });
     }
 
-    // Initial counter update
-    aggiornaContatoriCorsi();
+    // Delete course functionality
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('btn-delete')) {
+            const btn = e.target;
+            const id = btn.getAttribute('data-id');
+            const type = btn.getAttribute('data-type');
+            const row = btn.closest('tr');
+            const courseName = row.querySelector('td:nth-child(2)').textContent;
+            if (confirm(`Sei sicuro di voler eliminare il corso "${courseName}"?`)) {
+                fetch(`/delete-course/${type}/${id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                        return;
+                    }
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Errore durante l\'eliminazione del corso');
+                    });
+                })
+                .catch(error => {
+                    showError(error.message || 'Errore durante l\'eliminazione del corso', true, 'courses');
+                });
+            }
+        }
+    });
+
+    // View course functionality
+    document.querySelectorAll('.btn-view').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const type = this.getAttribute('data-type');
+            window.location.href = `/course-details/${type}/${id}/`;
+        });
+    });
 });
-
-function getCsrfToken() {
-    const name = 'csrftoken';
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-function aggiornaContatoriCorsi() {
-    try {
-        // Get all rows from both tables, excluding no-data rows
-        const gymRows = document.querySelectorAll('#gym tbody tr:not(.no-data)');
-        const spaRows = document.querySelectorAll('#spa tbody tr:not(.no-data)');
-        
-        // Count only valid rows (those with delete buttons)
-        const totalGym = Array.from(gymRows).filter(row => row.querySelector('.btn-delete')).length;
-        const totalSpa = Array.from(spaRows).filter(row => row.querySelector('.btn-delete')).length;
-        const total = totalGym + totalSpa;
-
-        // Update stat cards with the new counts
-        const statCards = document.querySelectorAll('.stat-cards .stat-card p');
-        if (statCards.length >= 3) {
-            // Aggiorna direttamente i valori invece di incrementare
-            statCards[0].textContent = totalSpa.toString();    // Totale Servizi Spa
-            statCards[1].textContent = totalGym.toString();    // Totale Corsi Palestra
-            statCards[2].textContent = total.toString();       // Corsi Totali
-        }
-
-        // Update no-data rows visibility
-        const updateNoDataRow = (tableId, count) => {
-            const tbody = document.querySelector(`#${tableId} tbody`);
-            if (!tbody) return;
-            
-            let noDataRow = tbody.querySelector('.no-data');
-            
-            if (count === 0) {
-                if (!noDataRow) {
-                    noDataRow = document.createElement('tr');
-                    noDataRow.className = 'no-data';
-                    noDataRow.innerHTML = `<td colspan="8" class="no-data">${
-                        tableId === 'gym' ? 'Nessun corso palestra disponibile' : 
-                        tableId === 'spa' ? 'Nessun servizio spa disponibile' : 
-                        'Nessun corso disponibile'
-                    }</td>`;
-                    tbody.appendChild(noDataRow);
-                }
-            } else if (noDataRow) {
-                noDataRow.remove();
-            }
-        };
-
-        // Update no-data rows for all tables
-        updateNoDataRow('gym', totalGym);
-        updateNoDataRow('spa', totalSpa);
-        updateNoDataRow('all', total);
-
-        console.log('Contatori aggiornati:', { totalGym, totalSpa, total }); // Debug log
-
-    } catch (error) {
-        console.error('Errore durante l\'aggiornamento dei contatori:', error);
-    }
-}
 </script>
-{% endblock %}
 </body>
 </html>
+{% endblock %}
