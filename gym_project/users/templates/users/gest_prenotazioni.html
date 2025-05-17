@@ -370,56 +370,15 @@
                             return response.json();
                         })
                         .then(data => {
-                            showSuccess('Prenotazione eliminata con successo', true, 'bookings');
-                            
-                            // Remove the row from both specific and all tabs with animation
-                            const id = bookingId;
-                            const type = bookingType;
-                            
-                            // Function to animate and remove a row
-                            const removeRowWithAnimation = (row) => {
-                                if (row) {
-                                    row.style.transition = 'all 0.3s ease';
-                                    row.style.opacity = '0';
-                                    setTimeout(() => {
-                                        row.remove();
-                                        // Check if table is empty and add no-data row if needed
-                                        const tbody = row.closest('tbody');
-                                        if (tbody && tbody.querySelectorAll('tr:not(.no-data)').length === 0) {
-                                            const noDataRow = document.createElement('tr');
-                                            noDataRow.className = 'no-data';
-                                            const noDataCell = document.createElement('td');
-                                            noDataCell.colSpan = '8';
-                                            noDataCell.textContent = type === 'gym' ? 
-                                                'Nessuna prenotazione palestra disponibile' : 
-                                                'Nessuna prenotazione spa disponibile';
-                                            noDataRow.appendChild(noDataCell);
-                                            tbody.appendChild(noDataRow);
-                                        }
-                                    }, 300);
-                                }
-                            };
-
-                            // Remove from specific tab
-                            const specificTab = document.querySelector(`#${type} tbody`);
-                            const specificRow = specificTab?.querySelector(`tr td:first-child[data-id="${id}"]`)?.closest('tr') || 
-                                              specificTab?.querySelector(`tr td:first-child:contains("${id}")`)?.closest('tr');
-                            removeRowWithAnimation(specificRow);
-
-                            // Remove from all tab
-                            const allTab = document.querySelector('#all tbody');
-                            const allRow = allTab?.querySelector(`tr td:first-child[data-id="${id}"]`)?.closest('tr') || 
-                                          allTab?.querySelector(`tr td:first-child:contains("${id}")`)?.closest('tr');
-                            removeRowWithAnimation(allRow);
-
-                            // Update counters after animation
-                            setTimeout(() => {
-                                updateBookingCounters();
-                            }, 350);
+                            console.log('Risposta cancellazione:', data);
+                            if (data.success) {
+                                window.location.reload();
+                            } else {
+                                console.error('Errore cancellazione:', data.error || 'Impossibile cancellare');
+                            }
                         })
                         .catch(error => {
                             console.error('Errore:', error);
-                            showError(error.error || 'Errore durante l\'eliminazione della prenotazione', true, 'bookings');
                         });
                     }
                 });

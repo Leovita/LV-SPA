@@ -314,7 +314,6 @@ function submitBooking(serviceId, serviceType, dateTime) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message)
             window.location.href = "?success=1";
         } else {
             alert('Errore: ' + (data.error || 'Prenotazione non riuscita'));
