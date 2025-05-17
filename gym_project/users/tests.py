@@ -1,13 +1,11 @@
 from django.test import TestCase
-import json
 from django.urls import reverse
 from django.utils import timezone
+import json
 from users.models import User
 from palestra.models import GymClass, GymBooking
 
-#test per la prenotazione di un corso palestra
-
-class BookGymClassTest(TestCase):
+class UserBookingTests(TestCase):
     def setUp(self):
         self.instructor = User.objects.create_user(
             email='istruttore@example.com',
@@ -30,7 +28,6 @@ class BookGymClassTest(TestCase):
         )
 
     def test_user_can_book_gym_class(self):
-        self.client.login(email='utente@example.com', password='pass123')
         logged_in = self.client.login(email='utente@example.com', password='pass123')
         self.assertTrue(logged_in)
         url = reverse('book_gym', args=[self.gym_class.id])
@@ -46,3 +43,28 @@ class BookGymClassTest(TestCase):
         self.assertIn('booking_id', data)
         booking = GymBooking.objects.filter(user=self.user, class_id=self.gym_class).first()
         self.assertIsNotNone(booking)
+
+    def test_user_can_cancel_gym_booking(self):
+        logged_in = self.client.login(email='utente@example.com', password='pass123')
+        self.assertTrue(logged_in)
+        booking = GymBooking.objects.create(
+            user=self.user,
+            class_id=self.gym_class,
+            date=timezone.now() + timezone.timedelta(days=1)
+        )
+        url = reverse('cancel_gym_booking', args=[booking.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data.get('success'))
+        exists = GymBooking.objects.filter(id=booking.id).exists()
+        self.assertFalse(exists)
+
+    def check_credential_error(self):
+        logged_in = self.client.login(email='utente@example.com', password='pass123')
+        self.assertTrue(logged_in)
+        url = reverse('book_gym', args=[self.gym_class.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 401)
+        return response
+
