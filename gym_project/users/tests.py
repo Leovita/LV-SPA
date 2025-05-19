@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-import json
+import json 
 from users.models import User
 from palestra.models import GymClass, GymBooking
 

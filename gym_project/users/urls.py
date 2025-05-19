@@ -29,6 +29,7 @@ urlpatterns = [
     path('delete-course/<str:type>/<int:id>/', views.delete_course, name='delete_course'),
     path('add-course/', views.add_course, name='add_course'),
     path('course-details/<str:type>/<int:id>/', views.course_details, name='course_details'),
+    path('edit-course/<str:type>/<int:id>/', views.edit_course, name='edit_course'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

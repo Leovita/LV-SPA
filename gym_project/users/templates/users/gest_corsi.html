@@ -229,6 +229,85 @@ Inattivo
 </div>
 <div id="notification" class="notification" style="display: none;"></div>
 </main>
+
+<!-- Edit Course Popup -->
+<div class="popup-overlay" id="edit-course-popup" style="display:none;">
+  <div class="popup-content">
+    <div class="popup-header">
+      <h2>Modifica Corso/Servizio</h2>
+      <button type="button" class="close-popup" onclick="closeEditCoursePopup()" aria-label="Close">&times;</button>
+    </div>
+    <form id="edit-course-form" method="post" enctype="multipart/form-data" class="course-form">
+      {% csrf_token %}
+      <div id="edit-form-loader"></div>
+      <input type="hidden" id="edit-course-type" name="type">
+      <input type="hidden" id="edit-course-id" name="id">
+      
+      <div class="form-group">
+        <label for="edit-name">Nome:</label>
+        <input type="text" name="name" id="edit-name" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-instructor">Istruttore/Operatore:</label>
+        <select name="instructor" id="edit-instructor-select" required>
+          {% for instructor in instructors %}
+          <option value="{{ instructor.id }}">{{ instructor.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-description">Descrizione:</label>
+        <textarea name="description" id="edit-description" required></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-duration">Durata (minuti):</label>
+        <input type="number" name="duration" id="edit-duration" min="1" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-scheduled">Data e Ora:</label>
+        <input type="datetime-local" name="scheduled" id="edit-scheduled" required>
+      </div>
+      
+      <div id="edit-gym-fields" class="conditional-fields">
+        <div class="form-group">
+          <label for="edit-max-partecipants">Capacità massima:</label>
+          <input type="number" name="max_partecipants" id="edit-max-partecipants" min="1">
+        </div>
+      </div>
+      
+      <div id="edit-spa-fields" class="conditional-fields" style="display:none;">
+        <div class="form-group">
+          <label for="edit-price">Prezzo (€):</label>
+          <input type="number" name="price" id="edit-price" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label for="edit-spa-type">Tipo trattamento:</label>
+          <select name="spa_type" id="edit-spa-type">
+            <option value="massage">Massaggio</option>
+            <option value="treatment">Trattamento</option>
+            <option value="ritual">Rituale</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-image">Immagine:</label>
+        <input type="file" name="image" id="edit-image" accept="image/*">
+        <small>Lascia vuoto per mantenere l'immagine attuale</small>
+      </div>
+      
+      <div class="popup-actions">
+        <button type="submit" class="btn btn-primary" id="submit-edit-btn">Salva Modifiche</button>
+        <button type="button" class="btn btn-cancel" onclick="closeEditCoursePopup()">Annulla</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="popup-overlay" id="add-course-popup" style="display:none;">
 <div class="popup-content">
 <div class="popup-header">
@@ -525,8 +604,14 @@ function getCsrfToken() {
     return cookieValue;
 }
 
+function closeEditCoursePopup() {
+    document.getElementById('edit-course-popup').style.display = 'none';
+    document.getElementById('edit-course-form').reset();
+    currentEditCourseId = null;
+    currentEditCourseType = null;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Setup tab switching
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -538,7 +623,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Search functionality
     function setupSearch(inputId, tableId, columns) {
         const input = document.getElementById(inputId);
         if (!input) return;
@@ -568,12 +652,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize search for each tab
-    setupSearch('search-all', 'all', [1, 2, 3, 4]); // Name, Type, Instructor, Description
-    setupSearch('search-gym', 'gym', [1, 2, 3]); // Name, Instructor, Description
-    setupSearch('search-spa', 'spa', [1, 2, 3, 4]); // Name, Type, Operator, Description
+    setupSearch('search-all', 'all', [1, 2, 3, 4]);
+    setupSearch('search-gym', 'gym', [1, 2, 3]);
+    setupSearch('search-spa', 'spa', [1, 2, 3, 4]);
 
-    // Popup functionality
     const addCoursePopup = document.getElementById('add-course-popup');
     const addCourseForm = document.getElementById('add-course-form');
     const courseTypeSelect = document.getElementById('course-type');
@@ -589,7 +671,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Add Course button
     const addCourseBtn = document.getElementById('add-course-btn');
     if (addCourseBtn) {
         addCourseBtn.addEventListener('click', function() {
@@ -599,12 +680,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Close popup buttons
     document.querySelectorAll('.close-popup, .btn-cancel').forEach(button => {
         button.addEventListener('click', closeAddCoursePopup);
     });
 
-    // Close popup when clicking outside
     if (addCoursePopup) {
         addCoursePopup.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -612,7 +691,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Prevent popup from closing when clicking inside
         const popupContent = addCoursePopup.querySelector('.popup-content');
         if (popupContent) {
             popupContent.addEventListener('click', function(e) {
@@ -621,7 +699,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Course type change handler
     courseTypeSelect.addEventListener('change', function() {
         const gymFields = document.getElementById('gym-fields');
         const spaFields = document.getElementById('spa-fields');
@@ -647,12 +724,10 @@ document.addEventListener('DOMContentLoaded', function() {
         notification.className = `notification ${type}`;
         notification.style.display = 'block';
         
-        // Add show class after a small delay to trigger animation
         setTimeout(() => {
             notification.classList.add('show');
         }, 10);
 
-        // Hide notification after 3 seconds
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => {
@@ -661,7 +736,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    // Form validation
     addCourseForm.addEventListener('submit', function(e) {
         const courseType = courseTypeSelect.value;
         if (courseType === 'gym' && !document.getElementById('max_partecipants').value) {
@@ -673,11 +747,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Add course form submission
     if (addCourseForm) {
         addCourseForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            // Rimuovi errori precedenti
             addCourseForm.querySelectorAll('.field-error').forEach(el => el.remove());
             submitBtn.disabled = true;
             formLoader.style.display = 'block';
@@ -766,7 +838,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 spaTbody.appendChild(spaRow);
                             }
                         }
-                        // Aggiorna i contatori
                         window.location.reload();
                     }
                 } else {
@@ -794,44 +865,138 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('click', function(e) {
         if (e.target && e.target.classList.contains('btn-delete')) {
+            e.preventDefault();
             const btn = e.target;
             const id = btn.getAttribute('data-id');
             const type = btn.getAttribute('data-type');
             const row = btn.closest('tr');
             const courseName = row.querySelector('td:nth-child(2)').textContent;
+            
             if (confirm(`Sei sicuro di voler eliminare il corso "${courseName}"?`)) {
-                //eliminazione del corso tramite delete-course view
                 fetch(`/delete-course/${type}/${id}/`, {
                     method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRFToken': getCsrfToken(),
                         'X-Requested-With': 'XMLHttpRequest'
                     },
+                    credentials: 'same-origin'
                 })
                 .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                        return;
+                    if (!response.ok) {
+                        throw new Error('Errore durante l\'eliminazione del corso');
                     }
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Errore durante l\'eliminazione del corso');
-                    });
+                    window.location.reload();
                 })
                 .catch(error => {
-                    showError(error.message || 'Errore durante l\'eliminazione del corso', true, 'courses');
+                    showError(error.message, true, 'courses');
                 });
             }
         }
     });
 
-    // View course functionality
     document.querySelectorAll('.btn-view').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
             const type = this.getAttribute('data-type');
             window.location.href = `/course-details/${type}/${id}/`;
         });
+    });
+
+    let currentEditCourseId = null;
+    let currentEditCourseType = null;
+
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const type = this.getAttribute('data-type');
+            const row = this.closest('tr');
+            
+            currentEditCourseId = id;
+            currentEditCourseType = type;
+            
+            const form = document.getElementById('edit-course-form');
+            form.action = `/edit-course/${type}/${id}/`;
+            
+            document.getElementById('edit-course-type').value = type;
+            document.getElementById('edit-course-id').value = id;
+            
+            document.getElementById('edit-name').value = row.cells[1].textContent;
+            document.getElementById('edit-description').value = row.cells[4].textContent;
+            document.getElementById('edit-duration').value = parseInt(row.cells[5].textContent);
+            
+            const instructorSelect = document.getElementById('edit-instructor-select');
+            const instructorName = row.cells[3].textContent;
+            for (let option of instructorSelect.options) {
+                if (option.text === instructorName) {
+                    instructorSelect.value = option.value;
+                    break;
+                }
+            }
+            
+            if (type === 'gym') {
+                document.getElementById('edit-gym-fields').style.display = 'block';
+                document.getElementById('edit-spa-fields').style.display = 'none';
+                document.getElementById('edit-max-partecipants').value = parseInt(row.cells[5].textContent);
+            } else {
+                document.getElementById('edit-gym-fields').style.display = 'none';
+                document.getElementById('edit-spa-fields').style.display = 'block';
+                document.getElementById('edit-price').value = parseFloat(row.cells[6].textContent.replace('€', ''));
+            }
+            
+            document.getElementById('edit-course-popup').style.display = 'flex';
+        });
+    });
+
+    document.querySelector('#edit-course-popup .close-popup').addEventListener('click', closeEditCoursePopup);
+    document.querySelector('#edit-course-popup .btn-cancel').addEventListener('click', closeEditCoursePopup);
+
+    document.getElementById('edit-course-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submit-edit-btn');
+        const formLoader = document.getElementById('edit-form-loader');
+        
+        submitBtn.disabled = true;
+        formLoader.style.display = 'block';
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken()
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            submitBtn.disabled = false;
+            formLoader.style.display = 'none';
+            
+            if (data.success) {
+                showSuccess(data.message, true, 'courses');
+                closeEditCoursePopup();
+                window.location.reload();
+            } else {
+                showError(data.error || 'Errore durante la modifica del corso', true, 'courses');
+            }
+        })
+        .catch(error => {
+            submitBtn.disabled = false;
+            formLoader.style.display = 'none';
+            console.error('Error:', error);
+            showError('Errore durante la richiesta: ' + error.message, true, 'courses');
+        });
+    });
+
+    document.querySelector('#edit-course-popup .popup-content').addEventListener('click', function(e) {
+        e.stopPropagation();
     });
 });
 </script>
