@@ -494,7 +494,6 @@ def add_course(request):
             messages.error(request, "Istruttore/Operatore non valido.")
             return redirect('gest-corsi')
 
-        # Convert scheduled string to datetime
         try:
             scheduled_dt = timezone.make_aware(datetime.strptime(scheduled, '%Y-%m-%dT%H:%M'))
         except ValueError:
@@ -515,16 +514,22 @@ def add_course(request):
                     })
                 messages.error(request, "Capacità massima richiesta per i corsi palestra.")
                 return redirect('gest-corsi')
-            
-            new_course = GymClass.objects.create(
-                name=name,
-                description=description,
-                duration=duration,
-                instructor=instructor,
-                max_partecipants=max_partecipants,
-                imgs=image,
-                scheduled=scheduled_dt
-            )
+            try:
+                new_course = GymClass.objects.create(
+                    name=name,
+                    description=description,
+                    duration=duration,
+                    instructor=instructor,
+                    max_partecipants=max_partecipants,
+                    imgs=image,
+                    scheduled=scheduled_dt
+                )
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': "Errore durante la creazione del corso."
+                })
+        
             if is_ajax:
                 return JsonResponse({
                     'success': True,

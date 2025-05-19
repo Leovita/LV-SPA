@@ -57,7 +57,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="plan_id" id="modalPlanId">
                 <label>Nome intestatario</label>
-                <input type="text" name="card_name" required>
+                <input type="text" name="card_name" value="{{ user.full_name }}" required>
                 <label>Numero carta</label>
                 <input type="text" name="card_number" maxlength="16" required>
                 <label>Scadenza</label>
