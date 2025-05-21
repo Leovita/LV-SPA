@@ -39,7 +39,7 @@
 <div class="filters">
 <div class="search-box">
 <span class="search-icon">🔍</span>
-<input type="text" id="search-all" placeholder="Cerca per nome, tipo o istruttore...">
+<input type="text" id="search-all" placeholder="Cerca per nome, tipo o istruttore/operatore...">
 </div>
 <div class="filter-group">
 <select id="filter-type-all">
@@ -49,8 +49,6 @@
 </select>
 <select id="filter-status-all">
 <option value="">Tutti gli stati</option>
-<option value="active">Attivo</option>
-<option value="inactive">Inattivo</option>
 </select>
 </div>
 </div>
@@ -59,31 +57,25 @@
 <thead>
 <tr>
 <th>ID</th>
-<th>Nome</th>
+<th>Nome corso/servizio</th>
 <th>Tipo</th>
-<th>Istruttore</th>
+<th>Istruttore/Operatore</th>
 <th>Descrizione</th>
 <th>Durata</th>
-<th>Stato</th>
 <th>Azioni</th>
 </tr>
 </thead>
 <tbody>
 {% for course in all_courses %}
-<tr>
+<tr data-scheduled="{{ course.scheduled|date:'Y-m-d\TH:i' }}" 
+    {% if course not in gym_courses %}data-price="{{ course.price }}"{% endif %}
+    data-type="{% if course in gym_courses %}gym{% else %}spa{% endif %}">
 <td>{{ course.id }}</td>
 <td>{{ course.name }}</td>
 <td>{% if course in gym_courses %}Palestra{% else %}Spa{% endif %}</td>
 <td>{{ course.instructor.full_name }}</td>
 <td>{{ course.description }}</td>
 <td>{{ course.duration }} min</td>
-<td><span class="status {{ course.status }}">
-{% if course.status == 'active' %}
-Attivo
-{% else %}
-Inattivo
-{% endif %}
-</span></td>
 <td class="actions">
 <button class="btn btn-view" data-id="{{ course.id }}" data-type="{% if course in gym_courses %}gym{% else %}spa{% endif %}">Visualizza</button>
 <button class="btn btn-edit" data-id="{{ course.id }}" data-type="{% if course in gym_courses %}gym{% else %}spa{% endif %}">Modifica</button>
@@ -92,7 +84,7 @@ Inattivo
 </tr>
 {% empty %}
 <tr>
-<td colspan="8" class="no-data">Nessun corso disponibile</td>
+<td colspan="7" class="no-data">Nessun corso disponibile</td>
 </tr>
 {% endfor %}
 </tbody>
@@ -114,8 +106,6 @@ Inattivo
 </select>
 <select id="filter-status-gym">
 <option value="">Tutti gli stati</option>
-<option value="active">Attivo</option>
-<option value="inactive">Inattivo</option>
 </select>
 </div>
 </div>
@@ -129,26 +119,18 @@ Inattivo
 <th>Descrizione</th>
 <th>Durata</th>
 <th>Capacità</th>
-<th>Stato</th>
 <th>Azioni</th>
 </tr>
 </thead>
 <tbody>
 {% for course in gym_courses %}
-<tr>
+<tr data-scheduled="{{ course.scheduled|date:'Y-m-d\TH:i' }}">
 <td>{{ course.id }}</td>
 <td>{{ course.name }}</td>
 <td>{{ course.instructor.full_name }}</td>
 <td>{{ course.description }}</td>
 <td>{{ course.duration }} min</td>
 <td>{{ course.max_partecipants }} persone</td>
-<td><span class="status {{ course.status }}">
-{% if course.status == 'active' %}
-Attivo
-{% else %}
-Inattivo
-{% endif %}
-</span></td>
 <td class="actions">
 <button class="btn btn-view" data-id="{{ course.id }}" data-type="gym">Visualizza</button>
 <button class="btn btn-edit" data-id="{{ course.id }}" data-type="gym">Modifica</button>
@@ -157,7 +139,7 @@ Inattivo
 </tr>
 {% empty %}
 <tr>
-<td colspan="8" class="no-data">Nessun corso palestra disponibile</td>
+<td colspan="7" class="no-data">Nessun corso palestra disponibile</td>
 </tr>
 {% endfor %}
 </tbody>
@@ -179,8 +161,6 @@ Inattivo
 </select>
 <select id="filter-status-spa">
 <option value="">Tutti gli stati</option>
-<option value="active">Attivo</option>
-<option value="inactive">Inattivo</option>
 </select>
 </div>
 </div>
@@ -190,7 +170,7 @@ Inattivo
 <tr>
 <th>ID</th>
 <th>Nome</th>
-<th>Tipo</th>
+<th>Tipo trattamento</th>
 <th>Operatore</th>
 <th>Descrizione</th>
 <th>Durata</th>
@@ -200,7 +180,7 @@ Inattivo
 </thead>
 <tbody>
 {% for service in spa_services %}
-<tr>
+<tr data-scheduled="{{ service.scheduled|date:'Y-m-d\TH:i' }}" data-price="{{ service.price }}">
 <td>{{ service.id }}</td>
 <td>{{ service.name }}</td>
 <td>{{ service.get_type_display }}</td>
@@ -557,6 +537,10 @@ gap: 5px;
 justify-content: center;
 }
 
+th:last-child {
+text-align: center;
+}
+
 .notification {
     position: fixed;
     top: 20px;
@@ -635,7 +619,14 @@ document.addEventListener('DOMContentLoaded', function() {
             for (let i = 1; i < rows.length; i++) {
                 let match = false;
                 const row = rows[i];
-                
+                if (tableId === 'all') {
+                    const typeFlt = document.getElementById('filter-type-all').value.trim().toLowerCase();
+                    const rowType = (row.getAttribute('data-type') || '').trim().toLowerCase();
+                    if (typeFlt && rowType !== typeFlt) {
+                        row.style.display = 'none';
+                        continue;
+                    }
+                }
                 for (let col of columns) {
                     const cell = row.getElementsByTagName('td')[col];
                     if (cell) {
@@ -643,6 +634,55 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (text.toLowerCase().indexOf(filter) > -1) {
                             match = true;
                             break;
+                        }
+                    }
+                }
+                
+                if (match) {
+                    if (tableId === 'all') {
+                        const typeFlt = document.getElementById('filter-type-all').value.trim().toLowerCase();
+                        const rowType = (row.getAttribute('data-type') || '').trim().toLowerCase();
+                        const statFlt = document.getElementById('filter-status-all').value.trim().toLowerCase();
+                        const statCell = row.cells[6];
+                        const statSpan = statCell.querySelector('.status');
+                        const statVal = statSpan ? statSpan.classList.contains('active') ? 'active' : 'inactive' : '';
+                        if (typeFlt !== '') {
+                            if (rowType === '' || rowType !== typeFlt) {
+                                match = false;
+                            }
+                        }
+                        if (statFlt !== '' && statVal !== statFlt) {
+                            match = false;
+                        }
+                    } 
+                    else if (tableId === 'gym') {
+                        const instFlt = document.getElementById('filter-instructor-gym').value.toLowerCase();
+                        const instCell = row.cells[2];
+                        const instTxt = instCell.textContent.trim().toLowerCase();
+                        
+                        const statFlt = document.getElementById('filter-status-gym').value.toLowerCase();
+                        const statCell = row.cells[6];
+                        const statSpan = statCell.querySelector('.status');
+                        const statVal = statSpan ? statSpan.classList.contains('active') ? 'active' : 'inactive' : '';
+                        
+                        if ((instFlt !== '' && instTxt !== instFlt) || 
+                            (statFlt !== '' && statVal !== statFlt)) {
+                            match = false;
+                        }
+                    } 
+                    else if (tableId === 'spa') {
+                        const typeFlt = document.getElementById('filter-type-spa').value.toLowerCase();
+                        const typeCell = row.cells[2];
+                        const typeTxt = typeCell.textContent.trim().toLowerCase();
+                        
+                        const statFlt = document.getElementById('filter-status-spa').value.toLowerCase();
+                        const statCell = row.cells[6];
+                        const statSpan = statCell.querySelector('.status');
+                        const statVal = statSpan ? statSpan.classList.contains('active') ? 'active' : 'inactive' : '';
+                        
+                        if ((typeFlt !== '' && !typeTxt.includes(typeFlt)) || 
+                            (statFlt !== '' && statVal !== statFlt)) {
+                            match = false;
                         }
                     }
                 }
@@ -655,6 +695,65 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSearch('search-all', 'all', [1, 2, 3, 4]);
     setupSearch('search-gym', 'gym', [1, 2, 3]);
     setupSearch('search-spa', 'spa', [1, 2, 3, 4]);
+
+    function setupFilter(selId, tabId, colIdx, valType = 'text') {
+        const sel = document.getElementById(selId);
+        if (!sel) return;
+        
+        sel.addEventListener('change', function() {
+            const flt = this.value.toLowerCase();
+            const tbl = document.querySelector(`#${tabId} table`);
+            const rows = tbl.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cell = row.getElementsByTagName('td')[colIdx];
+                
+                if (cell) {
+                    let txt = '';
+                    
+                    if (valType === 'status') {
+                        const span = cell.querySelector('.status');
+                        txt = span ? span.classList.contains('active') ? 'active' : 'inactive' : '';
+                    } else if (valType === 'type') {
+                        txt = cell.textContent.trim().toLowerCase();
+                    } else {
+                        txt = cell.textContent.toLowerCase();
+                    }
+                    
+                    if (flt === '' || txt.includes(flt)) {
+                        const srch = document.getElementById(`search-${tabId}`);
+                        if (srch && srch.value.trim() !== '') {
+                            const srchFlt = srch.value.toLowerCase();
+                            let match = false;
+                            
+                            const cols = tabId === 'spa' ? [1, 2, 3, 4] : (tabId === 'gym' ? [1, 2, 3] : [1, 2, 3, 4]);
+                            for (let col of cols) {
+                                const c = row.getElementsByTagName('td')[col];
+                                if (c && c.textContent.toLowerCase().indexOf(srchFlt) > -1) {
+                                    match = true;
+                                    break;
+                                }
+                            }
+                            
+                            row.style.display = match ? '' : 'none';
+                        } else {
+                            row.style.display = '';
+                        }
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            }
+        });
+    }
+    
+    setupFilter('filter-type-all', 'all', 2, 'type');
+    setupFilter('filter-status-all', 'all', 6, 'status');
+    setupFilter('filter-instructor-gym', 'gym', 2);
+    setupFilter('filter-status-gym', 'gym', 6, 'status');
+    setupFilter('filter-type-spa', 'spa', 2);
+    setupFilter('filter-status-spa', 'spa', 6, 'status');
 
     const addCoursePopup = document.getElementById('add-course-popup');
     const addCourseForm = document.getElementById('add-course-form');
@@ -780,7 +879,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td>${isGym ? d.instructor : d.operator}</td>
                             <td>${d.description}</td>
                             <td>${d.duration} min</td>
-                            <td><span class="status ${d.status}">${d.status === 'active' ? 'Attivo' : 'Inattivo'}</span></td>
                             <td class="actions">
                                 <button class="btn btn-view" data-id="${d.id}" data-type="${isGym ? 'gym' : 'spa'}">Visualizza</button>
                                 <button class="btn btn-edit" data-id="${d.id}" data-type="${isGym ? 'gym' : 'spa'}">Modifica</button>
@@ -802,7 +900,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <td>${d.description}</td>
                                 <td>${d.duration} min</td>
                                 <td>${d.max_partecipants} persone</td>
-                                <td><span class="status ${d.status}">${d.status === 'active' ? 'Attivo' : 'Inattivo'}</span></td>
                                 <td class="actions">
                                     <button class="btn btn-view" data-id="${d.id}" data-type="gym">Visualizza</button>
                                     <button class="btn btn-edit" data-id="${d.id}" data-type="gym">Modifica</button>
@@ -924,6 +1021,12 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-description').value = row.cells[4].textContent;
             document.getElementById('edit-duration').value = parseInt(row.cells[5].textContent);
             
+            // Get the scheduled date from the row's data attribute
+            const scheduledDate = row.getAttribute('data-scheduled');
+            if (scheduledDate) {
+                document.getElementById('edit-scheduled').value = scheduledDate;
+            }
+            
             const instructorSelect = document.getElementById('edit-instructor-select');
             const instructorName = row.cells[3].textContent;
             for (let option of instructorSelect.options) {
@@ -940,7 +1043,24 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 document.getElementById('edit-gym-fields').style.display = 'none';
                 document.getElementById('edit-spa-fields').style.display = 'block';
-                document.getElementById('edit-price').value = parseFloat(row.cells[6].textContent.replace('€', ''));
+                
+                const price = row.getAttribute('data-price');
+                if (price) {
+                    document.getElementById('edit-price').value = price;
+                }
+                
+                // Get spa type from cell index 2 (Tipo column)
+                const typeCell = row.cells[2];
+                if (typeCell) {
+                    const spaTypeSelect = document.getElementById('edit-spa-type');
+                    const typeText = typeCell.textContent.trim();
+                    for (let option of spaTypeSelect.options) {
+                        if (option.text.toLowerCase() === typeText.toLowerCase()) {
+                            spaTypeSelect.value = option.value;
+                            break;
+                        }
+                    }
+                }
             }
             
             document.getElementById('edit-course-popup').style.display = 'flex';
@@ -997,6 +1117,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelector('#edit-course-popup .popup-content').addEventListener('click', function(e) {
         e.stopPropagation();
+    });
+
+    document.getElementById('filter-type-all').addEventListener('change', function() {
+        const val = this.value.trim().toLowerCase();
+        const tbl = document.querySelector('#all table');
+        const rows = tbl.getElementsByTagName('tr');
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const rowType = (row.getAttribute('data-type') || '').trim().toLowerCase();
+            if (!val || rowType === val) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
     });
 });
 </script>

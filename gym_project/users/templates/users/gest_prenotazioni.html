@@ -34,21 +34,18 @@
             </div>
         </div>
         
-        <!-- Tabs -->
         <div class="tabs">
             <div class="tab active" data-tab="all">Tutte le prenotazioni</div>
             <div class="tab" data-tab="gym">Prenotazioni Palestra</div>
             <div class="tab" data-tab="spa">Prenotazioni Spa</div>
         </div>
         
-        <!-- Tab Content -->
         <div class="tab-content-container">
-            <!-- All Bookings -->
             <div id="all" class="tab-content active">
                 <div class="filters">
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="search-all" placeholder="Cerca per nome, servizio o data...">
+                        <input type="text" id="search-all" placeholder="Cerca per utente, corso/servizio o data...">
                     </div>
                     <div class="filter-group">
                         <select id="filter-service-all">
@@ -72,9 +69,9 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Utente</th>
-                                <th>Servizio</th>
+                                <th>Corso/Servizio</th>
                                 <th>Descrizione</th>
-                                <th>Data</th>
+                                <th>Data e ora</th>
                                 <th>Stato</th>
                                 <th>Azioni</th>
                             </tr>
@@ -112,7 +109,6 @@
                 </div>
             </div>
             
-            <!-- Gym Bookings -->
             <div id="gym" class="tab-content">
                 <div class="filters">
                     <div class="search-box">
@@ -179,7 +175,6 @@
                 </div>
             </div>
             
-            <!-- Spa Bookings -->
             <div id="spa" class="tab-content">
                 <div class="filters">
                     <div class="search-box">
@@ -262,15 +257,15 @@
             transform: translateY(-20px);
             transition: all 0.3s ease;
         }
-
+        .table-container th {
+            text-align: center;
+        }
         .notification.success {
             background-color: #28a745;
         }
-
         .notification.error {
             background-color: #dc3545;
         }
-
         .notification.show {
             opacity: 1;
             transform: translateY(0);
@@ -298,7 +293,6 @@
                 }, 3000);
             }
 
-            // Tab switching functionality
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -310,7 +304,6 @@
                 });
             });
 
-            // Search functionality
             function setupSearch(inputId, tableId, columns) {
                 const input = document.getElementById(inputId);
                 if (!input) return;
@@ -340,34 +333,33 @@
                 });
             }
 
-            // Setup search functionality
-            setupSearch('search-all', 'all', [1, 2, 3, 4]); // User, Service, Description, Date
-            setupSearch('search-gym', 'gym', [1, 2, 3, 4]); // User, Course, Description, Date
-            setupSearch('search-spa', 'spa', [1, 2, 3, 4]); // User, Treatment, Description, Date
 
-            // Delete booking functionality
+            setupSearch('search-all', 'all', [1, 2, 3, 4]); 
+            setupSearch('search-gym', 'gym', [1, 2, 3, 4]); 
+            setupSearch('search-spa', 'spa', [1, 2, 3, 4]); 
+
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const bookingId = this.getAttribute('data-id');
                     const bookingType = this.getAttribute('data-type');
-                    const userName = this.closest('tr').querySelector('td:nth-child(2)').textContent;
+                    const username = this.closest('tr').querySelector('td:nth-child(2)').textContent;
                     const serviceName = this.closest('tr').querySelector('td:nth-child(3)').textContent;
 
-                    if (confirm(`Sei sicuro di voler eliminare la prenotazione di ${userName} per ${serviceName}?`)) {
+                    if (confirm(`Sei sicuro di voler eliminare la prenotazione di ${username} per ${serviceName}?`)) {
                         fetch("{% url 'admin_delete_booking' %}", {
                             method: 'POST',
                             headers: {
-                                'X-CSRFToken': '{{ csrf_token }}',
+                                'X-CSRFToken': getCookie('csrftoken'),
                                 'Content-Type': 'application/x-www-form-urlencoded',
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
                             body: `booking_id=${bookingId}&type=${bookingType}`
                         })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.json().then(err => { throw err; });
+                        .then(res => {
+                            if (!res.ok) {
+                                return res.json().then(err => { throw err; });
                             }
-                            return response.json();
+                            return res.json();
                         })
                         .then(data => {
                             console.log('Risposta cancellazione:', data);
@@ -389,11 +381,32 @@
                 const totalSpa = document.querySelectorAll('#spa tbody tr:not(.no-data)').length;
                 const total = totalGym + totalSpa;
 
-                // Aggiorna i contatori nelle stat cards
                 document.querySelector('.stat-card:nth-child(1) p').textContent = totalSpa;
                 document.querySelector('.stat-card:nth-child(2) p').textContent = totalGym;
                 document.querySelector('.stat-card:nth-child(3) p').textContent = total;
             }
+
+            function setupServiceFilter() {
+                const sel = document.getElementById('filter-service-all');
+                if (!sel) return;
+                sel.addEventListener('change', function() {
+                    const flt = this.value;
+                    const tbl = document.querySelector('#all table');
+                    const rows = tbl.getElementsByTagName('tr');
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        const cell = row.getElementsByTagName('td')[2];
+                        if (!cell) continue;
+                        const txt = cell.textContent.toLowerCase();
+                        if (flt === '' || (flt === 'gym' && txt.includes('palestra')) || (flt === 'spa' && txt.includes('spa'))) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            }
+            setupServiceFilter();
         });
     </script>
 {% endblock %}

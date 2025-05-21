@@ -97,7 +97,13 @@
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Prezzo:</span>
-                                    <span class="detail-value">€{{ booking.service_id.price }}</span>
+                                    <span class="detail-value">
+                                        {% if active_subscription %}
+                                            Gratis con abbonamento {{ active_subscription.plan.name }}
+                                        {% else %}
+                                            €{{ booking.service_id.price }}
+                                        {% endif %}
+                                    </span>
                                 </div>
                                 {% if booking.description %}
                                 <div class="detail-item">

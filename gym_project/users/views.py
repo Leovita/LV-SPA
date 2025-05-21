@@ -70,15 +70,17 @@ def home(req):
     gym_srv = GymClass.objects.all()
     spa_srv = SpaService.objects.all()
 
-    gym_date = {s.id: GymBooking.objects.filter(class_id=s).values_list('date', flat=True).first() for s in gym_srv}
-    spa_date = {s.id: SpaBooking.objects.filter(service_id=s).values_list('date', flat=True).first() for s in spa_srv}
+    gym_date = {s.id: s.scheduled for s in gym_srv}
+    spa_date = {s.id: s.scheduled for s in spa_srv}
 
     user_gym = []
     user_spa = []
+    active_subscription = None
     
     if req.user.is_authenticated:
         user_gym = list(GymBooking.objects.filter(user=req.user).values_list('class_id', flat=True))
         user_spa = list(SpaBooking.objects.filter(user=req.user).values_list('service_id', flat=True))
+        active_subscription = req.user.subscription_set.filter(is_active=True).first()
 
     ctx = {
         'gym_services': gym_srv,
@@ -87,6 +89,7 @@ def home(req):
         'spa_service_booking_dates': spa_date,
         'user_gym_bookings': user_gym,
         'user_spa_bookings': user_spa,
+        'active_subscription': active_subscription,
         'timestamp': datetime.now().timestamp(),  
     }
 
@@ -379,10 +382,12 @@ def book_spa_service(request, service_id):
 def my_bookings(request):
     gym_bookings = GymBooking.objects.filter(user=request.user).order_by('-date')
     spa_bookings = SpaBooking.objects.filter(user=request.user).order_by('-date')
+    active_subscription = request.user.subscription_set.filter(is_active=True).first()
     
     ctx = {
         'gym_bookings': gym_bookings,
         'spa_bookings': spa_bookings,
+        'active_subscription': active_subscription,
     }
     
     return render(request, 'users/my_bookings.html', ctx)
@@ -570,7 +575,8 @@ def add_course(request):
                 price=price,
                 imgs=image,
                 max_partecipants=max_partecipants if max_partecipants else 1,
-                scheduled=scheduled_dt
+                scheduled=scheduled_dt,
+                type=spa_type or 'massage'
             )
             if is_ajax:
                 return JsonResponse({
@@ -700,6 +706,7 @@ def edit_course(request, type, id):
                 })
             course.price = price
             course.operator = instructor
+            course.type = request.POST.get('spa_type') or 'massage'
 
         course.save()
 

@@ -9,10 +9,14 @@ class SpaService(models.Model):
     duration = models.IntegerField(default=45)
     scheduled = models.DateTimeField(default=timezone.now)
     price = models.IntegerField()
-
-
     max_partecipants = models.IntegerField(default=1)
     imgs = models.ImageField(upload_to='spa/', blank=True, null=True, help_text="Carica un'immagine del trattamento")
+    TYPE_CHOICES = [
+        ('massage', 'Massaggio'),
+        ('treatment', 'Trattamento'),
+        ('ritual', 'Rituale'),
+    ]
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='massage')
 
     def check_availability(self):
         return SpaBooking.objects.filter(service_id=self.id).count() < self.max_partecipants

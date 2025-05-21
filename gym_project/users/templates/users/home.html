@@ -105,11 +105,12 @@
         {% with booking_date=spa_service_booking_dates|get_item:service.id %}
             {% if booking_date %}
                 <span class="detail-value">{{ booking_date|date:"Y-m-d H:i" }}</span>
-            {% else %}
+        {% else %}
                 Nessuna data disponibile
-            {% endif %}
+        {% endif %}
         {% endwith %}
     </p>
+    <p><strong>Data e ora:</strong> <span class="detail-value">{{ spa_service_booking_dates|get_item:service.id|date:"Y-m-d H:i"|default:"Nessuna data disponibile" }}</span></p>
     <p><strong>Posti disponibili:</strong>
      {% if service.check_availability %}
      Disponibile
@@ -244,6 +245,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     serviceCards.forEach(card => {
         card.addEventListener('click', function() {
+            if (this.classList.contains('no-click')) return;
+
             const serviceId = this.dataset.id;
             const serviceType = this.dataset.type;
             const serviceName = this.dataset.name;
@@ -267,12 +270,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('popup-availability').textContent = `${max - current} su ${max}`;
             } else if (serviceType === 'spa') {
                 document.getElementById('spa-specific-fields').style.display = 'block';
-                document.getElementById('popup-price').textContent = '€' + this.dataset.price;
+                const hasSubscription = this.dataset.hasSubscription === 'true';
+                const subscriptionName = this.dataset.subscriptionName;
+                if (hasSubscription) {
+                    document.getElementById('popup-price').textContent = 'Gratis con abbonamento ' + subscriptionName;
+                } else {
+                    document.getElementById('popup-price').textContent = '€' + this.dataset.price;
+                }
             }
 
-            const bookingDate = this.querySelector('.detail-value')?.textContent || 'Non disponibile';
-            document.getElementById('booking-datetime').textContent = bookingDate;
-
+            document.getElementById('booking-datetime').textContent = this.dataset.bookingDate;
             document.getElementById('booking-popup').style.display = 'flex';
         });
     });
@@ -347,7 +354,6 @@ function closeAddCoursePopup() {
   document.getElementById('add-course-popup').style.display = 'none';
 }
 
-// Mostra/nasconde i campi in base al tipo selezionato
 document.getElementById('course-type').addEventListener('change', function() {
   if (this.value === 'spa') {
     document.getElementById('gym-fields').style.display = 'none';

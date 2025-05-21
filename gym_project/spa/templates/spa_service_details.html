@@ -21,7 +21,15 @@
           </div>
           <div class="info-item">
             <span class="label">Prezzo:</span>
-            <span class="value">€{{ course.price }}</span>
+            <span class="value">
+                {% with active_sub=user.subscription_set.all|first %}
+                    {% if active_sub and active_sub.is_active %}
+                        Gratis con abbonamento {{ active_sub.plan.name }}
+                    {% else %}
+                        €{{ course.price }}
+                    {% endif %}
+                {% endwith %}
+            </span>
           </div>
           <div class="info-item">
             <span class="label">Tipo:</span>
