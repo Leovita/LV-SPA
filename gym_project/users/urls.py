@@ -14,6 +14,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
     path('profile/update-picture/', views.update_profile_picture, name='update_profile_picture'),
+    path('profile/change-password/', views.change_password_view, name='change_password'),
     path('profile/delete-account/', views.delete_account, name='delete_account'),
     path('gest-prenotazioni/', views.gest_prenotazioni, name='gest_prenotazioni'),
     path('book-gym/<int:class_id>/', views.book_gym_class, name='book_gym'),

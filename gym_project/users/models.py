@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 import os
 from subscriptions.models import SubscriptionPlan
+import re
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **xtra_F):
@@ -34,7 +35,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+    @staticmethod
+    def validate_password(pwd):
+        RULES = [
+            (r'.{,}', "Minimo 8 caratteri."),
+            (r'[A-Z]', "Almeno una MAIUSCOLA."),
+            (r'[a-z]', "Almeno una minuscola."),
+            (r'\d', "Almeno un numero."),
+            (r'[!@#$%^&*(),.?\":{}|<>]', "Almeno un simbolo speciale.")
+        ]
+        return [msg for rgx, msg in RULES if not re.search(rgx, pwd)]
+
     def edit_profile(self):
+        self.validate_password(self.password)
         self.save()
 
     def show_history(self):
@@ -47,6 +60,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email 
 
+    def cancel_booking(self, booking_model, booking_id):
+        try:
+            booking = booking_model.objects.get(id=booking_id, user=self)
+            booking.delete()
+            return True, 'Prenotazione annullata con successo'
+        except booking_model.DoesNotExist:
+            return False, 'Prenotazione non trovata'
+        except Exception as e:
+            return False, str(e)
 
 
 class ProfileUpdateForm(forms.ModelForm):
@@ -57,6 +79,12 @@ class ProfileUpdateForm(forms.ModelForm):
         model = User
         fields = ['full_name', 'email', 'phone']
         
+    def clean_full_name(self):
+        full_name = self.cleaned_data.get('full_name', '').strip()
+        if not re.match(r'^[A-Za-zÀ-ÿ\s]{3,}$', full_name) or len(full_name.split()) < 2:
+            raise ValidationError(_("Il nome completo deve contenere almeno nome e cognome (solo lettere)."))
+        return full_name
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
         user_id = self.instance.id
@@ -68,13 +96,11 @@ class ProfileUpdateForm(forms.ModelForm):
         return email
         
     def clean_phone(self):
-        phone = self.cleaned_data.get('phone')
+        phone = self.cleaned_data.get('phone', '').strip()
         
-        if phone:
-            cleaned_phone = ''.join(filter(lambda x: x.isdigit() or x in ['+', '-', '(', ')'], phone))
-            if len(cleaned_phone) < 6:
-                raise ValidationError(_('Il numero di telefono deve contenere almeno 6 cifre.'))
-                
+        if phone and (not phone.isdigit() or len(phone) != 10):
+            raise ValidationError(_("Il numero di telefono deve contenere esattamente 10 cifre numeriche."))
+            
         return phone
 
 class ProfilePictureForm(forms.ModelForm):

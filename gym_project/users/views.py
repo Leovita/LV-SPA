@@ -19,14 +19,8 @@ from dateutil import parser
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
-def is_staff_member(user):
-    return user.is_staff
-
-def is_admin(user):
-    return user.is_superuser
-
 @login_required
-@user_passes_test(is_staff_member)
+@user_passes_test(lambda u: u.is_staff)
 def gest_corsi(req):
     gym = GymClass.objects.all()
     spa = SpaService.objects.all()
@@ -44,10 +38,10 @@ def gest_corsi(req):
 
 def profile(request):
     if not request.user.is_authenticated:
-        return redirect('login') 
-    return render(request, 'users/profile.html') 
+        return redirect('login')
+    return render(request, 'users/profile.html')
 
-def login(req): 
+def login(req):
     if req.method == "POST":
         mail = req.POST.get("email")
         pwd = req.POST.get("login-password")
@@ -63,7 +57,7 @@ def login(req):
             return redirect('home')
         else:
             messages.error(req, "Email o password errati.")
-    
+
     return render(req, "users/login.html")
 
 def home(req):
@@ -76,7 +70,7 @@ def home(req):
     user_gym = []
     user_spa = []
     active_subscription = None
-    
+
     if req.user.is_authenticated:
         user_gym = list(GymBooking.objects.filter(user=req.user).values_list('class_id', flat=True))
         user_spa = list(SpaBooking.objects.filter(user=req.user).values_list('service_id', flat=True))
@@ -90,21 +84,11 @@ def home(req):
         'user_gym_bookings': user_gym,
         'user_spa_bookings': user_spa,
         'active_subscription': active_subscription,
-        'timestamp': datetime.now().timestamp(),  
+        'timestamp': datetime.now().timestamp(),
     }
 
     return render(req, 'users/home.html', ctx)
 
-
-def validate_password(pwd):
-    RULES = [
-        (r'.{8,}', "Minimo 8 caratteri."),
-        (r'[A-Z]', "Almeno una MAIUSCOLA."),
-        (r'[a-z]', "Almeno una minuscola."),
-        (r'\d', "Almeno un numero."),
-        (r'[!@#$%^&*(),.?\":{}|<>]', "Almeno un simbolo speciale.")
-    ]
-    return [msg for rgx, msg in RULES if not re.search(rgx, pwd)]
 
 def register(req):
     if req.method == "POST":
@@ -125,7 +109,7 @@ def register(req):
             messages.error(req, "Utente già esistente con questa email.")
             return redirect('/login/?tab=register')
 
-        pwd_err = validate_password(pwd)
+        pwd_err = User.validate_password(pwd)
         if pwd_err:
             for err in pwd_err:
                 messages.error(req, err)
@@ -161,30 +145,12 @@ def update_profile(request):
     """
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, instance=request.user)
-        
+
         if form.is_valid():
-            cleaned_data = form.cleaned_data
-            full_name = cleaned_data.get('full_name', '').strip()
-            phone = cleaned_data.get('phone', '').strip()
-            email = cleaned_data.get('email', '').strip()
-
-            if not re.match(r'^[A-Za-zÀ-ÿ\s]{3,}$', full_name) or len(full_name.split()) < 2:
-                messages.error(request, "Il nome completo deve contenere almeno nome e cognome (solo lettere).")
-                return redirect('profile')
-
-            if phone and (not phone.isdigit() or len(phone) < 9) or len(phone) > 10:
-                messages.error(request, "Il numero di telefono deve contenere almeno 8 cifre numeriche.")
-                return redirect('profile')
-            try:
-                validate_email(email)
-            except ValidationError:
-                messages.error(request, "L'email inserita non è valida.")
-                return redirect('profile')
-
             form.save()
             messages.success(request, 'Il tuo profilo è stato aggiornato con successo!')
             return redirect('profile')
-        
+
         else:
             for field, errors in form.errors.items():
                 for error in errors:
@@ -206,7 +172,7 @@ def update_profile_picture(request):
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
-    
+
     return redirect('profile')
 
 @login_required
@@ -231,16 +197,16 @@ def delete_account(request):
     return render(request, 'users/delete_account.html')
 
 @login_required
-@user_passes_test(is_staff_member)
+@user_passes_test(lambda u: u.is_staff)
 def gest_prenotazioni(request):
-    gym_bookings = GymBooking.objects.select_related('user', 'class_id').all()    
-    spa_bookings = SpaBooking.objects.select_related('user', 'service_id').all()    
+    gym_bookings = GymBooking.objects.select_related('user', 'class_id').all()
+    spa_bookings = SpaBooking.objects.select_related('user', 'service_id').all()
 
     gym_count = gym_bookings.count()
     spa_count = spa_bookings.count()
-    
+
     all_bookings = []
-    
+
     for booking in gym_bookings:
         all_bookings.append({
             'id': booking.id,
@@ -248,10 +214,10 @@ def gest_prenotazioni(request):
             'service': f"{booking.class_id.name} (Palestra)",
             'description': booking.description if booking.description else booking.class_id.description,
             'date': booking.class_id.scheduled,
-            'status': 'confirmed',  
+            'status': 'confirmed',
             'type': 'gym'
         })
-    
+
     for booking in spa_bookings:
         all_bookings.append({
             'id': booking.id,
@@ -262,10 +228,9 @@ def gest_prenotazioni(request):
             'status': 'confirmed',
             'type': 'spa'
         })
-    
-    #sort by date
+
     all_bookings.sort(key=lambda x: x['date'])
-    
+
     gym_bookings_data = []
     for booking in gym_bookings:
         gym_bookings_data.append({
@@ -274,9 +239,9 @@ def gest_prenotazioni(request):
             'course': booking.class_id.name,
             'description': booking.description if booking.description else booking.class_id.description,
             'date': booking.class_id.scheduled,
-            'status': 'confirmed', 
+            'status': 'confirmed',
         })
-    
+
     spa_bookings_data = []
     for booking in spa_bookings:
         spa_bookings_data.append({
@@ -285,18 +250,18 @@ def gest_prenotazioni(request):
             'treatment': booking.service_id.name,
             'description': booking.description if booking.description else booking.service_id.description,
             'date': booking.service_id.scheduled,
-            'status': 'confirmed',  
+            'status': 'confirmed',
         })
-    
+
     ctx = {
         'total_gym_bookings': gym_count,
         'total_spa_bookings': spa_count,
         'all_bookings': all_bookings,
         'gym_bookings': gym_bookings_data,
         'spa_bookings': spa_bookings_data,
-        'timestamp': datetime.now().timestamp(),  
+        'timestamp': datetime.now().timestamp(),
     }
-    
+
     return render(request, 'users/gest_prenotazioni.html', ctx)
 
 @login_required
@@ -304,35 +269,35 @@ def gest_prenotazioni(request):
 def book_gym_class(request, class_id):
     try:
         gym_class = GymClass.objects.get(id=class_id)
-        
+
         if not gym_class.check_availability():
             return JsonResponse({'success': False, 'error': 'Classe esaurita. Non ci sono posti disponibili.'})
-        
+
         data = json.loads(request.body)
         date_time_str = data.get('date_time')
-        
+
         if not date_time_str:
             return JsonResponse({'success': False, 'error': 'Data/ora mancante.'})
-        
+
         try:
             date_time = parser.isoparse(date_time_str)
             if timezone.is_naive(date_time):
                 date_time = timezone.make_aware(date_time)
         except ValueError:
             return JsonResponse({'success': False, 'error': 'Formato data/ora non valido.'})
-        
+
         booking = GymBooking.objects.create(
             user=request.user,
             class_id=gym_class,
             date=date_time,
         )
-        
+
         return JsonResponse({
-            'success': True, 
+            'success': True,
             'booking_id': booking.id,
             'message': f'Prenotazione per {gym_class.name} confermata!'
         })
-    
+
     except GymClass.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Classe non trovata.'})
     except Exception as e:
@@ -343,34 +308,34 @@ def book_gym_class(request, class_id):
 def book_spa_service(request, service_id):
     try:
         spa_service = SpaService.objects.get(id=service_id)
-        
+
         if not spa_service.check_availability():
             return JsonResponse({'success': False, 'error': 'Servizio non disponibile al momento.'})
-        
+
         data = json.loads(request.body)
         date_time_str = data.get('date_time')
-        
+
         if not date_time_str:
             return JsonResponse({'success': False, 'error': 'Data/ora mancante.'})
-        
+
         try:
             date_time = parser.isoparse(date_time_str)
             if timezone.is_naive(date_time):
                 date_time = timezone.make_aware(date_time)
         except ValueError:
             return JsonResponse({'success': False, 'error': 'Formato data/ora non valido.'})
-        
+
         notes = data.get('notes', '')
-        
+
         booking = SpaBooking.objects.create(
             user=request.user,
             service_id=spa_service,
             date=date_time,
             description=notes
         )
-        
+
         return JsonResponse({
-            'success': True, 
+            'success': True,
             'booking_id': booking.id,
             'message': f'Prenotazione per {spa_service.name} confermata!'
         })
@@ -383,17 +348,17 @@ def my_bookings(request):
     gym_bookings = GymBooking.objects.filter(user=request.user).order_by('-date')
     spa_bookings = SpaBooking.objects.filter(user=request.user).order_by('-date')
     active_subscription = request.user.subscription_set.filter(is_active=True).first()
-    
+
     ctx = {
         'gym_bookings': gym_bookings,
         'spa_bookings': spa_bookings,
         'active_subscription': active_subscription,
     }
-    
+
     return render(request, 'users/my_bookings.html', ctx)
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(lambda u: u.is_superuser)
 @require_http_methods(["DELETE"])
 def delete_course(request, type, id):
     try:
@@ -408,7 +373,7 @@ def delete_course(request, type, id):
             return JsonResponse({'message': 'Corso eliminato con successo'})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-    
+
     except (GymClass.DoesNotExist, SpaService.DoesNotExist):
         return JsonResponse({'error': 'Corso non trovato'}, status=404)
     except Exception as e:
@@ -416,7 +381,7 @@ def delete_course(request, type, id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(lambda u: u.is_superuser)
 @require_http_methods(["POST"])
 def admin_delete_booking(request):
     """
@@ -440,30 +405,28 @@ def admin_delete_booking(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
-#booking sempre cancellato con user=request.user per fare in modo
-# che un utente non possa cancellare una prenotazione di un altro utente
-def delete_booking(model, user, booking_id):
-    try:
-        booking = model.objects.get(id=booking_id, user=user)
-        booking.delete()
-        return JsonResponse({'success': True, 'message': 'Prenotazione annullata con successo'})
-    except model.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Prenotazione non trovata'}, status=404)
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
 @login_required
 @require_http_methods(["POST"])
 def cancel_gym_booking(request, booking_id):
-    return delete_booking(GymBooking, request.user, booking_id)
+    success, message = request.user.cancel_booking(GymBooking, booking_id)
+    if success:
+        return JsonResponse({'success': True, 'message': message})
+    else:
+        status_code = 404 if message == 'Prenotazione non trovata' else 500
+        return JsonResponse({'success': False, 'error': message}, status=status_code)
 
 @login_required
 @require_http_methods(["POST"])
 def cancel_spa_booking(request, booking_id):
-    return delete_booking(SpaBooking, request.user, booking_id)
+    success, message = request.user.cancel_booking(SpaBooking, booking_id)
+    if success:
+        return JsonResponse({'success': True, 'message': message})
+    else:
+        status_code = 404 if message == 'Prenotazione non trovata' else 500
+        return JsonResponse({'success': False, 'error': message}, status=status_code)
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(lambda u: u.is_superuser)
 @require_http_methods(["POST"])
 def add_course(request):
     """Aggiunge un nuovo corso palestra o servizio spa (solo admin, solo POST)."""
@@ -476,10 +439,9 @@ def add_course(request):
         image = request.FILES.get('image')
         max_partecipants = request.POST.get('max_partecipants')
         scheduled = request.POST.get('scheduled')
-        
-        # Verifica se è una richiesta AJAX
+
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-        
+
         if not all([course_type, name, description, duration, instructor_id, image, scheduled]):
             if is_ajax:
                 return JsonResponse({
@@ -534,7 +496,7 @@ def add_course(request):
                     'success': False,
                     'error': "Errore durante la creazione del corso."
                 })
-        
+
             if is_ajax:
                 return JsonResponse({
                     'success': True,
@@ -554,7 +516,7 @@ def add_course(request):
                     }
                 })
             messages.success(request, f"Corso palestra '{name}' aggiunto con successo.")
-        
+
         elif course_type == 'spa':
             price = request.POST.get('price')
             spa_type = request.POST.get('spa_type')
@@ -566,7 +528,7 @@ def add_course(request):
                     })
                 messages.error(request, "Prezzo richiesto per i servizi spa.")
                 return redirect('gest-corsi')
-            
+
             new_service = SpaService.objects.create(
                 name=name,
                 description=description,
@@ -597,7 +559,7 @@ def add_course(request):
                     }
                 })
             messages.success(request, f"Servizio spa '{name}' aggiunto con successo.")
-        
+
         else:
             if is_ajax:
                 return JsonResponse({
@@ -606,11 +568,11 @@ def add_course(request):
                 })
             messages.error(request, "Tipo corso/servizio non valido.")
             return redirect('gest-corsi')
-        
+
         if not is_ajax:
             return redirect('gest-corsi')
         return JsonResponse({'success': True})
-    
+
     except Exception as e:
         if is_ajax:
             return JsonResponse({
@@ -621,7 +583,7 @@ def add_course(request):
         return redirect('gest-corsi')
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(lambda u: u.is_superuser)
 def course_details(request, type, id):
     """Visualizza i dettagli di un corso palestra o servizio spa."""
     try:
@@ -634,14 +596,14 @@ def course_details(request, type, id):
         else:
             messages.error(request, "Tipo di corso non valido")
             return redirect('gest-corsi')
-        
+
         return render(request, template, {'course': course})
     except Exception as e:
         messages.error(request, f"Errore nel caricamento dei dettagli: {str(e)}")
         return redirect('gest-corsi')
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(lambda u: u.is_superuser)
 @require_http_methods(["POST"])
 def edit_course(request, type, id):
     """Modifica un corso palestra o servizio spa esistente."""
@@ -697,7 +659,7 @@ def edit_course(request, type, id):
                 })
             course.max_partecipants = max_partecipants
             course.instructor = instructor
-        else:  # spa
+        else:
             price = request.POST.get('price')
             if not price:
                 return JsonResponse({
