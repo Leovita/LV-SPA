@@ -82,18 +82,4 @@ document.addEventListener('DOMContentLoaded', function() {
             errorSpan.remove();
         }, { once: true });
     }
-    
-    // Handle messages fadeout
-    const messages = document.querySelectorAll('.message');
-    if (messages.length > 0) {
-        setTimeout(() => {
-            messages.forEach(msg => {
-                msg.style.transition = 'opacity 0.5s ease';
-                msg.style.opacity = '0';
-                setTimeout(() => {
-                    msg.remove();
-                }, 500);
-            });
-        }, 5000);
-    }
 });

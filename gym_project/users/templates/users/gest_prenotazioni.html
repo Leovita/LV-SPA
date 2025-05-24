@@ -243,7 +243,155 @@
         </div>
         <div id="notification" class="notification" style="display: none;"></div>
     </main>
+
+    <!-- Edit Booking Popup -->
+    <div class="popup-overlay" id="edit-booking-popup" style="display:none;">
+      <div class="popup-content">
+        <div class="popup-header">
+          <h2>Modifica Prenotazione</h2>
+          <button type="button" class="close-popup" data-popup-id="edit-booking-popup" aria-label="Close">&times;</button>
+        </div>
+        <form id="edit-booking-form" method="post" class="course-form"> 
+          {% csrf_token %}
+          <input type="hidden" id="edit-booking-id" name="booking_id">
+          <input type="hidden" id="edit-booking-type" name="booking_type">
+          
+          <div id="edit-booking-loader" style="display: none; margin: 0 auto 10px auto; width: 36px; height: 36px; border: 4px solid #e3e3e3; border-top: 4px solid #007bff; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+
+          <div class="form-group">
+            <label>Utente:</label>
+            <input type="text" id="edit-booking-user-info" readonly style="background: #f8f9fa; color: #333; font-size: 0.95rem; border: 1.5px solid #ddd; border-radius: 6px;" />
+          </div>
+
+          <div class="form-group">
+            <label>Corso/Servizio:</label>
+            <input type="text" id="edit-booking-service-info" readonly style="background: #f8f9fa; color: #333; font-size: 0.95rem; border: 1.5px solid #ddd; border-radius: 6px;" />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-booking-datetime">Data e Ora Prenotazione:</label>
+            <input type="datetime-local" name="datetime" id="edit-booking-datetime" required>
+          </div>
+          
+          <div id="edit-booking-notes-group" class="form-group" style="display:none;">
+            <label for="edit-booking-notes">Note/Descrizione:</label>
+            <textarea name="notes" id="edit-booking-notes"></textarea>
+          </div>
+          
+          <div class="popup-actions">
+            <button type="submit" class="btn btn-primary" id="submit-edit-booking-btn">Salva Modifiche</button>
+            <button type="button" class="btn btn-cancel close-popup" data-popup-id="edit-booking-popup">Annulla</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <style>
+        /* Basic styles for popup - can be moved to a CSS file */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeInBg 0.3s;
+        }
+
+        @keyframes fadeInBg {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 32px 28px 24px 28px;
+            border-radius: 16px;
+            width: 95%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 1.5px 6px rgba(0,0,0,0.08);
+            animation: popupIn 0.35s cubic-bezier(.4,1.4,.6,1);
+            z-index: 1001;
+            pointer-events: auto;
+        }
+        
+        @keyframes popupIn {
+            from { transform: scale(0.95) translateY(40px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-popup {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s;
+        }
+        .close-popup:hover { color: #e74c3c; }
+
+        .course-form { /* Reusing some styling from gest_corsi */
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px;
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #fafbfc;
+            transition: border 0.2s;
+            width: 100%; /* Make input fields take full width */
+            box-sizing: border-box; /* Ensure padding and border don't add to width */
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border: 1.5px solid #007bff;
+            outline: none;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .popup-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* Original styles from gest_prenotazioni.html */
         .notification {
             position: fixed;
             top: 20px;
@@ -274,6 +422,22 @@
     <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
     <script>
+        function getCsrfToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             function showNotification(message, type = 'success') {
                 const notification = document.getElementById('notification');
@@ -349,7 +513,7 @@
                         fetch("{% url 'admin_delete_booking' %}", {
                             method: 'POST',
                             headers: {
-                                'X-CSRFToken': getCookie('csrftoken'),
+                                'X-CSRFToken': getCsrfToken(),
                                 'Content-Type': 'application/x-www-form-urlencoded',
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
@@ -376,16 +540,6 @@
                 });
             });
 
-            function updateBookingCounters() {
-                const totalGym = document.querySelectorAll('#gym tbody tr:not(.no-data)').length;
-                const totalSpa = document.querySelectorAll('#spa tbody tr:not(.no-data)').length;
-                const total = totalGym + totalSpa;
-
-                document.querySelector('.stat-card:nth-child(1) p').textContent = totalSpa;
-                document.querySelector('.stat-card:nth-child(2) p').textContent = totalGym;
-                document.querySelector('.stat-card:nth-child(3) p').textContent = total;
-            }
-
             function setupServiceFilter() {
                 const sel = document.getElementById('filter-service-all');
                 if (!sel) return;
@@ -407,6 +561,219 @@
                 });
             }
             setupServiceFilter();
+
+            document.querySelectorAll('.btn-view').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const type = this.getAttribute('data-type');
+                    // Redirect to a new URL for booking details
+                    window.location.href = `/booking-details/${type}/${id}/`;
+                });
+            });
+
+            // --- JavaScript para Edit Booking Popup ---
+            const editBookingPopup = document.getElementById('edit-booking-popup');
+            const editBookingForm = document.getElementById('edit-booking-form');
+            const editBookingLoader = document.getElementById('edit-booking-loader');
+            const submitEditBookingBtn = document.getElementById('submit-edit-booking-btn');
+
+            function openEditBookingPopup() {
+                editBookingPopup.style.display = 'flex';
+            }
+
+            function closeEditBookingPopup() {
+                editBookingPopup.style.display = 'none';
+                editBookingForm.reset();
+                document.getElementById('edit-booking-notes-group').style.display = 'none'; 
+            }
+
+            document.querySelectorAll('.close-popup').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const popupId = this.getAttribute('data-popup-id');
+                    if (popupId === 'edit-booking-popup') {
+                        closeEditBookingPopup();
+                    }
+                    // Aquí puedes añadir lógica para otros popups si es necesario
+                });
+            });
+
+            // Cerrar popup si se hace clic fuera del contenido
+            editBookingPopup.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeEditBookingPopup();
+                }
+            });
+            editBookingPopup.querySelector('.popup-content').addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookingId = this.getAttribute('data-id');
+                    const bookingType = this.getAttribute('data-type');
+                    
+                    openEditBookingPopup(); 
+                    editBookingLoader.style.display = 'block';
+                    editBookingForm.style.display = 'flex'; 
+
+                    const userInfoGroup = document.getElementById('edit-booking-user-info').closest('.form-group');
+                    const serviceInfoGroup = document.getElementById('edit-booking-service-info').closest('.form-group');
+                    const datetimeGroup = document.getElementById('edit-booking-datetime').closest('.form-group');
+                    const notesGroup = document.getElementById('edit-booking-notes-group');
+                    const popupActions = editBookingForm.querySelector('.popup-actions');
+
+                    userInfoGroup.style.display = 'none';
+                    serviceInfoGroup.style.display = 'none';
+                    datetimeGroup.style.display = 'none';
+                    notesGroup.style.display = 'none';
+                    popupActions.style.display = 'none';
+                    
+                    document.getElementById('edit-booking-user-info').value = '';
+                    document.getElementById('edit-booking-service-info').value = '';
+                    document.getElementById('edit-booking-datetime').value = '';
+                    document.getElementById('edit-booking-notes').value = '';
+
+                    fetch(`/edit-booking/${bookingType}/${bookingId}/`, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': getCsrfToken()
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Response not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success && data.booking) {
+                            const booking = data.booking;
+                            document.getElementById('edit-booking-id').value = booking.id;
+                            document.getElementById('edit-booking-type').value = booking.type;
+                            document.getElementById('edit-booking-user-info').value = booking.user_info;
+                            document.getElementById('edit-booking-service-info').value = booking.service_info;
+                            document.getElementById('edit-booking-datetime').value = booking.datetime;
+                            
+                            // Mostra i gruppi di form popolati
+                            userInfoGroup.style.display = 'flex';
+                            serviceInfoGroup.style.display = 'flex';
+                            datetimeGroup.style.display = 'flex';
+
+                            // Always show notes field if it exists and populate it
+                            const notesInput = document.getElementById('edit-booking-notes');
+                            const notesGroupElement = document.getElementById('edit-booking-notes-group');
+                            if (booking.notes !== undefined) {
+                                notesInput.value = booking.notes || '';
+                                notesInput.disabled = false;
+                                notesInput.readOnly = false;
+                                notesGroupElement.style.display = 'block'; // or 'flex'
+                            } else {
+                                notesGroupElement.style.display = 'none';
+                            }
+                            // Ensure datetime is editable
+                            const datetimeInput = document.getElementById('edit-booking-datetime');
+                            datetimeInput.disabled = false;
+                            datetimeInput.readOnly = false;
+                            popupActions.style.display = 'flex'; // Mostra i pulsanti di azione
+
+                            // --- BEGIN DIAGNOSTIC LOGS ---
+                            const datetimeInputForLog = document.getElementById('edit-booking-datetime');
+                            console.log('Datetime input state:', {
+                                disabled: datetimeInputForLog.disabled,
+                                readOnly: datetimeInputForLog.readOnly,
+                                value: datetimeInputForLog.value
+                            });
+                            const notesInputForLog = document.getElementById('edit-booking-notes');
+                            console.log('Notes input state:', {
+                                disabled: notesInputForLog.disabled,
+                                readOnly: notesInputForLog.readOnly,
+                                value: notesInputForLog.value
+                            });
+                            // --- END DIAGNOSTIC LOGS ---
+
+                        } else {
+                            throw new Error(data.error || 'Impossibile caricare i dati della prenotazione.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Errore nel fetch dei dettagli prenotazione:', error);
+                        showNotification(error.message || 'Errore caricamento dati.', 'error');
+                        closeEditBookingPopup();
+                    })
+                    .finally(() => {
+                        editBookingLoader.style.display = 'none'; // Nascondi lo spinner in ogni caso
+                    });
+                });
+            });
+
+            editBookingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitEditBookingBtn.disabled = true;
+                editBookingLoader.style.display = 'block';
+
+                const formData = new FormData(this);
+                const bookingId = formData.get('booking_id');
+                const bookingType = formData.get('booking_type');
+
+                // Ensure 'notes' is included in formData even if empty, if the field was visible
+                const notesGroup = document.getElementById('edit-booking-notes-group');
+                if (notesGroup.style.display !== 'none' && !formData.has('notes')) {
+                    formData.append('notes', '');
+                }
+
+                fetch(`/edit-booking/${bookingType}/${bookingId}/`, { // URL de la nueva vista POST
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCsrfToken() 
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message || 'Prenotazione aggiornata!', 'success');
+                        closeEditBookingPopup();
+                        // Aggiorna la riga della tabella senza ricaricare la pagina
+                        const bookingId = formData.get('booking_id');
+                        const bookingType = formData.get('booking_type');
+                        // Trova la riga corrispondente in tutte le tabelle
+                        document.querySelectorAll(`.btn-edit[data-id='${bookingId}'][data-type='${bookingType}']`).forEach(function(btn) {
+                            const row = btn.closest('tr');
+                            if (row) {
+                                // Aggiorna la data (quinta colonna)
+                                const dateCell = row.querySelector('td:nth-child(5)');
+                                // Prendi il nuovo valore dal campo input
+                                const newDateValue = document.getElementById('edit-booking-datetime').value;
+                                // Formatta la data in stile italiano (es: 31 Mag 2025, 12:34)
+                                if (dateCell && newDateValue) {
+                                    const dateObj = new Date(newDateValue);
+                                    const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+                                    // toLocaleString con 'it-IT' per formato italiano
+                                    dateCell.textContent = dateObj.toLocaleString('it-IT', options).replace('.', '');
+                                }
+                                // Aggiorna la descrizione/notes (quarta colonna)
+                                const notesCell = row.querySelector('td:nth-child(4)');
+                                const newNotesValue = document.getElementById('edit-booking-notes').value;
+                                if (notesCell) {
+                                    notesCell.textContent = newNotesValue;
+                                }
+                            }
+                        });
+                        // Nessun reload della pagina!
+                    } else {
+                        showNotification(data.error || 'Errore durante l\'aggiornamento.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Errore aggiornamento prenotazione:', error);
+                    showNotification('Errore di rete o del server.', 'error');
+                })
+                .finally(() => {
+                    submitEditBookingBtn.disabled = false;
+                    editBookingLoader.style.display = 'none';
+                });
+            });
+
         });
     </script>
 {% endblock %}

@@ -1,4 +1,3 @@
-from curses import window
 import json
 import re
 from datetime import datetime
@@ -14,10 +13,18 @@ from django.utils import timezone
 from users.models import User, ProfileUpdateForm, ProfilePictureForm
 from palestra.models import GymBooking, GymClass
 from spa.models import SpaBooking, SpaService
-from django.contrib.auth.models import Group
 from dateutil import parser
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+
+
+
+def ajax_error(err_message):
+    return JsonResponse({'success': False, 'error': err_message})
+
+def ajax_ok(mess_ok):
+    return JsonResponse({'success': True, 'message': mess_ok})
+
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)
@@ -165,7 +172,7 @@ def update_profile_picture(request):
     """
     if request.method == 'POST':
         form = ProfilePictureForm(request.POST, request.FILES, instance=request.user)
-        if form.is_valid()  :
+        if form.is_valid():
             form.save()
             messages.success(request, 'La tua immagine del profilo è stata aggiornata con successo!')
         else:
@@ -271,20 +278,20 @@ def book_gym_class(request, class_id):
         gym_class = GymClass.objects.get(id=class_id)
 
         if not gym_class.check_availability():
-            return JsonResponse({'success': False, 'error': 'Classe esaurita. Non ci sono posti disponibili.'})
+            return ajax_error('Classe esaurita. Non ci sono posti disponibili.')
 
         data = json.loads(request.body)
         date_time_str = data.get('date_time')
 
         if not date_time_str:
-            return JsonResponse({'success': False, 'error': 'Data/ora mancante.'})
+            return ajax_error('Data/ora mancante.')
 
         try:
             date_time = parser.isoparse(date_time_str)
             if timezone.is_naive(date_time):
                 date_time = timezone.make_aware(date_time)
         except ValueError:
-            return JsonResponse({'success': False, 'error': 'Formato data/ora non valido.'})
+            return ajax_error('Formato data/ora non valido.')
 
         booking = GymBooking.objects.create(
             user=request.user,
@@ -292,16 +299,12 @@ def book_gym_class(request, class_id):
             date=date_time,
         )
 
-        return JsonResponse({
-            'success': True,
-            'booking_id': booking.id,
-            'message': f'Prenotazione per {gym_class.name} confermata!'
-        })
+        return ajax_ok(f'Prenotazione per {gym_class.name} confermata!')
 
     except GymClass.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Classe non trovata.'})
+        return ajax_error('Classe non trovata.')
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        return ajax_error(str(e))
 
 @login_required
 @require_http_methods(["POST"])
@@ -310,20 +313,20 @@ def book_spa_service(request, service_id):
         spa_service = SpaService.objects.get(id=service_id)
 
         if not spa_service.check_availability():
-            return JsonResponse({'success': False, 'error': 'Servizio non disponibile al momento.'})
+            return ajax_error('Servizio non disponibile al momento.')
 
         data = json.loads(request.body)
         date_time_str = data.get('date_time')
 
         if not date_time_str:
-            return JsonResponse({'success': False, 'error': 'Data/ora mancante.'})
+            return ajax_error('Data/ora mancante.')
 
         try:
             date_time = parser.isoparse(date_time_str)
             if timezone.is_naive(date_time):
                 date_time = timezone.make_aware(date_time)
         except ValueError:
-            return JsonResponse({'success': False, 'error': 'Formato data/ora non valido.'})
+            return ajax_error('Formato data/ora non valido.')
 
         notes = data.get('notes', '')
 
@@ -334,15 +337,12 @@ def book_spa_service(request, service_id):
             description=notes
         )
 
-        return JsonResponse({
-            'success': True,
-            'booking_id': booking.id,
-            'message': f'Prenotazione per {spa_service.name} confermata!'
-        })
+        return ajax_ok(f'Prenotazione per {spa_service.name} confermata!')
+
     except SpaService.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Servizio non trovato.'})
+        return ajax_error('Servizio non trovato.')
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        return ajax_error(str(e))
 
 def my_bookings(request):
     gym_bookings = GymBooking.objects.filter(user=request.user).order_by('-date')
@@ -367,17 +367,17 @@ def delete_course(request, type, id):
         elif type == 'spa':
             course = SpaService.objects.get(id=id)
         else:
-            return JsonResponse({'error': 'Il tipo di corso non è valido (gym o spa)'}, status=400)
+            return ajax_error('Il tipo di corso non è valido (gym o spa)')
         try:
             course.delete()
-            return JsonResponse({'message': 'Corso eliminato con successo'})
+            return ajax_ok('Corso eliminato con successo')
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            return ajax_error(str(e))
 
     except (GymClass.DoesNotExist, SpaService.DoesNotExist):
-        return JsonResponse({'error': 'Corso non trovato'}, status=404)
+        return ajax_error('Corso non trovato')
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return ajax_error(str(e))
 
 
 @login_required
@@ -390,46 +390,45 @@ def admin_delete_booking(request):
     booking_id = request.POST.get('booking_id')
     booking_type = request.POST.get('type')
     if not booking_id or not booking_type:
-        return JsonResponse({'success': False, 'error': 'Dati mancanti.'}, status=400)
+        return ajax_error('Dati mancanti.')
     try:
         if booking_type == 'gym':
             booking = GymBooking.objects.get(id=booking_id)
         elif booking_type == 'spa':
             booking = SpaBooking.objects.get(id=booking_id)
         else:
-            return JsonResponse({'success': False, 'error': 'Tipo non valido.'}, status=400)
+            return ajax_error('Tipo non valido.')
         booking.delete()
-        return JsonResponse({'success': True})
+        return ajax_ok('Prenotazione eliminata con successo.')
     except (GymBooking.DoesNotExist, SpaBooking.DoesNotExist):
-        return JsonResponse({'success': False, 'error': 'Prenotazione non trovata.'}, status=404)
+        return ajax_error('Prenotazione non trovata.')
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        return ajax_error(str(e))
 
 @login_required
 @require_http_methods(["POST"])
 def cancel_gym_booking(request, booking_id):
     success, message = request.user.cancel_booking(GymBooking, booking_id)
     if success:
-        return JsonResponse({'success': True, 'message': message})
+        return ajax_ok(message)
     else:
-        status_code = 404 if message == 'Prenotazione non trovata' else 500
-        return JsonResponse({'success': False, 'error': message}, status=status_code)
+        return ajax_error(message)
 
 @login_required
 @require_http_methods(["POST"])
 def cancel_spa_booking(request, booking_id):
     success, message = request.user.cancel_booking(SpaBooking, booking_id)
     if success:
-        return JsonResponse({'success': True, 'message': message})
+        return ajax_ok(message)
     else:
-        status_code = 404 if message == 'Prenotazione non trovata' else 500
-        return JsonResponse({'success': False, 'error': message}, status=status_code)
+        return ajax_error(message)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 @require_http_methods(["POST"])
 def add_course(request):
     """Aggiunge un nuovo corso palestra o servizio spa (solo admin, solo POST)."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     try:
         course_type = request.POST.get('type')
         name = request.POST.get('name')
@@ -440,24 +439,16 @@ def add_course(request):
         max_partecipants = request.POST.get('max_partecipants')
         scheduled = request.POST.get('scheduled')
 
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if not all([course_type, name, description, duration, instructor_id, image, scheduled]):
             if is_ajax:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Tutti i campi obbligatori devono essere compilati."
-                })
+                return ajax_error("Tutti i campi obbligatori devono essere compilati.")
             messages.error(request, "Tutti i campi obbligatori devono essere compilati.")
             return redirect('gest-corsi')
 
         instructor = User.objects.filter(id=instructor_id).first()
         if not instructor:
             if is_ajax:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Istruttore/Operatore non valido."
-                })
+                return ajax_error("Istruttore/Operatore non valido.")
             messages.error(request, "Istruttore/Operatore non valido.")
             return redirect('gest-corsi')
 
@@ -465,20 +456,14 @@ def add_course(request):
             scheduled_dt = timezone.make_aware(datetime.strptime(scheduled, '%Y-%m-%dT%H:%M'))
         except ValueError:
             if is_ajax:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Formato data e ora non valido."
-                })
+                return ajax_error("Formato data e ora non valido.")
             messages.error(request, "Formato data e ora non valido.")
             return redirect('gest-corsi')
 
         if course_type == 'gym':
             if not max_partecipants:
                 if is_ajax:
-                    return JsonResponse({
-                        'success': False,
-                        'error': "Capacità massima richiesta per i corsi palestra."
-                    })
+                    return ajax_error("Capacità massima richiesta per i corsi palestra.")
                 messages.error(request, "Capacità massima richiesta per i corsi palestra.")
                 return redirect('gest-corsi')
             try:
@@ -492,10 +477,7 @@ def add_course(request):
                     scheduled=scheduled_dt
                 )
             except Exception as e:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Errore durante la creazione del corso."
-                })
+                return ajax_error("Errore durante la creazione del corso.")
 
             if is_ajax:
                 return JsonResponse({
@@ -522,10 +504,7 @@ def add_course(request):
             spa_type = request.POST.get('spa_type')
             if not price:
                 if is_ajax:
-                    return JsonResponse({
-                        'success': False,
-                        'error': "Prezzo richiesto per i servizi spa."
-                    })
+                    return ajax_error("Prezzo richiesto per i servizi spa.")
                 messages.error(request, "Prezzo richiesto per i servizi spa.")
                 return redirect('gest-corsi')
 
@@ -562,23 +541,17 @@ def add_course(request):
 
         else:
             if is_ajax:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Tipo corso/servizio non valido."
-                })
+                return ajax_error("Tipo corso/servizio non valido.")
             messages.error(request, "Tipo corso/servizio non valido.")
             return redirect('gest-corsi')
 
         if not is_ajax:
             return redirect('gest-corsi')
-        return JsonResponse({'success': True})
+        return ajax_ok('Operazione completata con successo.') # Generic success for AJAX if not returning specific data
 
     except Exception as e:
         if is_ajax:
-            return JsonResponse({
-                'success': False,
-                'error': f"Errore durante l'aggiunta: {str(e)}"
-            })
+            return ajax_error(f"Errore durante l'aggiunta: {str(e)}")
         messages.error(request, f"Errore durante l'aggiunta: {str(e)}")
         return redirect('gest-corsi')
 
@@ -613,7 +586,7 @@ def edit_course(request, type, id):
         elif type == 'spa':
             course = get_object_or_404(SpaService, id=id)
         else:
-            return JsonResponse({'error': 'Tipo non valido'}, status=400)
+            return ajax_error('Tipo non valido')
 
         name = request.POST.get('name')
         description = request.POST.get('description')
@@ -623,25 +596,16 @@ def edit_course(request, type, id):
         image = request.FILES.get('image')
 
         if not all([name, description, duration, instructor_id, scheduled]):
-            return JsonResponse({
-                'success': False,
-                'error': "Tutti i campi obbligatori devono essere compilati."
-            })
+            return ajax_error("Tutti i campi obbligatori devono essere compilati.")
 
         instructor = User.objects.filter(id=instructor_id).first()
         if not instructor:
-            return JsonResponse({
-                'success': False,
-                'error': "Istruttore/Operatore non valido."
-            })
+            return ajax_error("Istruttore/Operatore non valido.")
 
         try:
             scheduled_dt = timezone.make_aware(datetime.strptime(scheduled, '%Y-%m-%dT%H:%M'))
         except ValueError:
-            return JsonResponse({
-                'success': False,
-                'error': "Formato data e ora non valido."
-            })
+            return ajax_error("Formato data e ora non valido.")
 
         course.name = name
         course.description = description
@@ -653,19 +617,13 @@ def edit_course(request, type, id):
         if type == 'gym':
             max_partecipants = request.POST.get('max_partecipants')
             if not max_partecipants:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Capacità massima richiesta per i corsi palestra."
-                })
+                return ajax_error("Capacità massima richiesta per i corsi palestra.")
             course.max_partecipants = max_partecipants
             course.instructor = instructor
         else:
             price = request.POST.get('price')
             if not price:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Prezzo richiesto per i servizi spa."
-                })
+                return ajax_error("Prezzo richiesto per i servizi spa.")
             course.price = price
             course.operator = instructor
             course.type = request.POST.get('spa_type') or 'massage'
@@ -691,7 +649,83 @@ def edit_course(request, type, id):
         })
 
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f"Errore durante la modifica: {str(e)}"
-        })    
+        return ajax_error(f"Errore durante la modifica: {str(e)}")
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def booking_details(request, type, id):
+    """Visualizza i dettagli di una prenotazione (gym o spa)."""
+    try:
+        if type == 'gym':
+            booking = get_object_or_404(GymBooking.objects.select_related('user', 'class_id'), id=id)
+        elif type == 'spa':
+            booking = get_object_or_404(SpaBooking.objects.select_related('user', 'service_id'), id=id)
+        else:
+            messages.error(request, "Tipo di prenotazione non valido.")
+            return redirect('gest_prenotazioni')
+
+        return render(request, 'users/booking_details.html', {'booking': booking, 'type': type})
+    except Exception as e:
+        messages.error(request, f"Errore nel caricamento dei dettagli della prenotazione: {str(e)}")
+        return redirect('gest_prenotazioni')
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+@require_http_methods(["GET", "POST"])
+def edit_booking(request, type, id):
+    try:
+        if type == 'gym':
+            booking = get_object_or_404(GymBooking.objects.select_related('user', 'class_id'), id=id)
+            related_service = booking.class_id
+        elif type == 'spa':
+            booking = get_object_or_404(SpaBooking.objects.select_related('user', 'service_id'), id=id)
+            related_service = booking.service_id
+        else:
+            return ajax_error("Tipo di prenotazione non valido.")
+
+        if request.method == 'GET':
+            booking_data = {
+                'id': booking.id,
+                'type': type,
+                'user_info': f'{booking.user.full_name} ({booking.user.email})',
+                'service_info': f'{related_service.name} (ID: {related_service.id})',
+                'datetime': booking.date.strftime('%Y-%m-%dT%H:%M'),
+                'notes': booking.description if hasattr(booking, 'description') else ''
+            }
+            return JsonResponse({'success': True, 'booking': booking_data})
+
+        elif request.method == 'POST':
+            data = request.POST
+            datetime_str = data.get('datetime')
+            
+            if not datetime_str:
+                return ajax_error('Data e ora sono obbligatorie.')
+            
+            # Log the received datetime string for debugging
+            print(f'[edit_booking] Received datetime string: {datetime_str}')
+            try:
+                # Try parsing as naive first
+                try:
+                    new_datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M')
+                    new_datetime = timezone.make_aware(new_datetime)
+                except ValueError:
+                    # Try parsing as aware (with timezone info)
+                    new_datetime = parser.isoparse(datetime_str)
+                    if timezone.is_naive(new_datetime):
+                        new_datetime = timezone.make_aware(new_datetime)
+            except Exception as e:
+                print(f'[edit_booking] Error parsing datetime: {e}')
+                return ajax_error('Formato data e ora non valido. Assicurati di selezionare una data valida.')
+
+            booking.date = new_datetime
+            # Handle description/notes for both gym and spa
+            if hasattr(booking, 'description'):
+                booking.description = data.get('notes', '')
+            
+            booking.save()
+            return ajax_ok(f'Prenotazione #{booking.id} aggiornata con successo.')
+
+    except (GymBooking.DoesNotExist, SpaBooking.DoesNotExist):
+        return ajax_error('Prenotazione non trovata.')
+    except Exception as e:
+        return ajax_error(f'Errore durante la modifica della prenotazione: {str(e)}')    

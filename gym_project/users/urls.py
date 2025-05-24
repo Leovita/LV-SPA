@@ -31,6 +31,8 @@ urlpatterns = [
     path('add-course/', views.add_course, name='add_course'),
     path('course-details/<str:type>/<int:id>/', views.course_details, name='course_details'),
     path('edit-course/<str:type>/<int:id>/', views.edit_course, name='edit_course'),
+    path('booking-details/<str:type>/<int:id>/', views.booking_details, name='booking_details'),
+    path('edit-booking/<str:type>/<int:id>/', views.edit_booking, name='edit_booking'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
