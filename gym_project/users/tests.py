@@ -4,6 +4,7 @@ from django.utils import timezone
 import json 
 from users.models import User
 from palestra.models import GymClass, GymBooking
+from spa.models import SpaService, SpaBooking
 
 class UserBookingTests(TestCase):
     def setUp(self):
@@ -25,6 +26,16 @@ class UserBookingTests(TestCase):
             duration=60,
             instructor=self.instructor,
             max_partecipants=10
+        )
+        self.spa_service = SpaService.objects.create(
+            name='Massaggio',
+            description='Massaggio rilassante',
+            operator=self.instructor,
+            duration=60,
+            price=50,
+            max_partecipants=1,
+            scheduled=timezone.now() + timezone.timedelta(days=1),
+            type='massage'
         )
 
     def test_user_can_book_gym_class(self):
@@ -67,4 +78,49 @@ class UserBookingTests(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 401)
         return response
+
+    def test_login_view(self):
+        url = reverse('login')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_register_view(self):
+        url = reverse('register')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)  # redirect to /login/?tab=register
+
+    def test_logout_view(self):
+        self.client.login(email='utente@example.com', password='pass123')
+        url = reverse('logout')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_profile_view_requires_login(self):
+        url = reverse('profile')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)  # redirect to login
+        self.client.login(email='utente@example.com', password='pass123')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_gest_corsi_staff(self):
+        self.client.login(email='istruttore@example.com', password='password123')
+        url = reverse('gest_corsi')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_gest_prenotazioni_staff(self):
+        self.client.login(email='istruttore@example.com', password='password123')
+        url = reverse('gest_prenotazioni')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_ajax_ok_and_error(self):
+        from users.views.utils import ajax_ok, ajax_error
+        resp_ok = ajax_ok('ok')
+        resp_err = ajax_error('errore')
+        self.assertEqual(resp_ok.status_code, 200)
+        self.assertEqual(resp_err.status_code, 200)
+        self.assertIn('success', resp_ok.content.decode())
+        self.assertIn('error', resp_err.content.decode())
 

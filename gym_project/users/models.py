@@ -20,13 +20,19 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **xtra_F):
         xtra_F.setdefault('is_staff', True)
         xtra_F.setdefault('is_superuser', True)
+        xtra_F.setdefault('profile_picture', 'profile_pics/admin_def.jpg')
         return self.create_user(email, password, **xtra_F)
 
 class User(AbstractBaseUser, PermissionsMixin):
     full_name = models.CharField(max_length=255, default="Nome Cognome")
     email = models.EmailField(unique=True)  
     phone = models.CharField(max_length=20, blank=True)
-    profile_picture = models.ImageField(upload_to="profile_pics/", default="profile_pics/def_pfp.png")    
+    profile_picture = models.ImageField(
+        upload_to="profile_pics/",
+        default="profile_pics/def_pfp.png",
+        null=True,
+        blank=True
+    )    
     USERNAME_FIELD = 'email' 
 
     is_active = models.BooleanField(default=True)

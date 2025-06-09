@@ -14,4 +14,5 @@ __all__ = [
     'gest_corsi', 'delete_course', 'add_course', 'course_details', 'edit_course',
     'gest_prenotazioni', 'admin_delete_booking', 'booking_details', 'edit_booking',
     'ajax_ok', 'ajax_error'
-]    
+]
+# Altri import verranno aggiunti man mano che modularizziamo le altre view 

@@ -26,7 +26,7 @@
                 <!-- Profile Picture Section -->
                 <div class="profile-picture-section">
                     <div class="profile-picture-container">
-                        <img src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.png
+                        <img src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.jpg
                         {% elif user.profile_picture %}{{ user.profile_picture.url }}
                         {% else %}/media/profile_pics/def_pfp.png{% endif %}" 
                         alt="Profile Picture" class="current-profile-pic">

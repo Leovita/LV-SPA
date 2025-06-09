@@ -1,3 +1,5 @@
+const AJaX = 'XMLHttpRequest';
+
 function updateCourseCounters() {
     // Get counts from each tab, excluding the "no-data" rows
     const gymRows = document.querySelectorAll('#gym tbody tr:not(.no-data)');
