@@ -113,10 +113,10 @@ STATICFILES_DIRS = []
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
-
+#default url
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 
-# path per foto caricate dinamicamente (users)
+#path media 
 MEDIA_URL = '/media/'  
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
