@@ -100,17 +100,17 @@
     <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
     <h3>{{ service.name }}</h3>
     <p>{{ service.description }}</p>
+    <p><strong>Operatore:</strong> {{ service.operator.full_name }}</p>
     <p><strong>Prezzo:</strong> €{{ service.price }}</p>
     <p><strong>Data e ora:</strong>
         {% with booking_date=spa_service_booking_dates|get_item:service.id %}
             {% if booking_date %}
                 <span class="detail-value">{{ booking_date|date:"Y-m-d H:i" }}</span>
-        {% else %}
+            {% else %}
                 Nessuna data disponibile
-        {% endif %}
+            {% endif %}
         {% endwith %}
     </p>
-    <p><strong>Data e ora:</strong> <span class="detail-value">{{ spa_service_booking_dates|get_item:service.id|date:"Y-m-d H:i"|default:"Nessuna data disponibile" }}</span></p>
     <p><strong>Posti disponibili:</strong>
      {% if service.check_availability %}
      Disponibile
@@ -118,6 +118,8 @@
      Esaurito
      {% endif %}
     </p>
+    <p><strong>Posti totali:</strong> {{ service.max_partecipants }}</p>
+    <p><strong>Partecipanti attuali:</strong> {{ service.check_participants }}</p>
     {% if service.id in user_spa_bookings %}
         <p class="already-booked">Hai già prenotato questo servizio</p>
     {% endif %}

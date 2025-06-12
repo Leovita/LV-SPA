@@ -21,6 +21,9 @@ class SpaService(models.Model):
     def check_availability(self):
         return SpaBooking.objects.filter(service_id=self.id).count() < self.max_partecipants
 
+    def check_participants(self):
+        return SpaBooking.objects.filter(service_id=self.id).count()
+
     def __str__(self):
         return self.name
 
@@ -31,4 +34,4 @@ class SpaBooking(models.Model):
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"{self.user.username} - {self.service_id.name}"
+        return f"{self.user.email} - {self.service.name}"

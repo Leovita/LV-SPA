@@ -15,8 +15,9 @@ from datetime import datetime
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def gest_corsi(req):
-    gym = GymClass.objects.all()
-    spa = SpaService.objects.all()
+    now = timezone.now()
+    gym = GymClass.objects.filter(scheduled__gte=now)
+    spa = SpaService.objects.filter(scheduled__gte=now)
     all_corsi = list(gym) + list(spa)
     instructors = User.objects.filter(is_staff=True)
     ctx = {

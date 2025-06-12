@@ -73,7 +73,7 @@
 <td>{{ course.id }}</td>
 <td>{{ course.name }}</td>
 <td>{% if course in gym_courses %}Palestra{% else %}Spa{% endif %}</td>
-<td>{{ course.instructor.full_name }}</td>
+<td>{% if course in gym_courses %}{{ course.instructor.full_name }}{% else %}{{ course.operator.full_name }}{% endif %}</td>
 <td>{{ course.description }}</td>
 <td>{{ course.duration }} min</td>
 <td class="actions">

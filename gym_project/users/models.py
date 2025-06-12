@@ -44,6 +44,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
 
+    def save(self, *args, **kwargs):
+        if not self.profile_picture or str(self.profile_picture) == 'profile_pics/def_pfp.png':
+            if self.is_superuser:
+                self.profile_picture = 'profile_pics/def_admin.jpg'
+            elif self.is_staff:
+                self.profile_picture = 'profile_pics/def_staff.png'
+            else:
+                self.profile_picture = 'profile_pics/def_pfp.png'
+        super().save(*args, **kwargs)
+
     @staticmethod
     def validate_password(pwd):
         RULES = [
