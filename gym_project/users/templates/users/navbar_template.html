@@ -27,9 +27,7 @@
                 {% if user.is_authenticated %}
                     <div class="dropdown">
                         <img 
-                            src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.jpg
-                            {% elif user.profile_picture %}{{ user.profile_picture.url }}
-                            {% else %}/media/profile_pics/def_pfp.png{% endif %}"
+                            src="{{ user.profile_picture.url }}"
                             alt="Immagine profilo utente"
                             class="user-profile-pic"
                         >

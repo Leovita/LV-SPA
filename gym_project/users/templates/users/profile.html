@@ -26,15 +26,13 @@
                 <!-- Profile Picture Section -->
                 <div class="profile-picture-section">
                     <div class="profile-picture-container">
-                        <img src="{% if user.is_superuser %}/media/profile_pics/admin_pfp.jpg
-                        {% elif user.profile_picture %}{{ user.profile_picture.url }}
-                        {% else %}/media/profile_pics/def_pfp.png{% endif %}" 
+                        <img src="{{ user.profile_picture.url }}"
                         alt="Profile Picture" class="current-profile-pic">
                         <div class="change-photo-overlay">
                             <span>Cambia Foto</span>
                         </div>
                     </div>
-                        <form id="profile-pic-form" enctype="multipart/form-data" method="post" action="{% url 'update_profile_picture' %}">
+                    <form id="profile-pic-form" enctype="multipart/form-data" method="post" action="{% url 'update_profile_picture' %}">
                         {% csrf_token %}
                         <input type="file" id="profile-pic-input" name="profile_picture" accept="image/*" hidden>
                         <button type="button" id="change-photo-btn" class="profile-button">Seleziona Immagine</button>

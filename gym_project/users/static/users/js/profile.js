@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadPhotoBtn = document.getElementById('upload-photo-btn');
     const profilePicContainer = document.querySelector('.profile-picture-container');
     const currentProfilePic = document.querySelector('.current-profile-pic');
+    const profilePicForm = document.getElementById('profile-pic-form');
     
     if (changePhotoBtn) {
         changePhotoBtn.addEventListener('click', function() {
@@ -32,7 +33,14 @@ document.addEventListener('DOMContentLoaded', function() {
             profilePicInput.click();
         });
     }
-    
+
+    if (profilePicForm) {
+        profilePicForm.addEventListener('submit', function(e) {
+            uploadPhotoBtn.disabled = true;
+            uploadPhotoBtn.textContent = 'Caricamento...';
+        });
+    }
+
     // Form validation
     const personalInfoForm = document.querySelector('.personal-info-section form');
     if (personalInfoForm) {

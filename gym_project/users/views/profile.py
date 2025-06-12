@@ -2,6 +2,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from users.models import ProfileUpdateForm, ProfilePictureForm
+import logging
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def profile_view(request):
@@ -40,6 +43,7 @@ def update_profile_picture(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'La tua immagine del profilo è stata aggiornata con successo!')
+            return redirect('profile')
         else:
             for field, errors in form.errors.items():
                 for error in errors:

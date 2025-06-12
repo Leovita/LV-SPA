@@ -3,11 +3,12 @@ from django.contrib.auth import authenticate, login as auth_login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from users.models import User, ProfileUpdateForm, ProfilePictureForm
+from django.conf import settings
 
 def profile(request):
     if not request.user.is_authenticated:
         return redirect('login')
-    return render(request, 'users/profile.html')
+    return render(request, 'users/profile.html', {'MEDIA_URL': settings.MEDIA_URL})
 
 def login(req):
     if req.method == "POST":
