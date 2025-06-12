@@ -30,7 +30,7 @@ def gest_corsi(req):
     return render(req, 'users/gest_corsi.html', ctx)
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_staff)
 @require_http_methods(["DELETE"])
 def delete_course(request, type, id):
     try:
@@ -183,7 +183,7 @@ def add_course(request):
         return redirect('gest-corsi')
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_staff)
 def course_details(request, type, id):
     try:
         if type == 'gym':
@@ -202,7 +202,7 @@ def course_details(request, type, id):
         return redirect('gest-corsi')
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_staff)
 @require_http_methods(["POST"])
 def edit_course(request, type, id):
     try:
