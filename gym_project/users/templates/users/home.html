@@ -52,7 +52,8 @@
         data-instructor="{{ service.instructor.full_name }}"
         data-max-participants="{{ service.max_partecipants }}"
         data-current-participants="{{ service.check_participants }}"
-        data-available="{{ service.check_availability }}">
+        data-available="{{ service.check_availability }}"
+        data-booking-date="{% with booking_date=gym_service_booking_dates|get_item:service.id %}{% if booking_date %}{{ booking_date|date:'Y-m-d H:i' }}{% else %}Nessuna data disponibile{% endif %}{% endwith %}">
         
         <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
         <h3>{{ service.name }}</h3>
@@ -95,7 +96,11 @@
      data-name="{{ service.name }}"
      data-description="{{ service.description }}"
      data-price="{{ service.price }}"
-     data-available="{{ service.check_availability }}">
+     data-available="{{ service.check_availability }}"
+     data-operator="{{ service.operator.full_name }}"
+     data-max-participants="{{ service.max_partecipants }}"
+     data-current-participants="{{ service.check_participants }}"
+     data-booking-date="{% with booking_date=spa_service_booking_dates|get_item:service.id %}{% if booking_date %}{{ booking_date|date:'Y-m-d H:i' }}{% else %}Nessuna data disponibile{% endif %}{% endwith %}">
 
     <img src="{{ service.imgs.url }}" alt="{{ service.name }}">
     <h3>{{ service.name }}</h3>
@@ -253,35 +258,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const serviceType = this.dataset.type;
             const serviceName = this.dataset.name;
             const serviceDescription = this.dataset.description;
+            const bookingDate = this.dataset.bookingDate;
+            const max = parseInt(this.dataset.maxParticipants);
+            const current = parseInt(this.dataset.currentParticipants);
 
             currentServiceId = serviceId;
             currentServiceType = serviceType;
 
+            // Imposta i campi comuni
             document.getElementById('popup-title').textContent = 'Prenota ' + serviceName;
             document.getElementById('popup-service-name').textContent = serviceName;
             document.getElementById('popup-description').textContent = serviceDescription;
+            document.getElementById('booking-datetime').textContent = bookingDate;
 
+            // Nascondi entrambe le sezioni specifiche
             document.getElementById('gym-specific-fields').style.display = 'none';
             document.getElementById('spa-specific-fields').style.display = 'none';
 
+            // Mostra i campi specifici in base al tipo
             if (serviceType === 'gym') {
                 document.getElementById('gym-specific-fields').style.display = 'block';
                 document.getElementById('popup-instructor').textContent = this.dataset.instructor;
-                const max = parseInt(this.dataset.maxParticipants);
-                const current = parseInt(this.dataset.currentParticipants);
                 document.getElementById('popup-availability').textContent = `${max - current} su ${max}`;
             } else if (serviceType === 'spa') {
                 document.getElementById('spa-specific-fields').style.display = 'block';
-                const hasSubscription = this.dataset.hasSubscription === 'true';
-                const subscriptionName = this.dataset.subscriptionName;
-                if (hasSubscription) {
-                    document.getElementById('popup-price').textContent = 'Gratis con abbonamento ' + subscriptionName;
-                } else {
-                    document.getElementById('popup-price').textContent = '€' + this.dataset.price;
-                }
+                document.getElementById('popup-price').textContent = '€' + this.dataset.price;
+                document.getElementById('popup-instructor').textContent = this.dataset.operator;
+                document.getElementById('popup-availability').textContent = `${max - current} su ${max}`;
             }
 
-            document.getElementById('booking-datetime').textContent = this.dataset.bookingDate;
             document.getElementById('booking-popup').style.display = 'flex';
         });
     });
