@@ -4,8 +4,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 import os
-from subscriptions.models import SubscriptionPlan
 import re
+from subscriptions.models import Subscription, SubscriptionPlan
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -54,6 +54,14 @@ class User(AbstractBaseUser, PermissionsMixin):
                 self.profile_picture = 'profile_pics/def_pfp.png'
         super().save(*args, **kwargs)
 
+        if self.is_superuser or self.is_staff:
+            try:
+                annual_plan = SubscriptionPlan.objects.get(id=3)
+                has_active = Subscription.objects.filter(user=self, is_active=True, plan=annual_plan).exists()
+                if not has_active:
+                    Subscription.objects.create(user=self, plan=annual_plan)
+            except SubscriptionPlan.DoesNotExist:
+                pass  
     @staticmethod
     def validate_password(pwd):
         RULES = [

@@ -20,6 +20,8 @@ class Subscription(models.Model):
 
     def save(self, *args, **kwargs):
         if self.plan:
+            if not self.start_date:
+                self.start_date = timezone.now()
             if not self.end_date:
                 self.end_date = self.start_date + timedelta(days=self.plan.duration)
         if self.end_date and self.end_date < timezone.now():
