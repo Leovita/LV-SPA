@@ -52,7 +52,7 @@ def delete_course(request, type, id):
         return ajax_error(str(e))
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser or u.is_staff)
 @require_http_methods(["POST"])
 def add_course(request):
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'

@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
 from django import forms
 from django.core.exceptions import ValidationError
@@ -8,24 +8,27 @@ from subscriptions.models import SubscriptionPlan
 import re
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **xtra_F):
+    def create_user(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError('L\'email deve essere fornita')
+            raise ValueError('L\'email è obbligatoria')
         email = self.normalize_email(email)
-        user = self.model(email=email, **xtra_F)
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **xtra_F):
-        xtra_F.setdefault('is_staff', True)
-        xtra_F.setdefault('is_superuser', True)
-        xtra_F.setdefault('profile_picture', 'profile_pics/admin_def.jpg')
-        return self.create_user(email, password, **xtra_F)
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser deve avere is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser deve avere is_superuser=True.')
+        return self.create_user(email, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
     full_name = models.CharField(max_length=255, default="Nome Cognome")
-    email = models.EmailField(unique=True)  
+    email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True)
     profile_picture = models.ImageField(
         upload_to="profile_pics/",
@@ -33,13 +36,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True,
         blank=True
     )    
-    USERNAME_FIELD = 'email' 
-
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False) 
     is_superuser = models.BooleanField(default=False)
 
     objects = UserManager()
+
+    USERNAME_FIELD = 'email'
 
     @staticmethod
     def validate_password(pwd):
