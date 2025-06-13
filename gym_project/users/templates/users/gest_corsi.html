@@ -359,6 +359,10 @@
 <option value="ritual">Rituale</option>
 </select>
 </div>
+<div class="form-group">
+<label for="max_partecipants_spa">Capacità massima:</label>
+<input type="number" name="max_partecipants" id="max_partecipants_spa" min="1" required>
+</div>
 </div>
 <div class="form-group">
 <label for="image">Immagine:</label>
@@ -814,17 +818,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const gymFields = document.getElementById('gym-fields');
         const spaFields = document.getElementById('spa-fields');
         const maxParticipantsInput = document.getElementById('max_partecipants');
+        const maxParticipantsSpaInput = document.getElementById('max_partecipants_spa');
         const priceInput = document.getElementById('price');
 
         if (this.value === 'gym') {
             gymFields.style.display = 'block';
             spaFields.style.display = 'none';
             maxParticipantsInput.required = true;
+            maxParticipantsSpaInput.required = false;
             priceInput.required = false;
         } else {
             gymFields.style.display = 'none';
             spaFields.style.display = 'block';
             maxParticipantsInput.required = false;
+            maxParticipantsSpaInput.required = true;
             priceInput.required = true;
         }
     });

@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from django.http import JsonResponse
 from palestra.models import GymBooking, GymClass
 from spa.models import SpaBooking, SpaService
 from users.views.utils import ajax_error, ajax_ok
@@ -26,7 +27,7 @@ def gest_prenotazioni(request):
             'id': booking.id,
             'user': f"{booking.user.full_name}",
             'service': f"{booking.class_id.name} (Palestra)",
-            'description': booking.description if booking.description else booking.class_id.description,
+            'description': booking.description or booking.class_id.description,
             'date': booking.class_id.scheduled,
             'status': 'confirmed',
             'type': 'gym'
@@ -37,7 +38,7 @@ def gest_prenotazioni(request):
             'id': booking.id,
             'user': f"{booking.user.full_name}",
             'service': f"{booking.service_id.name} (Spa)",
-            'description': booking.description if booking.description else booking.service_id.description,
+            'description': booking.description or booking.service_id.description,
             'date': booking.service_id.scheduled,
             'status': 'confirmed',
             'type': 'spa'
@@ -51,7 +52,7 @@ def gest_prenotazioni(request):
             'id': booking.id,
             'user': f"{booking.user.full_name}",
             'course': booking.class_id.name,
-            'description': booking.description if booking.description else booking.class_id.description,
+            'description': booking.description or booking.class_id.description,
             'date': booking.class_id.scheduled,
             'status': 'confirmed',
         })
@@ -62,7 +63,7 @@ def gest_prenotazioni(request):
             'id': booking.id,
             'user': f"{booking.user.full_name}",
             'treatment': booking.service_id.name,
-            'description': booking.description if booking.description else booking.service_id.description,
+            'description': booking.description or booking.service_id.description,
             'date': booking.service_id.scheduled,
             'status': 'confirmed',
         })
