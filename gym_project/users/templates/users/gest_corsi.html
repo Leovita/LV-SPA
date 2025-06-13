@@ -62,12 +62,15 @@
 <th>Istruttore/Operatore</th>
 <th>Descrizione</th>
 <th>Durata</th>
+<th>Capacità</th>
+<th>Tipo trattamento</th>
+<th>Prezzo</th>
 <th>Azioni</th>
 </tr>
 </thead>
 <tbody>
 {% for course in all_courses %}
-<tr data-scheduled="{{ course.scheduled|date:'Y-m-d\TH:i' }}" 
+<tr data-scheduled="{{ course.scheduled|date:'Y-m-d\\TH:i' }}" 
     {% if course not in gym_courses %}data-price="{{ course.price }}"{% endif %}
     data-type="{% if course in gym_courses %}gym{% else %}spa{% endif %}">
 <td>{{ course.id }}</td>
@@ -76,6 +79,9 @@
 <td>{% if course in gym_courses %}{{ course.instructor.full_name }}{% else %}{{ course.operator.full_name }}{% endif %}</td>
 <td>{{ course.description }}</td>
 <td>{{ course.duration }} min</td>
+<td>{{ course.max_partecipants }} persone</td>
+<td>{% if course in gym_courses %}-{% else %}{{ course.get_type_display }}{% endif %}</td>
+<td>{% if course in gym_courses %}-{% else %}€{{ course.price }}{% endif %}</td>
 <td class="actions">
 <button class="btn btn-view" data-id="{{ course.id }}" data-type="{% if course in gym_courses %}gym{% else %}spa{% endif %}">Visualizza</button>
 <button class="btn btn-edit" data-id="{{ course.id }}" data-type="{% if course in gym_courses %}gym{% else %}spa{% endif %}">Modifica</button>
@@ -84,7 +90,7 @@
 </tr>
 {% empty %}
 <tr>
-<td colspan="7" class="no-data">Nessun corso disponibile</td>
+<td colspan="10" class="no-data">Nessun corso disponibile</td>
 </tr>
 {% endfor %}
 </tbody>
@@ -174,19 +180,21 @@
 <th>Operatore</th>
 <th>Descrizione</th>
 <th>Durata</th>
+<th>Capacità</th>
 <th>Prezzo</th>
 <th>Azioni</th>
 </tr>
 </thead>
 <tbody>
 {% for service in spa_services %}
-<tr data-scheduled="{{ service.scheduled|date:'Y-m-d\TH:i' }}" data-price="{{ service.price }}">
+<tr data-scheduled="{{ service.scheduled|date:'Y-m-d\\TH:i' }}" data-price="{{ service.price }}">
 <td>{{ service.id }}</td>
 <td>{{ service.name }}</td>
 <td>{{ service.get_type_display }}</td>
 <td>{{ service.operator.full_name }}</td>
 <td>{{ service.description }}</td>
 <td>{{ service.duration }} min</td>
+<td>{{ service.max_partecipants }} persone</td>
 <td>€{{ service.price }}</td>
 <td class="actions">
 <button class="btn btn-view" data-id="{{ service.id }}" data-type="spa">Visualizza</button>
@@ -196,7 +204,7 @@
 </tr>
 {% empty %}
 <tr>
-<td colspan="8" class="no-data">Nessun servizio spa disponibile</td>
+<td colspan="9" class="no-data">Nessun servizio spa disponibile</td>
 </tr>
 {% endfor %}
 </tbody>
@@ -271,6 +279,10 @@
             <option value="treatment">Trattamento</option>
             <option value="ritual">Rituale</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-max-partecipants-spa">Capacità massima:</label>
+          <input type="number" name="max_partecipants" id="edit-max-partecipants-spa" min="1">
         </div>
       </div>
       
@@ -837,9 +849,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     addCourseForm.addEventListener('submit', function(e) {
         const courseType = courseTypeSelect.value;
-        if (courseType === 'gym' && !document.getElementById('max_partecipants').value) {
+        const maxPartecipantsValue = document.getElementById('max_partecipants').value;
+        if (!maxPartecipantsValue) {
             e.preventDefault();
-            showNotification('Per i corsi palestra è necessario specificare la capacità massima.', 'error');
+            showNotification('Per tutti i corsi/servizi è necessario specificare la capacità massima.', 'error');
         } else if (courseType === 'spa' && !document.getElementById('price').value) {
             e.preventDefault();
             showNotification('Per i servizi spa è necessario specificare il prezzo.', 'error');
@@ -921,6 +934,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <td>${d.operator}</td>
                                 <td>${d.description}</td>
                                 <td>${d.duration} min</td>
+                                <td>${d.max_partecipants} persone</td>
                                 <td>€${d.price}</td>
                                 <td class="actions">
                                     <button class="btn btn-view" data-id="${d.id}" data-type="spa">Visualizza</button>
@@ -1043,12 +1057,10 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 document.getElementById('edit-gym-fields').style.display = 'none';
                 document.getElementById('edit-spa-fields').style.display = 'block';
-                
                 const price = row.getAttribute('data-price');
                 if (price) {
                     document.getElementById('edit-price').value = price;
                 }
-                
                 // Get spa type from cell index 2 (Tipo column)
                 const typeCell = row.cells[2];
                 if (typeCell) {
@@ -1060,6 +1072,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             break;
                         }
                     }
+                }
+                // Popola la capacità massima per spa (colonna 6 = capacità)
+                if (row.cells[6]) {
+                    const capText = row.cells[6].textContent.replace(/[^0-9]/g, '');
+                    document.getElementById('edit-max-partecipants-spa').value = capText ? parseInt(capText) : '';
                 }
             }
             

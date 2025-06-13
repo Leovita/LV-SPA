@@ -253,6 +253,9 @@ def edit_course(request, type, id):
             course.price = price
             course.operator = instructor
             course.type = request.POST.get('spa_type') or 'massage'
+            max_partecipants = request.POST.get('max_partecipants')
+            if max_partecipants:
+                course.max_partecipants = max_partecipants
 
         course.save()
 
