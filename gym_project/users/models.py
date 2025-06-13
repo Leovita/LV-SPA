@@ -97,6 +97,29 @@ class User(AbstractBaseUser, PermissionsMixin):
         except Exception as e:
             return False, str(e)
 
+    def has_free_spa_access(self):
+        """
+        Verifica se l'utente ha accesso gratuito allo spa
+        l'accesso è gratuito se:
+         -L'utente è staff o superuser
+         -L'utente ha un abbonamento attivo
+        """
+        if self.is_staff or self.is_superuser:
+            return True
+            
+        return Subscription.objects.filter(
+            user=self,
+            is_active=True
+        ).exists()
+
+    def get_active_subscription(self):
+        """
+        Restituisce l'abbonamento attivo dell'utente, se presente.
+        """
+        return Subscription.objects.filter(
+            user=self,
+            is_active=True
+        ).first()
 
 class ProfileUpdateForm(forms.ModelForm):
     """

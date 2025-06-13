@@ -730,6 +730,10 @@ header nav ul li a:hover::after {
     margin-top: 10px;
 }
 
+.free-price {
+    color: #28a745;
+    font-weight: bold;
+}
 
 /* Footer */
 footer {

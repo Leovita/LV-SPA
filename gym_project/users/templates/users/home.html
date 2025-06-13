@@ -106,7 +106,13 @@
     <h3>{{ service.name }}</h3>
     <p>{{ service.description }}</p>
     <p><strong>Operatore:</strong> {{ service.operator.full_name }}</p>
-    <p><strong>Prezzo:</strong> €{{ service.price }}</p>
+    <p><strong>Prezzo:</strong>
+        {% if request.user.is_authenticated and request.user.has_free_spa_access %}
+            <span class="free-price">Gratuito con abbonamento {{ active_subscription.plan.name }}</span>
+        {% else %}
+            €{{ service.price }}
+        {% endif %}
+    </p>
     <p><strong>Data e ora:</strong>
         {% with booking_date=spa_service_booking_dates|get_item:service.id %}
             {% if booking_date %}

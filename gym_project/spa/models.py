@@ -24,6 +24,14 @@ class SpaService(models.Model):
     def check_participants(self):
         return SpaBooking.objects.filter(service_id=self.id).count()
 
+    def get_price_for_user(self, user):
+        """
+        se l'utente ha un abbonamento attivo, il prezzo è 0.
+        """
+        if user.subscription_set.filter(is_active=True).exists():
+            return 0
+        return self.price
+
     def __str__(self):
         return self.name
 
