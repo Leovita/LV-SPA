@@ -1053,7 +1053,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (type === 'gym') {
                 document.getElementById('edit-gym-fields').style.display = 'block';
                 document.getElementById('edit-spa-fields').style.display = 'none';
-                document.getElementById('edit-max-partecipants').value = parseInt(row.cells[5].textContent);
+                // Prova a prendere la capacità dal data-attribute se presente
+                let capValue = row.getAttribute('data-max-partecipants');
+                if (!capValue) {
+                    // Trova dinamicamente la colonna 'Capacità'
+                    let capIndex = -1;
+                    const ths = row.closest('table').querySelectorAll('thead th');
+                    ths.forEach((th, idx) => {
+                        if (th.textContent.trim().toLowerCase().includes('capacità')) {
+                            capIndex = idx;
+                        }
+                    });
+                    if (capIndex !== -1 && row.cells[capIndex]) {
+                        capValue = row.cells[capIndex].textContent.replace(/[^0-9]/g, '');
+                    }
+                }
+                document.getElementById('edit-max-partecipants').value = capValue ? parseInt(capValue) : '';
             } else {
                 document.getElementById('edit-gym-fields').style.display = 'none';
                 document.getElementById('edit-spa-fields').style.display = 'block';
@@ -1097,6 +1112,16 @@ document.addEventListener('DOMContentLoaded', function() {
         formLoader.style.display = 'block';
         
         const formData = new FormData(this);
+        
+        // Forza il valore del tipo in base alla selezione corrente
+        const type = document.getElementById('edit-course-type').value;
+        if (!type) {
+            // Recupera dal bottone attivo o altro fallback se necessario
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                document.getElementById('edit-course-type').value = activeTab.getAttribute('data-tab');
+            }
+        }
         
         fetch(this.action, {
             method: 'POST',

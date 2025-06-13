@@ -95,12 +95,18 @@ def add_course(request):
                 messages.error(request, "Capacità massima richiesta per i corsi palestra.")
                 return redirect('gest-corsi')
             try:
+                max_partecipants_int = int(max_partecipants)
+                if max_partecipants_int < 1:
+                    raise ValueError
+            except (TypeError, ValueError):
+                return ajax_error("Capacità massima richiesta per i corsi palestra (deve essere almeno 1).")
+            try:
                 new_course = GymClass.objects.create(
                     name=name,
                     description=description,
                     duration=duration,
                     instructor=instructor,
-                    max_partecipants=max_partecipants,
+                    max_partecipants=max_partecipants_int,
                     imgs=image,
                     scheduled=scheduled_dt
                 )
@@ -242,20 +248,15 @@ def edit_course(request, type, id):
 
         if type == 'gym':
             max_partecipants = request.POST.get('max_partecipants')
-            if not max_partecipants:
-                return ajax_error("Capacità massima richiesta per i corsi palestra.")
-            course.max_partecipants = max_partecipants
+            course.max_partecipants = int(max_partecipants) if max_partecipants else 1
             course.instructor = instructor
         else:
             price = request.POST.get('price')
-            if not price:
-                return ajax_error("Prezzo richiesto per i servizi spa.")
+            max_partecipants = request.POST.get('max_partecipants')
             course.price = price
             course.operator = instructor
             course.type = request.POST.get('spa_type') or 'massage'
-            max_partecipants = request.POST.get('max_partecipants')
-            if max_partecipants:
-                course.max_partecipants = max_partecipants
+            course.max_partecipants = int(max_partecipants) if max_partecipants else 1
 
         course.save()
 
