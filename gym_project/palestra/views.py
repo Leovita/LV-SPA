@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from palestra.models import GymClass  # importa dal modello palestra se è lì
+from palestra.models import GymClass
 
 def all_services_view(request):
     gym_services = GymClass.objects.all()

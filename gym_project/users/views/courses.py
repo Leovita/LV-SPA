@@ -86,7 +86,6 @@ def add_course(request):
 
         try:
             scheduled_dt = timezone.make_aware(datetime.strptime(scheduled, '%Y-%m-%dT%H:%M'))
-            # Verifica che la data sia futura
             if scheduled_dt <= timezone.now():
                 if is_ajax:
                     return ajax_error("La data del corso deve essere futura.")
@@ -250,8 +249,11 @@ def edit_course(request, type, id):
         description = request.POST.get('description')
         duration = request.POST.get('duration')
         instructor_id = request.POST.get('instructor')
-        scheduled = request.POST.get('scheduled')
         image = request.FILES.get('image')
+        max_partecipants = request.POST.get('max_partecipants')
+        scheduled = request.POST.get('scheduled')
+        price = request.POST.get('price')
+        spa_type = request.POST.get('spa_type')
 
         if not all([name, description, duration, instructor_id, scheduled]):
             return ajax_error("Tutti i campi obbligatori devono essere compilati.")
@@ -262,53 +264,95 @@ def edit_course(request, type, id):
 
         try:
             scheduled_dt = timezone.make_aware(datetime.strptime(scheduled, '%Y-%m-%dT%H:%M'))
-            # Verifica che la data sia futura
             if scheduled_dt <= timezone.now():
                 return ajax_error("La data del corso deve essere futura.")
         except ValueError:
             return ajax_error("Formato data e ora non valido.")
 
-        course.name = name
-        course.description = description
-        course.duration = duration
-        course.scheduled = scheduled_dt
-        if image:
-            course.imgs = image
-
         if type == 'gym':
-            max_partecipants = request.POST.get('max_partecipants')
-            course.max_partecipants = int(max_partecipants) if max_partecipants else 1
-            course.instructor = instructor
-        else:
-            price = request.POST.get('price')
-            max_partecipants = request.POST.get('max_partecipants')
+            if not max_partecipants:
+                return ajax_error("Capacità massima richiesta per i corsi palestra.")
             try:
-                course.price = float(price) if price else 0.0
+                max_partecipants_int = int(max_partecipants)
+                if max_partecipants_int < 1:
+                    raise ValueError
+            except (TypeError, ValueError):
+                return ajax_error("Capacità massima richiesta per i corsi palestra (deve essere almeno 1).")
+
+            try:
+                price_float = float(price) if price else 0.0
             except ValueError:
-                return ajax_error("Prezzo non valido")
+                return ajax_error("Prezzo non valido.")
+
+            course.name = name
+            course.description = description
+            course.duration = duration
+            course.instructor = instructor
+            course.max_partecipants = max_partecipants_int
+            if image:
+                course.imgs = image
+            course.scheduled = scheduled_dt
+            course.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': f"Corso palestra '{name}' modificato con successo.",
+                'course': {
+                    'id': course.id,
+                    'name': course.name,
+                    'description': course.description,
+                    'duration': course.duration,
+                    'instructor': instructor.full_name if instructor else '',
+                    'instructor_id': instructor.id if instructor else '',
+                    'max_partecipants': course.max_partecipants,
+                    'scheduled': course.scheduled.strftime('%Y-%m-%dT%H:%M'),
+                    'type': 'gym',
+                    'status': 'active',
+                    'image_url': course.imgs.url if course.imgs else ''
+                }
+            })
+
+        elif type == 'spa':
+            if not price:
+                return ajax_error("Prezzo richiesto per i servizi spa.")
+
+            try:
+                price_float = float(price)
+            except ValueError:
+                return ajax_error("Prezzo non valido.")
+
+            course.name = name
+            course.description = description
             course.operator = instructor
-            course.type = request.POST.get('spa_type') or 'massage'
+            course.duration = duration
+            course.price = price_float
+            if image:
+                course.imgs = image
             course.max_partecipants = int(max_partecipants) if max_partecipants else 1
+            course.scheduled = scheduled_dt
+            course.type = spa_type or 'massage'
+            course.save()
 
-        course.save()
+            return JsonResponse({
+                'success': True,
+                'message': f"Servizio spa '{name}' modificato con successo.",
+                'service': {
+                    'id': course.id,
+                    'name': course.name,
+                    'description': course.description,
+                    'duration': course.duration,
+                    'operator': instructor.full_name if instructor else '',
+                    'operator_id': instructor.id if instructor else '',
+                    'price': course.price,
+                    'scheduled': course.scheduled.strftime('%Y-%m-%dT%H:%M'),
+                    'type': spa_type or '',
+                    'status': 'active',
+                    'image_url': course.imgs.url if course.imgs else '',
+                }
+            })
 
-        return JsonResponse({
-            'success': True,
-            'message': f"{'Corso' if type == 'gym' else 'Servizio'} modificato con successo.",
-            'course': {
-                'id': course.id,
-                'name': course.name,
-                'description': course.description,
-                'duration': course.duration,
-                'instructor': instructor.full_name if instructor else '',
-                'instructor_id': instructor.id if instructor else '',
-                'scheduled': course.scheduled.strftime('%Y-%m-%dT%H:%M'),
-                'status': 'active',
-                'image_url': course.imgs.url if course.imgs else '',
-                'type': type,
-                **({'max_partecipants': course.max_partecipants} if type == 'gym' else {'price': course.price})
-            }
-        })
+        else:
+            return ajax_error("Tipo corso/servizio non valido.")
 
     except Exception as e:
         return ajax_error(f"Errore durante la modifica: {str(e)}") 

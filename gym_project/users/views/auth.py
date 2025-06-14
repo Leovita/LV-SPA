@@ -41,7 +41,6 @@ def register(req):
             messages.error(req, "Compila tutti i campi.")
             return render(req, "users/login.html", {'tab': 'register', 'form_data': req.POST})
 
-        # Validazione email
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_pattern, mail):
             messages.error(req, "Email non valida.")
@@ -55,7 +54,6 @@ def register(req):
             messages.error(req, "Utente già esistente con questa email.")
             return render(req, "users/login.html", {'tab': 'register', 'form_data': req.POST})
 
-        # Validazione nome completo
         if len(name) < 3 or len(name.split()) < 2:
             messages.error(req, "Il nome completo deve contenere almeno nome e cognome (minimo 3 caratteri e almeno due parole).")
             return render(req, "users/login.html", {'tab': 'register', 'form_data': req.POST})
@@ -77,13 +75,9 @@ def register(req):
     return render(req, "users/login.html", {'tab': 'register'})
 
 def user_logout(request):
-    """Effettua il logout dell'utente e lo reindirizza alla homepage."""
     logout(request)
     return redirect('home')
 
 @login_required
 def change_password_view(request):
-    """
-    Visualizza la pagina per il cambio della password.
-    """
     return render(request, 'users/change_password.html') 

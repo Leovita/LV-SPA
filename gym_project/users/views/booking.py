@@ -13,6 +13,10 @@ from django.shortcuts import render
 @require_http_methods(["POST"])
 def book_gym_class(request, class_id):
     try:
+        # Verifica se l'utente ha un abbonamento attivo
+        if not request.user.has_free_spa_access():
+            return ajax_error('È necessario un abbonamento attivo per prenotare i corsi della palestra.')
+
         gym_class = GymClass.objects.get(id=class_id)
 
         if not gym_class.check_availability():
@@ -68,6 +72,10 @@ def book_spa_service(request, service_id):
 
         notes = data.get('notes', '')
 
+        # Verifica se l'utente ha un abbonamento attivo
+        has_subscription = request.user.has_free_spa_access()
+        price = spa_service.get_price_for_user(request.user)
+
         booking = SpaBooking.objects.create(
             user=request.user,
             service_id=spa_service,
@@ -75,7 +83,11 @@ def book_spa_service(request, service_id):
             description=notes
         )
 
-        return ajax_ok(f'Prenotazione per {spa_service.name} confermata!')
+        message = f'Prenotazione per {spa_service.name} confermata!'
+        if not has_subscription:
+            message += f' Prezzo: €{price}'
+
+        return ajax_ok(message)
 
     except SpaService.DoesNotExist:
         return ajax_error('Servizio non trovato.')

@@ -42,4 +42,4 @@ class SpaBooking(models.Model):
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"{self.user.email} - {self.service.name}"
+        return f"{self.user.email} - {self.service_id.name}"
