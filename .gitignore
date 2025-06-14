@@ -1,0 +1,23 @@
+#py
+__pycache__/
+*.py[cod]
+*.pyc
+
+#mac 
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Database
+#db.sqlite3
+#db.sqlite3-journal
+
+# Media e Static
+#media/
+#static/
+
+# Logs
+*.log
+logs/
