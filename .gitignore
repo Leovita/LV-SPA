@@ -9,15 +9,14 @@ __pycache__/
 # IDE
 .idea/
 .vscode/
+*.log
+logs/
 
 # Database
 #db.sqlite3
 #db.sqlite3-journal
 
-# Media e Static
+#media/static
 #media/
 #static/
 
-# Logs
-*.log
-logs/
