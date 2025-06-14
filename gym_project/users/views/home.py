@@ -3,10 +3,12 @@ from palestra.models import GymClass, GymBooking
 from spa.models import SpaService, SpaBooking
 from users.models import User
 from datetime import datetime
+from django.utils import timezone
 
 def home(req):
-    gym_srv = GymClass.objects.all()
-    spa_srv = SpaService.objects.all()
+    now = timezone.now()
+    gym_srv = GymClass.objects.filter(scheduled__gte=now)
+    spa_srv = SpaService.objects.filter(scheduled__gte=now)
     coaches = User.objects.filter(is_staff=True).exclude(is_superuser=True)
 
     gym_date = {s.id: s.scheduled for s in gym_srv}

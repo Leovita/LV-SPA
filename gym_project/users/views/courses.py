@@ -28,6 +28,7 @@ def gest_corsi(req):
         'total_gym_courses': gym.count(),
         'total_spa_services': spa.count(),
         'instructors': instructors,
+        'now': now,
     }
     return render(req, 'users/gest_corsi.html', ctx)
 
@@ -85,6 +86,12 @@ def add_course(request):
 
         try:
             scheduled_dt = timezone.make_aware(datetime.strptime(scheduled, '%Y-%m-%dT%H:%M'))
+            # Verifica che la data sia futura
+            if scheduled_dt <= timezone.now():
+                if is_ajax:
+                    return ajax_error("La data del corso deve essere futura.")
+                messages.error(request, "La data del corso deve essere futura.")
+                return redirect('gest-corsi')
         except ValueError:
             if is_ajax:
                 return ajax_error("Formato data e ora non valido.")
@@ -255,6 +262,9 @@ def edit_course(request, type, id):
 
         try:
             scheduled_dt = timezone.make_aware(datetime.strptime(scheduled, '%Y-%m-%dT%H:%M'))
+            # Verifica che la data sia futura
+            if scheduled_dt <= timezone.now():
+                return ajax_error("La data del corso deve essere futura.")
         except ValueError:
             return ajax_error("Formato data e ora non valido.")
 

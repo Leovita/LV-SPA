@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,11 +78,11 @@
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="register-name">Full Name</label>
-                        <input name="register-name" type="text" id="register-name" required>
+                        <input name="register-name" type="text" id="register-name" value="{{ request.POST|get_item:'register-name' }}" required>
                     </div>
                     <div class="form-group">
                         <label for="register-email">Email Address</label>
-                        <input name="register-email" type="email" id="register-email" required>
+                        <input name="register-email" type="email" id="register-email" value="{{ request.POST|get_item:'register-email' }}" required>
                     </div>
                     <div class="form-group">
                         <label for="register-password">Password</label>
@@ -92,7 +93,7 @@
                         <input name="register-confirm" type="password" id="register-confirm" required>
                     </div>
                     <div class="remember-me">
-                        <input type="checkbox" id="terms">
+                        <input type="checkbox" id="terms" name="terms" {% if request.POST|get_item:'terms' %}checked{% endif %}>
                         <label for="terms">I agree to the Terms and Conditions</label>
                     </div>
                     <button type="submit" class="submit-btn">Create Account</button>
@@ -127,8 +128,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            const tab = getTabFromURL();
-            showTab(tab || 'login');
+            const tab = "{{ tab|default:'login' }}";
+            showTab(tab);
         });
     
         // funzionalita' messaggi

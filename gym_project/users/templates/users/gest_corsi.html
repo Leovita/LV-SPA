@@ -257,7 +257,8 @@
       
       <div class="form-group">
         <label for="edit-scheduled">Data e Ora:</label>
-        <input type="datetime-local" name="scheduled" id="edit-scheduled" required>
+        <input type="datetime-local" name="scheduled" id="edit-scheduled" required min="{{ now|date:'Y-m-d\\TH:i' }}">
+        <small class="form-text text-muted">La data deve essere futura</small>
       </div>
       
       <div id="edit-gym-fields" class="conditional-fields">
@@ -338,7 +339,8 @@
 </div>
 <div class="form-group">
 <label for="course-scheduled">Data e Ora:</label>
-<input type="datetime-local" name="scheduled" id="course-scheduled" required>
+<input type="datetime-local" name="scheduled" id="course-scheduled" required min="{{ now|date:'Y-m-d\\TH:i' }}">
+<small class="form-text text-muted">La data deve essere futura</small>
 </div>
 <div id="gym-fields">
 <div class="form-group">
@@ -1094,6 +1096,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.style.display = 'none';
             }
         }
+    });
+
+    // Imposta la data minima per gli input datetime-local
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const minDateTime = now.toISOString().slice(0, 16);
+    
+    document.querySelectorAll('input[type="datetime-local"]').forEach(input => {
+        input.min = minDateTime;
+        
+        // Aggiungi validazione al submit del form
+        input.closest('form').addEventListener('submit', function(e) {
+            const selectedDate = new Date(input.value);
+            if (selectedDate < now) {
+                e.preventDefault();
+                showNotification('La data selezionata non può essere nel passato', 'error');
+            }
+        });
     });
 });
 </script>
