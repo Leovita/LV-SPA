@@ -483,8 +483,8 @@ function closePopup() {
 
 function submitBooking(serviceId, serviceType, dateTime) {
     const bookingUrl = serviceType === 'gym'
-        ? "{% url 'book_gym' 0 %}".replace('0', serviceId)
-        : "{% url 'book_spa' 0 %}".replace('0', serviceId);
+        ? "{% url 'book_gym_class' 0 %}".replace('0', serviceId)
+        : "{% url 'book_spa_service' 0 %}".replace('0', serviceId);
 
     fetch(bookingUrl, {
         method: 'POST',

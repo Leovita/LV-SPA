@@ -270,7 +270,7 @@
 
           <div class="form-group">
             <label for="edit-booking-datetime">Data e Ora Prenotazione:</label>
-            <input type="datetime-local" name="datetime" id="edit-booking-datetime" required>
+            <input type="datetime-local" name="datetime" id="edit-booking-datetime" required min="{{ min_datetime }}">
           </div>
           
           <div id="edit-booking-notes-group" class="form-group" style="display:none;">
@@ -279,8 +279,8 @@
           </div>
           
           <div class="popup-actions">
-            <button type="submit" class="btn btn-primary" id="submit-edit-booking-btn">Salva Modifiche</button>
-            <button type="button" class="btn btn-cancel close-popup" data-popup-id="edit-booking-popup">Annulla</button>
+            <button type="button" class="btn-cancel" onclick="closeEditBookingPopup()">Annulla</button>
+            <button type="submit" class="btn-confirm" id="submit-edit-booking-btn">Salva Modifiche</button>
           </div>
         </form>
       </div>
@@ -665,19 +665,47 @@
                     document.getElementById('edit-booking-service-info').value = row.cells[2].textContent;
                     
                     // Estrai la data dalla riga e formattala per l'input datetime-local
-                    const dateCell = row.cells[4].textContent;
-                    const [datePart, timePart] = dateCell.split(', ');
-                    const [day, month, year] = datePart.split(' ');
+                    const dateCell = row.cells[4].textContent; 
+                    console.log('1. Data dalla riga (dateCell):', dateCell);
+
+                    const parts = dateCell.split(', '); 
+                    const datePart = parts[0];
+                    const timePart = parts[1];
+                    console.log('2. Parte data (datePart):', datePart, '3. Parte ora (timePart):', timePart);
+
+                    let day, month, year;
+
+                    // Prova a parsare DD/MM/YYYY prima, se contiene '/'
+                    if (datePart.includes('/')) {
+                        [day, month, year] = datePart.split('/');
+                    } else { // Altrimenti, assumi DD NomeMese YYYY
+                        const dateWords = datePart.split(' ');
+                        day = dateWords[0];
+                        month = dateWords[1]; // es. "Giu"
+                        year = dateWords[2];
+
+                        // Converti il mese testuale in numero
+                        const months = {
+                            'Gen': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'Mag': '05', 'Giu': '06',
+                            'Lug': '07', 'Ago': '08', 'Set': '09', 'Ott': '10', 'Nov': '11', 'Dic': '12'
+                        };
+                        month = months[month] || month; 
+                    }
+
                     const [hours, minutes] = timePart.split(':');
+
+                    console.log('4. Giorno:', day, '5. Mese:', month, '6. Anno:', year);
+                    console.log('7. Ore:', hours, '8. Minuti:', minutes);
                     
-                    // Converti il mese da testo a numero
-                    const months = {
-                        'Gen': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'Mag': '05', 'Giu': '06',
-                        'Lug': '07', 'Ago': '08', 'Set': '09', 'Ott': '10', 'Nov': '11', 'Dic': '12'
-                    };
-                    
-                    const formattedDate = `${year}-${months[month]}-${day.padStart(2, '0')}T${hours}:${minutes}`;
-                    document.getElementById('edit-booking-datetime').value = formattedDate;
+                    // Aggiungi padding a due cifre se necessario
+                    const formattedDay = day.padStart(2, '0');
+                    const formattedMonth = month.padStart(2, '0'); 
+                    const formattedHours = hours.padStart(2, '0');
+                    const formattedMinutes = minutes.padStart(2, '0');
+
+                    const formattedDateTime = `${year}-${formattedMonth}-${formattedDay}T${formattedHours}:${formattedMinutes}`;
+                    console.log('9. Data formattata per input datetime-local:', formattedDateTime);
+                    document.getElementById('edit-booking-datetime').value = formattedDateTime;
 
                     // Gestisci le note se presenti
                     const notesInput = document.getElementById('edit-booking-notes');
@@ -702,6 +730,16 @@
                 });
             });
 
+            // Imposta la data minima al momento attuale
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('edit-booking-datetime').min = minDateTime;
+
             editBookingForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 submitEditBookingBtn.disabled = true;
@@ -710,11 +748,36 @@
                 const formData = new FormData(this);
                 const bookingId = formData.get('booking_id');
                 const bookingType = formData.get('booking_type');
-
-                // Formatta la data nel formato corretto
                 const datetimeInput = document.getElementById('edit-booking-datetime');
+
+                // Validazione della data
+                const selectedDate = new Date(datetimeInput.value);
+                const currentDate = new Date();
+
+                if (selectedDate < currentDate) {
+                    showNotification('Non è possibile selezionare una data passata', 'error');
+                    submitEditBookingBtn.disabled = false;
+                    editBookingLoader.style.display = 'none';
+                    return;
+                }
+
+                // Formatta la data nel formato corretto YYYY-MM-DDTHH:mm
                 if (datetimeInput.value) {
-                    formData.set('datetime', datetimeInput.value);
+                    const date = new Date(datetimeInput.value);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    console.log('Data originale:', datetimeInput.value);
+                    console.log('Data formattata:', formattedDateTime);
+                    formData.set('datetime', formattedDateTime);
+                }
+
+                // Log di tutti i dati del form
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
                 }
 
                 // Aggiungi le note se presenti
@@ -723,41 +786,50 @@
                     formData.set('notes', notesInput.value);
                 }
 
-                console.log('Dati inviati:', {
-                    bookingId: bookingId,
-                    bookingType: bookingType,
-                    datetime: formData.get('datetime'),
-                    notes: formData.get('notes')
-                });
-
-                fetch(`/edit-booking/${bookingType}/${bookingId}/`, {
+                fetch(`/gest-prenotazioni/edit/${bookingType}/${bookingId}/`, {
                     method: 'POST',
                     body: formData,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': getCsrfToken() 
+                        'X-CSRFToken': getCsrfToken()
                     }
                 })
                 .then(response => {
-                    console.log('Risposta del server:', response);
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Errore durante la modifica della prenotazione');
+                        });
+                    }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Dati ricevuti:', data);
                     if (data.success) {
-                        showNotification(data.message || 'Prenotazione aggiornata!', 'success');
+                        showNotification('Prenotazione aggiornata con successo!', 'success');
                         closeEditBookingPopup();
-                        // Ricarica la pagina
                         window.location.reload();
                     } else {
-                        showNotification(data.error || 'Errore durante l\'aggiornamento.', 'error');
-                        submitEditBookingBtn.disabled = false;
-                        editBookingLoader.style.display = 'none';
+                        throw new Error(data.error || 'Errore durante l\'aggiornamento della prenotazione');
                     }
                 })
                 .catch(error => {
                     console.error('Errore aggiornamento prenotazione:', error);
-                    showNotification('Errore di rete o del server.', 'error');
+                    let errorMessage = 'Errore durante la modifica della prenotazione: ';
+                    
+                    if (error.message.includes('CSRF')) {
+                        errorMessage += 'Errore di autenticazione. Ricarica la pagina e riprova.';
+                    } else if (error.message.includes('404')) {
+                        errorMessage += 'Prenotazione non trovata. Potrebbe essere stata eliminata.';
+                    } else if (error.message.includes('403')) {
+                        errorMessage += 'Non hai i permessi necessari per modificare questa prenotazione.';
+                    } else if (error.message.includes('500')) {
+                        errorMessage += 'Errore del server. Contatta l\'amministratore.';
+                    } else if (error.message.includes('pattern')) {
+                        errorMessage += 'Formato data non valido. Assicurati di selezionare una data valida.';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    
+                    showNotification(errorMessage, 'error');
                     submitEditBookingBtn.disabled = false;
                     editBookingLoader.style.display = 'none';
                 });

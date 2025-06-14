@@ -80,7 +80,7 @@ def gest_prenotazioni(request):
     return render(request, 'users/gest_prenotazioni.html', ctx)
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_staff)
 @require_http_methods(["POST"])
 def admin_delete_booking(request):
     booking_id = request.POST.get('booking_id')
@@ -102,7 +102,7 @@ def admin_delete_booking(request):
         return ajax_error(str(e))
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_staff)
 def booking_details(request, type, id):
     try:
         if type == 'gym':
@@ -119,60 +119,43 @@ def booking_details(request, type, id):
         return redirect('gest_prenotazioni')
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_staff)
 @require_http_methods(["GET", "POST"])
 def edit_booking(request, type, id):
-    try:
-        if type == 'gym':
-            booking = get_object_or_404(GymBooking.objects.select_related('user', 'class_id'), id=id)
-            related_service = booking.class_id
-        elif type == 'spa':
-            booking = get_object_or_404(SpaBooking.objects.select_related('user', 'service_id'), id=id)
-            related_service = booking.service_id
-        else:
-            return ajax_error("Tipo di prenotazione non valido.")
+    if request.method == 'POST':
+        datetime_str = request.POST.get('datetime')
+        notes = request.POST.get('notes', '')
 
-        if request.method == 'GET':
-            booking_data = {
-                'id': booking.id,
-                'type': type,
-                'user_info': f'{booking.user.full_name} ({booking.user.email})',
-                'service_info': f'{related_service.name} (ID: {related_service.id})',
-                'datetime': booking.date.strftime('%Y-%m-%dT%H:%M'),
-                'notes': booking.description if hasattr(booking, 'description') else ''
-            }
-            return JsonResponse({'success': True, 'booking': booking_data})
+        # --- LOG DI DEBUG ---
+        print(f"[DEBUG BACKEND] datetime_str ricevuto: '{datetime_str}', Tipo: {type}, ID: {id}")
+        # --- FINE LOG DI DEBUG ---
 
-        elif request.method == 'POST':
-            data = request.POST
-            datetime_str = data.get('datetime')
-            
-            if not datetime_str:
-                return ajax_error('Data e ora sono obbligatorie.')
-            
+        if not all([datetime_str]):
+            return ajax_error('Dati mancanti.')
+
+        try:
             try:
-                try:
-                    new_datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M')
-                    new_datetime = timezone.make_aware(new_datetime)
-                except ValueError:
-                    new_datetime = parser.isoparse(datetime_str)
-                    if timezone.is_naive(new_datetime):
-                        new_datetime = timezone.make_aware(new_datetime)
-            except Exception as e:
-                return ajax_error('Formato data e ora non valido. Assicurati di selezionare una data valida.')
+                new_datetime = timezone.make_aware(datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M'))
+            except ValueError as e:
+                return ajax_error(f'Formato data non valido. Usa il formato YYYY-MM-DDTHH:mm. Errore: {str(e)}')
 
-            booking.date = new_datetime
-            related_service.scheduled = new_datetime
+            if type == 'gym':
+                booking = GymBooking.objects.get(id=id)
+                booking.class_id.scheduled = new_datetime
+                booking.class_id.save()
+            elif type == 'spa':
+                booking = SpaBooking.objects.get(id=id)
+                booking.service_id.scheduled = new_datetime
+                if notes:
+                    booking.description = notes
+                booking.service_id.save()
+            else:
+                return ajax_error('Tipo di prenotazione non valido.')
             
-            if hasattr(booking, 'description'):
-                booking.description = data.get('notes', '')
-            
-            booking.save()
-            related_service.save()
-            
-            return ajax_ok(f'Prenotazione #{booking.id} aggiornata con successo.')
-
-    except (GymBooking.DoesNotExist, SpaBooking.DoesNotExist):
-        return ajax_error('Prenotazione non trovata.')
-    except Exception as e:
-        return ajax_error(f'Errore durante la modifica della prenotazione: {str(e)}') 
+            return ajax_ok('Prenotazione modificata con successo!')
+        except (GymBooking.DoesNotExist, SpaBooking.DoesNotExist):
+            return ajax_error('Prenotazione non trovata.')
+        except Exception as e:
+            return ajax_error(f'Errore durante la modifica della prenotazione: {str(e)}')
+    
+    return ajax_error('Metodo non supportato.') 

@@ -44,7 +44,9 @@
               <h3>Descrizione Corso</h3>
               <p>{{ booking.class_id.description }}</p>
             </div>
-        {% elif type == 'spa' %}
+        {% endif %}
+        
+        {% if type == 'spa' %}
             <h2>Prenotazione Servizio: {{ booking.service_id.name }}</h2>
             <div class="info-grid">
                 <div class="info-item">
