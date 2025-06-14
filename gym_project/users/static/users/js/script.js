@@ -1,26 +1,36 @@
 // Funzione per inviare il modulo di contatto (per esempio, solo una simulazione)
-document.getElementById('contact-form').addEventListener('submit', function(event) {
-    event.preventDefault();  // Previene il comportamento predefinito del modulo (invio)
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+    contactForm.addEventListener('submit', function(event) {
+        event.preventDefault();  // Previene il comportamento predefinito del modulo (invio)
 
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    const message = document.getElementById('message').value;
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const message = document.getElementById('message').value;
 
-    if (name && email && message) {
-        alert('Grazie per il tuo messaggio, ' + name + '! Ti risponderemo presto.');
-    } else {
-        alert('Per favore, compila tutti i campi del modulo.');
-    }
-});
+        if (name && email && message) {
+            alert('Grazie per il tuo messaggio, ' + name + '! Ti risponderemo presto.');
+        } else {
+            alert('Per favore, compila tutti i campi del modulo.');
+        }
+    });
+}
 
-document.querySelector(".login-btn").addEventListener("click", function() {
-    window.location.href = "/login/";
-});
+const loginBtn = document.querySelector(".login-btn");
+if (loginBtn) {
+    loginBtn.addEventListener("click", function() {
+        window.location.href = "/login/";
+    });
+}
 
-document.querySelector(".register-btn").addEventListener("click", function() {
-    console.log("register premuto!");
-    showTab('register');
-});
+const registerBtn = document.querySelector(".register-btn");
+if (registerBtn) {
+    registerBtn.addEventListener("click", function() {
+        console.log("register premuto!");
+        // Assicurati che showTab sia definito se usato qui, altrimenti commenta o rimuovi
+        // showTab('register');
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const discoverServicesBtn = document.querySelector('.hero .btn');

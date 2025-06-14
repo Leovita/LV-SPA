@@ -72,7 +72,8 @@
 {% for course in all_courses %}
 <tr data-scheduled="{{ course.scheduled|date:'Y-m-d\\TH:i' }}" 
     {% if course not in gym_courses %}data-price="{{ course.price }}"{% endif %}
-    data-type="{% if course in gym_courses %}gym{% else %}spa{% endif %}">
+    data-type="{% if course in gym_courses %}gym{% else %}spa{% endif %}"
+    {% if course in gym_courses %}data-max-partecipants="{{ course.max_partecipants }}"{% endif %}>
 <td>{{ course.id }}</td>
 <td>{{ course.name }}</td>
 <td>{% if course in gym_courses %}Palestra{% else %}Spa{% endif %}</td>
@@ -130,7 +131,7 @@
 </thead>
 <tbody>
 {% for course in gym_courses %}
-<tr data-scheduled="{{ course.scheduled|date:'Y-m-d\TH:i' }}">
+<tr data-scheduled="{{ course.scheduled|date:'Y-m-d\TH:i' }}" data-max-partecipants="{{ course.max_partecipants }}">
 <td>{{ course.id }}</td>
 <td>{{ course.name }}</td>
 <td>{{ course.instructor.full_name }}</td>
@@ -264,7 +265,7 @@
       <div id="edit-gym-fields" class="conditional-fields">
         <div class="form-group">
           <label for="edit-max-partecipants">Capacità massima:</label>
-          <input type="number" name="max_partecipants" id="edit-max-partecipants" min="1">
+          <input type="number" name="max_partecipants" id="edit-max-partecipants">
         </div>
       </div>
       
@@ -283,7 +284,7 @@
         </div>
         <div class="form-group">
           <label for="edit-max-partecipants-spa">Capacità massima:</label>
-          <input type="number" name="max_partecipants" id="edit-max-partecipants-spa" min="1">
+          <input type="number" name="max_partecipants" id="edit-max-partecipants-spa">
         </div>
       </div>
       
@@ -345,7 +346,7 @@
 <div id="gym-fields">
 <div class="form-group">
 <label for="course-max-partecipants">Capacità massima:</label>
-<input type="number" name="max_partecipants" id="course-max-partecipants" min="1">
+<input type="number" name="max_partecipants" id="course-max-partecipants">
 </div>
 </div>
 <div id="spa-fields" style="display:none;">
@@ -586,30 +587,76 @@ text-align: center;
 <script src="{% static 'users/js/notifications.js' %}?v={{ timestamp }}"></script>
 <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
 <script>
-function getCsrfToken() {
-    const name = 'csrftoken';
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-function closeEditCoursePopup() {
-    document.getElementById('edit-course-popup').style.display = 'none';
-    document.getElementById('edit-course-form').reset();
-    currentEditCourseId = null;
-    currentEditCourseType = null;
-}
-
 document.addEventListener('DOMContentLoaded', function() {
+    // Gestione delle date
+    const now = new Date();
+    const minDateTime = now.toISOString().slice(0, 16);
+    
+    document.querySelectorAll('input[type="datetime-local"]').forEach(input => {
+        input.min = minDateTime;
+        
+        input.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            if (selectedDate < now) {
+                showNotification('La data selezionata non può essere nel passato', 'error');
+                this.value = minDateTime;
+            }
+        });
+    });
+
+    // Gestione dei campi condizionali per il form di aggiunta
+    const courseTypeSelect = document.getElementById('course-type');
+    if (courseTypeSelect) {
+        courseTypeSelect.addEventListener('change', function() {
+            const gymFields = document.getElementById('gym-fields');
+            const spaFields = document.getElementById('spa-fields');
+            const maxParticipantsInput = document.getElementById('course-max-partecipants');
+            const priceInput = document.getElementById('course-price');
+            const spaTypeInput = document.getElementById('course-spa-type');
+
+            if (this.value === 'gym') {
+                gymFields.style.display = 'block';
+                spaFields.style.display = 'none';
+                if (maxParticipantsInput) maxParticipantsInput.required = false;
+                if (priceInput) priceInput.required = false;
+                if (spaTypeInput) spaTypeInput.required = false;
+            } else {
+                gymFields.style.display = 'none';
+                spaFields.style.display = 'block';
+                if (maxParticipantsInput) maxParticipantsInput.required = false;
+                if (priceInput) priceInput.required = true;
+                if (spaTypeInput) spaTypeInput.required = true;
+            }
+        });
+    }
+
+    // Gestione dei campi condizionali per il form di modifica
+    const editCourseType = document.getElementById('edit-course-type');
+    if (editCourseType) {
+        editCourseType.addEventListener('change', function() {
+            const gymFields = document.getElementById('edit-gym-fields');
+            const spaFields = document.getElementById('edit-spa-fields');
+            const maxParticipantsInput = document.getElementById('edit-max-partecipants');
+            const priceInput = document.getElementById('edit-price');
+            const spaTypeInput = document.getElementById('edit-spa-type');
+
+            if (this.value === 'gym') {
+                gymFields.style.display = 'block';
+                spaFields.style.display = 'none';
+                if (maxParticipantsInput) maxParticipantsInput.required = false;
+                if (priceInput) priceInput.required = false;
+                if (spaTypeInput) spaTypeInput.required = false;
+            } else {
+                gymFields.style.display = 'none';
+                spaFields.style.display = 'block';
+                if (maxParticipantsInput) maxParticipantsInput.required = false;
+                if (priceInput) priceInput.required = true;
+                if (spaTypeInput) spaTypeInput.required = true;
+            }
+        });
+    }
+
+    // Gestione dei tab
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -621,6 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Gestione della ricerca
     function setupSearch(inputId, tableId, columns) {
         const input = document.getElementById(inputId);
         if (!input) return;
@@ -628,19 +676,14 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('keyup', function() {
             const filter = this.value.toLowerCase();
             const table = document.querySelector(`#${tableId} table`);
+            if (!table) return;
+            
             const rows = table.getElementsByTagName('tr');
             
             for (let i = 1; i < rows.length; i++) {
                 let match = false;
                 const row = rows[i];
-                if (tableId === 'all') {
-                    const typeFlt = document.getElementById('filter-type-all').value.trim().toLowerCase();
-                    const rowType = (row.getAttribute('data-type') || '').trim().toLowerCase();
-                    if (typeFlt && rowType !== typeFlt) {
-                        row.style.display = 'none';
-                        continue;
-                    }
-                }
+                
                 for (let col of columns) {
                     const cell = row.getElementsByTagName('td')[col];
                     if (cell) {
@@ -648,55 +691,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (text.toLowerCase().indexOf(filter) > -1) {
                             match = true;
                             break;
-                        }
-                    }
-                }
-                
-                if (match) {
-                    if (tableId === 'all') {
-                        const typeFlt = document.getElementById('filter-type-all').value.trim().toLowerCase();
-                        const rowType = (row.getAttribute('data-type') || '').trim().toLowerCase();
-                        const statFlt = document.getElementById('filter-status-all').value.trim().toLowerCase();
-                        const statCell = row.cells[6];
-                        const statSpan = statCell.querySelector('.status');
-                        const statVal = statSpan ? statSpan.classList.contains('active') ? 'active' : 'inactive' : '';
-                        if (typeFlt !== '') {
-                            if (rowType === '' || rowType !== typeFlt) {
-                                match = false;
-                            }
-                        }
-                        if (statFlt !== '' && statVal !== statFlt) {
-                            match = false;
-                        }
-                    } 
-                    else if (tableId === 'gym') {
-                        const instFlt = document.getElementById('filter-instructor-gym').value.toLowerCase();
-                        const instCell = row.cells[2];
-                        const instTxt = instCell.textContent.trim().toLowerCase();
-                        
-                        const statFlt = document.getElementById('filter-status-gym').value.toLowerCase();
-                        const statCell = row.cells[6];
-                        const statSpan = statCell.querySelector('.status');
-                        const statVal = statSpan ? statSpan.classList.contains('active') ? 'active' : 'inactive' : '';
-                        
-                        if ((instFlt !== '' && instTxt !== instFlt) || 
-                            (statFlt !== '' && statVal !== statFlt)) {
-                            match = false;
-                        }
-                    } 
-                    else if (tableId === 'spa') {
-                        const typeFlt = document.getElementById('filter-type-spa').value.toLowerCase();
-                        const typeCell = row.cells[2];
-                        const typeTxt = typeCell.textContent.trim().toLowerCase();
-                        
-                        const statFlt = document.getElementById('filter-status-spa').value.toLowerCase();
-                        const statCell = row.cells[6];
-                        const statSpan = statCell.querySelector('.status');
-                        const statVal = statSpan ? statSpan.classList.contains('active') ? 'active' : 'inactive' : '';
-                        
-                        if ((typeFlt !== '' && !typeTxt.includes(typeFlt)) || 
-                            (statFlt !== '' && statVal !== statFlt)) {
-                            match = false;
                         }
                     }
                 }
@@ -710,223 +704,271 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSearch('search-gym', 'gym', [1, 2, 3]);
     setupSearch('search-spa', 'spa', [1, 2, 3, 4]);
 
-    function setupFilter(selId, tabId, colIdx, valType = 'text') {
+    // Gestione dei filtri
+    function setupFilter(selId, tabId, colIdx) {
         const sel = document.getElementById(selId);
         if (!sel) return;
         
         sel.addEventListener('change', function() {
-            const flt = this.value.toLowerCase();
-            const tbl = document.querySelector(`#${tabId} table`);
-            const rows = tbl.getElementsByTagName('tr');
+            const filter = this.value.toLowerCase();
+            const table = document.querySelector(`#${tabId} table`);
+            if (!table) return;
+            
+            const rows = table.getElementsByTagName('tr');
             
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 const cell = row.getElementsByTagName('td')[colIdx];
                 
                 if (cell) {
-                    let txt = '';
-                    
-                    if (valType === 'status') {
-                        const span = cell.querySelector('.status');
-                        txt = span ? span.classList.contains('active') ? 'active' : 'inactive' : '';
-                    } else if (valType === 'type') {
-                        txt = cell.textContent.trim().toLowerCase();
-                    } else {
-                        txt = cell.textContent.toLowerCase();
-                    }
-                    
-                    if (flt === '' || txt.includes(flt)) {
-                        const srch = document.getElementById(`search-${tabId}`);
-                        if (srch && srch.value.trim() !== '') {
-                            const srchFlt = srch.value.toLowerCase();
-                            let match = false;
-                            
-                            const cols = tabId === 'spa' ? [1, 2, 3, 4] : (tabId === 'gym' ? [1, 2, 3] : [1, 2, 3, 4]);
-                            for (let col of cols) {
-                                const c = row.getElementsByTagName('td')[col];
-                                if (c && c.textContent.toLowerCase().indexOf(srchFlt) > -1) {
-                                    match = true;
-                                    break;
-                                }
-                            }
-                            
-                            row.style.display = match ? '' : 'none';
-                        } else {
-                            row.style.display = '';
-                        }
-                    } else {
-                        row.style.display = 'none';
-                    }
+                    const text = cell.textContent.toLowerCase();
+                    row.style.display = filter === '' || text.includes(filter) ? '' : 'none';
                 }
             }
         });
     }
-    
-    setupFilter('filter-type-all', 'all', 2, 'type');
-    setupFilter('filter-status-all', 'all', 6, 'status');
+
+    setupFilter('filter-type-all', 'all', 2);
     setupFilter('filter-instructor-gym', 'gym', 2);
-    setupFilter('filter-status-gym', 'gym', 6, 'status');
     setupFilter('filter-type-spa', 'spa', 2);
-    setupFilter('filter-status-spa', 'spa', 6, 'status');
 
-    const addCoursePopup = document.getElementById('add-course-popup');
-    const addCourseForm = document.getElementById('add-course-form');
-    const courseTypeSelect = document.getElementById('course-type');
-    const submitBtn = document.getElementById('submit-course-btn');
-    const formLoader = document.getElementById('form-loader');
+    // Gestione dei popup
+    function showPopup(popupId) {
+        const popup = document.getElementById(popupId);
+        if (popup) {
+            popup.style.display = 'flex';
+        }
+    }
 
-    function closeAddCoursePopup() {
-        if (addCoursePopup) {
-            addCoursePopup.style.display = 'none';
-            if (addCourseForm) {
-                addCourseForm.reset();
+    function closePopup(popupId) {
+        const popup = document.getElementById(popupId);
+        if (popup) {
+            popup.style.display = 'none';
+            const form = popup.querySelector('form');
+            if (form) {
+                form.reset();
             }
         }
     }
 
+    // Event listeners per i popup
     const addCourseBtn = document.getElementById('add-course-btn');
     if (addCourseBtn) {
-        addCourseBtn.addEventListener('click', function() {
-            if (addCoursePopup) {
-                addCoursePopup.style.display = 'flex';
-            }
-        });
+        addCourseBtn.addEventListener('click', () => showPopup('add-course-popup'));
     }
 
-    document.querySelectorAll('.close-popup, .btn-cancel').forEach(button => {
-        button.addEventListener('click', closeAddCoursePopup);
-    });
-
-    if (addCoursePopup) {
-        addCoursePopup.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeAddCoursePopup();
+    document.querySelectorAll('.close-popup, .btn-cancel').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const popup = btn.closest('.popup-overlay');
+            if (popup) {
+                closePopup(popup.id);
             }
-        });
-
-        const popupContent = addCoursePopup.querySelector('.popup-content');
-        if (popupContent) {
-            popupContent.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        }
-    }
-
-    courseTypeSelect.addEventListener('change', function() {
-        const gymFields = document.getElementById('gym-fields');
-        const spaFields = document.getElementById('spa-fields');
-        const maxParticipantsInput = document.getElementById('course-max-partecipants');
-        const maxParticipantsSpaInput = document.getElementById('course-max-partecipants-spa');
-        const priceInput = document.getElementById('course-price');
-
-        if (this.value === 'gym') {
-            gymFields.style.display = 'block';
-            spaFields.style.display = 'none';
-            maxParticipantsInput.required = true;
-            maxParticipantsSpaInput.required = false;
-            priceInput.required = false;
-        } else {
-            gymFields.style.display = 'none';
-            spaFields.style.display = 'block';
-            maxParticipantsInput.required = false;
-            maxParticipantsSpaInput.required = true;
-            priceInput.required = true;
-        }
-    });
-
-    function showNotification(message, type = 'success') {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = `notification ${type}`;
-        notification.style.display = 'block';
-        
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 10);
-
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 300);
-        }, 3000);
-    }
-
-    addCourseForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('submit-course-btn');
-        const formLoader = document.getElementById('form-loader');
-        
-        submitBtn.disabled = true;
-        formLoader.style.display = 'block';
-        
-        const formData = new FormData(this);
-        
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': getCsrfToken()
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            submitBtn.disabled = false;
-            formLoader.style.display = 'none';
-            
-            if (data.success) {
-                showSuccess(data.message, true, 'courses');
-                closeAddCoursePopup();
-                window.location.reload();
-            } else {
-                showError(data.error || 'Errore durante l\'aggiunta del corso', true, 'courses');
-            }
-        })
-        .catch(error => {
-            submitBtn.disabled = false;
-            formLoader.style.display = 'none';
-            showError(error.message, true, 'courses');
         });
     });
 
-    document.addEventListener('click', function(e) {
-        if (e.target && e.target.classList.contains('btn-delete')) {
+    // Gestione del form di aggiunta corso
+    const addCourseForm = document.getElementById('add-course-form');
+    if (addCourseForm) {
+        addCourseForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            const btn = e.target;
-            const id = btn.getAttribute('data-id');
-            const type = btn.getAttribute('data-type');
-            const row = btn.closest('tr');
-            const courseName = row.querySelector('td:nth-child(2)').textContent;
             
-            if (confirm(`Sei sicuro di voler eliminare il corso "${courseName}"?`)) {
-                fetch(`/delete-course/${type}/${id}/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRFToken': getCsrfToken(),
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Errore durante l\'eliminazione del corso');
-                    }
-                    window.location.reload();
-                })
-                .catch(error => {
-                    showError(error.message, true, 'courses');
-                });
-            }
-        }
-    });
+            const courseType = document.getElementById('course-type').value;
+            const name = document.getElementById('course-name').value;
+            const description = document.getElementById('course-description').value;
+            const duration = document.getElementById('course-duration').value;
+            const instructor = document.getElementById('course-instructor').value;
+            const scheduled = document.getElementById('course-scheduled').value;
+            const imageInput = document.getElementById('course-image');
+            const image = imageInput ? imageInput.files[0] : null;
 
+            // Validazione campi obbligatori
+            if (!name || !description || !duration || !instructor || !scheduled || !image) {
+                showNotification('Tutti i campi obbligatori devono essere compilati', 'error');
+                return;
+            }
+
+            // Validazione campi specifici per tipo
+            if (courseType === 'gym') {
+                const maxParticipantsInput = document.getElementById('course-max-partecipants');
+                if (maxParticipantsInput) {
+                    const value = maxParticipantsInput.value.trim();
+                    console.log('Add Course Form - Max Participants Value:', value);
+                    if (value !== '') {
+                        const maxParticipants = Number(value);
+                        console.log('Add Course Form - Parsed Max Participants:', maxParticipants);
+                        if (isNaN(maxParticipants) || maxParticipants < 1) {
+                            showNotification('La capacità massima deve essere almeno 1', 'error');
+                            return;
+                        }
+                    }
+                }
+            } else {
+                const priceInput = document.getElementById('course-price');
+                const price = priceInput ? parseFloat(priceInput.value) : 0;
+                const spaTypeInput = document.getElementById('course-spa-type');
+                const spaType = spaTypeInput ? spaTypeInput.value : '';
+                
+                if (isNaN(price) || price <= 0) {
+                    showNotification('Il prezzo deve essere maggiore di 0', 'error');
+                    return;
+                }
+                if (!spaType) {
+                    showNotification('Seleziona un tipo di trattamento', 'error');
+                    return;
+                }
+            }
+
+            // Validazione data
+            const selectedDate = new Date(scheduled);
+            if (selectedDate < now) {
+                showNotification('La data selezionata non può essere nel passato', 'error');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const submitBtn = document.getElementById('submit-course-btn');
+            const formLoader = document.getElementById('form-loader');
+            
+            if (submitBtn) submitBtn.disabled = true;
+            if (formLoader) formLoader.style.display = 'block';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Errore durante l\'aggiunta del corso');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (submitBtn) submitBtn.disabled = false;
+                if (formLoader) formLoader.style.display = 'none';
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    closePopup('add-course-popup');
+                    window.location.reload();
+                } else {
+                    showNotification(data.error || 'Errore durante l\'aggiunta del corso', 'error');
+                }
+            })
+            .catch(error => {
+                if (submitBtn) submitBtn.disabled = false;
+                if (formLoader) formLoader.style.display = 'none';
+                showNotification(error.message, 'error');
+            });
+        });
+    }
+
+    // Gestione del form di modifica corso
+    const editCourseForm = document.getElementById('edit-course-form');
+    if (editCourseForm) {
+        editCourseForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const courseType = document.getElementById('edit-course-type').value;
+            const name = document.getElementById('edit-name').value;
+            const description = document.getElementById('edit-description').value;
+            const duration = document.getElementById('edit-duration').value;
+            const instructor = document.getElementById('edit-instructor-select').value;
+            const scheduled = document.getElementById('edit-scheduled').value;
+            
+            // Validazione campi obbligatori
+            if (!name || !description || !duration || !instructor || !scheduled) {
+                showNotification('Tutti i campi obbligatori devono essere compilati', 'error');
+                return;
+            }
+
+            // Validazione campi specifici per tipo
+            if (courseType === 'gym') {
+                const maxParticipantsInput = document.getElementById('edit-max-partecipants');
+                if (maxParticipantsInput) {
+                    const value = maxParticipantsInput.value.trim();
+                    console.log('Edit Course Form - Max Participants Value:', value);
+                    if (value !== '') {
+                        const maxParticipants = Number(value);
+                        console.log('Edit Course Form - Parsed Max Participants:', maxParticipants);
+                        if (isNaN(maxParticipants) || maxParticipants < 1) {
+                            showNotification('La capacità massima deve essere almeno 1', 'error');
+                            return;
+                        }
+                    }
+                }
+            } else {
+                const priceInput = document.getElementById('edit-price');
+                const price = priceInput ? parseFloat(priceInput.value) : 0;
+                const spaTypeInput = document.getElementById('edit-spa-type');
+                const spaType = spaTypeInput ? spaTypeInput.value : '';
+
+                if (isNaN(price) || price <= 0) {
+                    showNotification('Il prezzo deve essere maggiore di 0', 'error');
+                    return;
+                }
+                if (!spaType) {
+                    showNotification('Seleziona un tipo di trattamento', 'error');
+                    return;
+                }
+            }
+
+            // Validazione data
+            const selectedDate = new Date(scheduled);
+            if (selectedDate < now) {
+                showNotification('La data selezionata non può essere nel passato', 'error');
+                return;
+            }
+
+            const formData = new FormData(this);
+            const submitBtn = document.getElementById('submit-edit-btn');
+            const formLoader = document.getElementById('edit-form-loader');
+            
+            if (submitBtn) submitBtn.disabled = true;
+            if (formLoader) formLoader.style.display = 'block';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Errore durante la modifica del corso');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (submitBtn) submitBtn.disabled = false;
+                if (formLoader) formLoader.style.display = 'none';
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    closePopup('edit-course-popup');
+                    window.location.reload();
+                } else {
+                    showNotification(data.error || 'Errore durante la modifica del corso', 'error');
+                }
+            })
+            .catch(error => {
+                if (submitBtn) submitBtn.disabled = false;
+                if (formLoader) formLoader.style.display = 'none';
+                showNotification(error.message, 'error');
+            });
+        });
+    }
+
+    // Gestione dei pulsanti di azione
     document.querySelectorAll('.btn-view').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
@@ -935,20 +977,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    let currentEditCourseId = null;
-    let currentEditCourseType = null;
-
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
             const type = this.getAttribute('data-type');
             const row = this.closest('tr');
             
-            currentEditCourseId = id;
-            currentEditCourseType = type;
-            
             const form = document.getElementById('edit-course-form');
-            form.action = `/edit-course/${type}/${id}/`;
+            if (!form) return;
+            
+            form.action = `/gest-corsi/edit/${type}/${id}/`;
             
             document.getElementById('edit-course-type').value = type;
             document.getElementById('edit-course-id').value = id;
@@ -957,7 +995,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-description').value = row.cells[4].textContent;
             document.getElementById('edit-duration').value = parseInt(row.cells[5].textContent);
             
-            // Get the scheduled date from the row's data attribute
             const scheduledDate = row.getAttribute('data-scheduled');
             if (scheduledDate) {
                 document.getElementById('edit-scheduled').value = scheduledDate;
@@ -975,22 +1012,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (type === 'gym') {
                 document.getElementById('edit-gym-fields').style.display = 'block';
                 document.getElementById('edit-spa-fields').style.display = 'none';
-                // Prova a prendere la capacità dal data-attribute se presente
-                let capValue = row.getAttribute('data-max-partecipants');
-                if (!capValue) {
-                    // Trova dinamicamente la colonna 'Capacità'
-                    let capIndex = -1;
-                    const ths = row.closest('table').querySelectorAll('thead th');
-                    ths.forEach((th, idx) => {
-                        if (th.textContent.trim().toLowerCase().includes('capacità')) {
-                            capIndex = idx;
-                        }
-                    });
-                    if (capIndex !== -1 && row.cells[capIndex]) {
-                        capValue = row.cells[capIndex].textContent.replace(/[^0-9]/g, '');
-                    }
+                const capValue = row.getAttribute('data-max-partecipants');
+                if (capValue) {
+                    document.getElementById('edit-max-partecipants').value = parseInt(capValue);
                 }
-                document.getElementById('edit-max-partecipants').value = capValue ? parseInt(capValue) : '';
             } else {
                 document.getElementById('edit-gym-fields').style.display = 'none';
                 document.getElementById('edit-spa-fields').style.display = 'block';
@@ -998,7 +1023,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (price) {
                     document.getElementById('edit-price').value = price;
                 }
-                // Get spa type from cell index 2 (Tipo column)
                 const typeCell = row.cells[2];
                 if (typeCell) {
                     const spaTypeSelect = document.getElementById('edit-spa-type');
@@ -1010,111 +1034,77 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 }
-                // Popola la capacità massima per spa (colonna 6 = capacità)
-                if (row.cells[6]) {
-                    const capText = row.cells[6].textContent.replace(/[^0-9]/g, '');
-                    document.getElementById('edit-max-partecipants-spa').value = capText ? parseInt(capText) : '';
+            }
+            
+            showPopup('edit-course-popup');
+        });
+    });
+
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const type = this.getAttribute('data-type');
+            const row = this.closest('tr');
+            const courseName = row.querySelector('td:nth-child(2)').textContent;
+            
+            if (confirm(`Sei sicuro di voler eliminare il corso "${courseName}"?`)) {
+                fetch(`/gest-corsi/delete/${type}/${id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Errore durante l\'eliminazione del corso');
+                    }
+                    window.location.reload();
+                })
+                .catch(error => {
+                    showNotification(error.message, 'error');
+                });
+            }
+        });
+    });
+
+    // Funzione per mostrare le notifiche
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        if (!notification) return;
+        
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 300);
+        }, 3000);
+    }
+
+    // Funzione per ottenere il token CSRF
+    function getCsrfToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-            
-            document.getElementById('edit-course-popup').style.display = 'flex';
-        });
-    });
-
-    document.querySelector('#edit-course-popup .close-popup').addEventListener('click', closeEditCoursePopup);
-    document.querySelector('#edit-course-popup .btn-cancel').addEventListener('click', closeEditCoursePopup);
-
-    document.getElementById('edit-course-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('submit-edit-btn');
-        const formLoader = document.getElementById('edit-form-loader');
-        
-        submitBtn.disabled = true;
-        formLoader.style.display = 'block';
-        
-        const formData = new FormData(this);
-        
-        // Forza il valore del tipo in base alla selezione corrente
-        const type = document.getElementById('edit-course-type').value;
-        if (!type) {
-            // Recupera dal bottone attivo o altro fallback se necessario
-            const activeTab = document.querySelector('.tab.active');
-            if (activeTab) {
-                document.getElementById('edit-course-type').value = activeTab.getAttribute('data-tab');
-            }
         }
-        
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': getCsrfToken()
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            submitBtn.disabled = false;
-            formLoader.style.display = 'none';
-            
-            if (data.success) {
-                showSuccess(data.message, true, 'courses');
-                closeEditCoursePopup();
-                window.location.reload();
-            } else {
-                showError(data.error || 'Errore durante la modifica del corso', true, 'courses');
-            }
-        })
-        .catch(error => {
-            submitBtn.disabled = false;
-            formLoader.style.display = 'none';
-            console.error('Error:', error);
-            showError('Errore durante la richiesta: ' + error.message, true, 'courses');
-        });
-    });
-
-    document.querySelector('#edit-course-popup .popup-content').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-
-    document.getElementById('filter-type-all').addEventListener('change', function() {
-        const val = this.value.trim().toLowerCase();
-        const tbl = document.querySelector('#all table');
-        const rows = tbl.getElementsByTagName('tr');
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            const rowType = (row.getAttribute('data-type') || '').trim().toLowerCase();
-            if (!val || rowType === val) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        }
-    });
-
-    // Imposta la data minima per gli input datetime-local
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    const minDateTime = now.toISOString().slice(0, 16);
-    
-    document.querySelectorAll('input[type="datetime-local"]').forEach(input => {
-        input.min = minDateTime;
-        
-        // Aggiungi validazione al submit del form
-        input.closest('form').addEventListener('submit', function(e) {
-            const selectedDate = new Date(input.value);
-            if (selectedDate < now) {
-                e.preventDefault();
-                showNotification('La data selezionata non può essere nel passato', 'error');
-            }
-        });
-    });
+        return cookieValue;
+    }
 });
 </script>
 </body>

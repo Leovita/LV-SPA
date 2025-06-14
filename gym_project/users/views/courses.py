@@ -98,17 +98,12 @@ def add_course(request):
             return redirect('gest-corsi')
 
         if course_type == 'gym':
-            if not max_partecipants:
-                if is_ajax:
-                    return ajax_error("Capacità massima richiesta per i corsi palestra.")
-                messages.error(request, "Capacità massima richiesta per i corsi palestra.")
-                return redirect('gest-corsi')
             try:
-                max_partecipants_int = int(max_partecipants)
+                max_partecipants_int = int(max_partecipants) if max_partecipants else 1
                 if max_partecipants_int < 1:
-                    raise ValueError
-            except (TypeError, ValueError):
-                return ajax_error("Capacità massima richiesta per i corsi palestra (deve essere almeno 1).")
+                    raise ValueError("La capacità massima deve essere almeno 1.")
+            except (TypeError, ValueError) as e:
+                return ajax_error(f"Capacità massima non valida: {str(e)}")
             try:
                 price_float = float(price) if price else 0.0
             except ValueError:
@@ -237,6 +232,10 @@ def course_details(request, type, id):
 @user_passes_test(lambda u: u.is_staff)
 @require_http_methods(["POST"])
 def edit_course(request, type, id):
+    # --- LOG DI DEBUG ---
+    print(f"[DEBUG BACKEND - EDIT COURSE] Richiesta POST ricevuta per Type: '{type}', ID: '{id}'")
+    print(f"[DEBUG BACKEND - EDIT COURSE] request.POST: {request.POST}")
+    # --- FINE LOG DI DEBUG ---
     try:
         if type == 'gym':
             course = get_object_or_404(GymClass, id=id)
@@ -270,14 +269,12 @@ def edit_course(request, type, id):
             return ajax_error("Formato data e ora non valido.")
 
         if type == 'gym':
-            if not max_partecipants:
-                return ajax_error("Capacità massima richiesta per i corsi palestra.")
             try:
-                max_partecipants_int = int(max_partecipants)
+                max_partecipants_int = int(max_partecipants) if max_partecipants else 1
                 if max_partecipants_int < 1:
-                    raise ValueError
-            except (TypeError, ValueError):
-                return ajax_error("Capacità massima richiesta per i corsi palestra (deve essere almeno 1).")
+                    raise ValueError("La capacità massima deve essere almeno 1.")
+            except (TypeError, ValueError) as e:
+                return ajax_error(f"Capacità massima non valida: {str(e)}")
 
             try:
                 price_float = float(price) if price else 0.0

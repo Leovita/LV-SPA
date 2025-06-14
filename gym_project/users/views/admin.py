@@ -143,12 +143,14 @@ def edit_booking(request, type, id):
                 booking = GymBooking.objects.get(id=id)
                 booking.class_id.scheduled = new_datetime
                 booking.class_id.save()
+                booking.description = notes
+                booking.save()
             elif type == 'spa':
                 booking = SpaBooking.objects.get(id=id)
                 booking.service_id.scheduled = new_datetime
-                if notes:
-                    booking.description = notes
+                booking.description = notes
                 booking.service_id.save()
+                booking.save()
             else:
                 return ajax_error('Tipo di prenotazione non valido.')
             

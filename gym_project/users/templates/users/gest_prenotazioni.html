@@ -665,13 +665,13 @@
                     document.getElementById('edit-booking-service-info').value = row.cells[2].textContent;
                     
                     // Estrai la data dalla riga e formattala per l'input datetime-local
-                    const dateCell = row.cells[4].textContent; 
-                    console.log('1. Data dalla riga (dateCell):', dateCell);
+                    const dateCell = row.cells[4].textContent;
+                    // console.log('1. Data dalla riga (dateCell):', dateCell);
 
-                    const parts = dateCell.split(', '); 
+                    const parts = dateCell.split(', ');
                     const datePart = parts[0];
                     const timePart = parts[1];
-                    console.log('2. Parte data (datePart):', datePart, '3. Parte ora (timePart):', timePart);
+                    // console.log('2. Parte data (datePart):', datePart, '3. Parte ora (timePart):', timePart);
 
                     let day, month, year;
 
@@ -689,22 +689,22 @@
                             'Gen': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'Mag': '05', 'Giu': '06',
                             'Lug': '07', 'Ago': '08', 'Set': '09', 'Ott': '10', 'Nov': '11', 'Dic': '12'
                         };
-                        month = months[month] || month; 
+                        month = months[month] || month;
                     }
 
                     const [hours, minutes] = timePart.split(':');
 
-                    console.log('4. Giorno:', day, '5. Mese:', month, '6. Anno:', year);
-                    console.log('7. Ore:', hours, '8. Minuti:', minutes);
+                    // console.log('4. Giorno:', day, '5. Mese:', month, '6. Anno:', year);
+                    // console.log('7. Ore:', hours, '8. Minuti:', minutes);
                     
                     // Aggiungi padding a due cifre se necessario
                     const formattedDay = day.padStart(2, '0');
-                    const formattedMonth = month.padStart(2, '0'); 
+                    const formattedMonth = month.padStart(2, '0');
                     const formattedHours = hours.padStart(2, '0');
                     const formattedMinutes = minutes.padStart(2, '0');
 
                     const formattedDateTime = `${year}-${formattedMonth}-${formattedDay}T${formattedHours}:${formattedMinutes}`;
-                    console.log('9. Data formattata per input datetime-local:', formattedDateTime);
+                    // console.log('9. Data formattata per input datetime-local:', formattedDateTime);
                     document.getElementById('edit-booking-datetime').value = formattedDateTime;
 
                     // Gestisci le note se presenti
@@ -750,7 +750,6 @@
                 const bookingType = formData.get('booking_type');
                 const datetimeInput = document.getElementById('edit-booking-datetime');
 
-                // Validazione della data
                 const selectedDate = new Date(datetimeInput.value);
                 const currentDate = new Date();
 
@@ -770,15 +769,15 @@
                     const hours = String(date.getHours()).padStart(2, '0');
                     const minutes = String(date.getMinutes()).padStart(2, '0');
                     const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                    console.log('Data originale:', datetimeInput.value);
-                    console.log('Data formattata:', formattedDateTime);
+                    // console.log('Data originale:', datetimeInput.value);
+                    // console.log('Data formattata:', formattedDateTime);
                     formData.set('datetime', formattedDateTime);
                 }
 
                 // Log di tutti i dati del form
-                for (let pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
-                }
+                // for (let pair of formData.entries()) {
+                //     console.log(pair[0] + ': ' + pair[1]);
+                // }
 
                 // Aggiungi le note se presenti
                 const notesInput = document.getElementById('edit-booking-notes');
