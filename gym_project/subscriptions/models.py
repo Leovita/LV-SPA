@@ -1,11 +1,12 @@
 from datetime import timedelta
 from django.db import models
 from django.utils import timezone
+from dateutil.relativedelta import relativedelta
 
 class SubscriptionPlan(models.Model):
     name = models.CharField(max_length=100)
     price = models.FloatField()
-    duration = models.IntegerField(help_text="Durata in giorni")
+    duration = models.IntegerField(help_text="Durata in mesi")
     description = models.TextField()
 
     def __str__(self):
@@ -23,11 +24,10 @@ class Subscription(models.Model):
             if not self.start_date:
                 self.start_date = timezone.now()
             if not self.end_date:
-                self.end_date = self.start_date + timedelta(days=self.plan.duration)
+                self.end_date = self.start_date + relativedelta(months=self.plan.duration)
         if self.end_date and self.end_date < timezone.now():
             self.is_active = False  
         super().save(*args, **kwargs)
-
 
     def __str__(self):
         return f"{self.user.email} - {self.plan.name}"

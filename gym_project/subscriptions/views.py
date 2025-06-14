@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.utils import timezone
 import re
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 def validate_fake_card_data(view_func):
     def _wrapped_view(request, plan_id, *args, **kwargs):
@@ -44,10 +45,11 @@ def validate_fake_card_data(view_func):
 @login_required
 def subscription_plans(request):
     """View to display all available subscription plans"""
+    plans = SubscriptionPlan.objects.all()
     context = {
-    "subscription_plans": SubscriptionPlan.objects.all(),
-    "user_subscription": Subscription.objects.filter(user=request.user, is_active=True).first(),
-}
+        "subscription_plans": plans,
+        "user_subscription": Subscription.objects.filter(user=request.user, is_active=True).first(),
+    }
     return render(request, 'subscriptions/subscription.html', context)
 
 @login_required
@@ -61,10 +63,15 @@ def subscribe_plan(request, plan_id):
         card_number = request.POST.get('card_number')
         card_expiry = request.POST.get('card_expiry')
         card_cvv = request.POST.get('card_cvv')
+        
+        start_date = timezone.now()
+        end_date = start_date + relativedelta(months=plan.duration)
+        
         subscription = Subscription.objects.create(
             user=request.user,
             plan=plan,
-            start_date=timezone.now(),
+            start_date=start_date,
+            end_date=end_date,
             is_active=True
         )
         messages.success(request, f"Abbonamento '{plan.name}' sottoscritto con successo!")
