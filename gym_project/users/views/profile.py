@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def profile_view(request):
-    return redirect('profile')
+    return render(request, 'users/profile.html')
 
 @login_required
 def update_profile(request):
