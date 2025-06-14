@@ -317,56 +317,52 @@
 </select>
 </div>
 <div class="form-group">
-<label for="name">Nome:</label>
-<input type="text" name="name" id="name" required>
+<label for="course-name">Nome:</label>
+<input type="text" name="name" id="course-name" required>
 </div>
 <div class="form-group">
-<label for="instructor">Istruttore/Operatore:</label>
-<select name="instructor" id="instructor-select" required>
+<label for="course-instructor">Istruttore/Operatore:</label>
+<select name="instructor" id="course-instructor" required>
 {% for instructor in instructors %}
 <option value="{{ instructor.id }}">{{ instructor.full_name }}</option>
 {% endfor %}
 </select>
 </div>
 <div class="form-group">
-<label for="description">Descrizione:</label>
-<textarea name="description" id="description" required></textarea>
+<label for="course-description">Descrizione:</label>
+<textarea name="description" id="course-description" required></textarea>
 </div>
 <div class="form-group">
-<label for="duration">Durata (minuti):</label>
-<input type="number" name="duration" id="duration" min="1" required>
+<label for="course-duration">Durata (min):</label>
+<input type="number" name="duration" id="course-duration" min="1" required>
 </div>
 <div class="form-group">
-<label for="scheduled">Data e Ora:</label>
-<input type="datetime-local" name="scheduled" id="scheduled" required>
+<label for="course-scheduled">Data e Ora:</label>
+<input type="datetime-local" name="scheduled" id="course-scheduled" required>
 </div>
-<div id="gym-fields" class="conditional-fields">
+<div id="gym-fields">
 <div class="form-group">
-<label for="max_partecipants">Capacità massima:</label>
-<input type="number" name="max_partecipants" id="max_partecipants" min="1" required>
+<label for="course-max-partecipants">Capacità massima:</label>
+<input type="number" name="max_partecipants" id="course-max-partecipants" min="1">
 </div>
 </div>
-<div id="spa-fields" class="conditional-fields" style="display:none;">
+<div id="spa-fields" style="display:none;">
 <div class="form-group">
-<label for="price">Prezzo (€):</label>
-<input type="number" name="price" id="price" min="0" step="0.01">
+<label for="course-price">Prezzo (€):</label>
+<input type="number" name="price" id="course-price" min="0" step="0.01">
 </div>
 <div class="form-group">
-<label for="spa_type">Tipo trattamento:</label>
-<select name="spa_type" id="spa_type">
+<label for="course-spa-type">Tipo trattamento:</label>
+<select name="spa_type" id="course-spa-type">
 <option value="massage">Massaggio</option>
 <option value="treatment">Trattamento</option>
 <option value="ritual">Rituale</option>
 </select>
 </div>
-<div class="form-group">
-<label for="max_partecipants_spa">Capacità massima:</label>
-<input type="number" name="max_partecipants" id="max_partecipants_spa" min="1" required>
-</div>
 </div>
 <div class="form-group">
-<label for="image">Immagine:</label>
-<input type="file" name="image" id="image" accept="image/*" required>
+<label for="course-image">Immagine:</label>
+<input type="file" name="image" id="course-image" accept="image/*" required>
 </div>
 <div class="popup-actions">
 <button type="submit" class="btn btn-primary" id="submit-course-btn">Aggiungi</button>
@@ -817,9 +813,9 @@ document.addEventListener('DOMContentLoaded', function() {
     courseTypeSelect.addEventListener('change', function() {
         const gymFields = document.getElementById('gym-fields');
         const spaFields = document.getElementById('spa-fields');
-        const maxParticipantsInput = document.getElementById('max_partecipants');
-        const maxParticipantsSpaInput = document.getElementById('max_partecipants_spa');
-        const priceInput = document.getElementById('price');
+        const maxParticipantsInput = document.getElementById('course-max-partecipants');
+        const maxParticipantsSpaInput = document.getElementById('course-max-partecipants-spa');
+        const priceInput = document.getElementById('course-price');
 
         if (this.value === 'gym') {
             gymFields.style.display = 'block';
@@ -855,131 +851,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     addCourseForm.addEventListener('submit', function(e) {
-        const courseType = courseTypeSelect.value;
-        const maxPartecipantsValue = document.getElementById('max_partecipants').value;
-        if (!maxPartecipantsValue) {
-            e.preventDefault();
-            showNotification('Per tutti i corsi/servizi è necessario specificare la capacità massima.', 'error');
-        } else if (courseType === 'spa' && !document.getElementById('price').value) {
-            e.preventDefault();
-            showNotification('Per i servizi spa è necessario specificare il prezzo.', 'error');
-        }
-    });
-
-    if (addCourseForm) {
-        addCourseForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            addCourseForm.querySelectorAll('.field-error').forEach(el => el.remove());
-            submitBtn.disabled = true;
-            formLoader.style.display = 'block';
-            const formData = new FormData(this);
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                submitBtn.disabled = false;
-                formLoader.style.display = 'none';
-                if (data.success) {
-                    showSuccess('Corso aggiunto con successo', true, 'courses');
-                    closeAddCoursePopup();
-                    this.reset();
-                    if (data.course || data.service) {
-                        const isGym = !!data.course;
-                        const d = isGym ? data.course : data.service;
-                        const allRow = document.createElement('tr');
-                        allRow.innerHTML = `
-                            <td>${d.id}</td>
-                            <td>${d.name}</td>
-                            <td>${isGym ? 'Palestra' : 'Spa'}</td>
-                            <td>${isGym ? d.instructor : d.operator}</td>
-                            <td>${d.description}</td>
-                            <td>${d.duration} min</td>
-                            <td class="actions">
-                                <button class="btn btn-view" data-id="${d.id}" data-type="${isGym ? 'gym' : 'spa'}">Visualizza</button>
-                                <button class="btn btn-edit" data-id="${d.id}" data-type="${isGym ? 'gym' : 'spa'}">Modifica</button>
-                                <button class="btn btn-delete" data-id="${d.id}" data-type="${isGym ? 'gym' : 'spa'}">Elimina</button>
-                            </td>
-                        `;
-                        const allTbody = document.querySelector('#all tbody');
-                        if (allTbody) {
-                            const noData = allTbody.querySelector('.no-data');
-                            if (noData) noData.remove();
-                            allTbody.appendChild(allRow);
-                        }
-                        if (isGym) {
-                            const gymRow = document.createElement('tr');
-                            gymRow.innerHTML = `
-                                <td>${d.id}</td>
-                                <td>${d.name}</td>
-                                <td>${d.instructor}</td>
-                                <td>${d.description}</td>
-                                <td>${d.duration} min</td>
-                                <td>${d.max_partecipants} persone</td>
-                                <td class="actions">
-                                    <button class="btn btn-view" data-id="${d.id}" data-type="gym">Visualizza</button>
-                                    <button class="btn btn-edit" data-id="${d.id}" data-type="gym">Modifica</button>
-                                    <button class="btn btn-delete" data-id="${d.id}" data-type="gym">Elimina</button>
-                                </td>
-                            `;
-                            const gymTbody = document.querySelector('#gym tbody');
-                            if (gymTbody) {
-                                const noData = gymTbody.querySelector('.no-data');
-                                if (noData) noData.remove();
-                                gymTbody.appendChild(gymRow);
-                            }
-                        } else {
-                            const spaRow = document.createElement('tr');
-                            spaRow.innerHTML = `
-                                <td>${d.id}</td>
-                                <td>${d.name}</td>
-                                <td>${d.get_type_display || d.type}</td>
-                                <td>${d.operator}</td>
-                                <td>${d.description}</td>
-                                <td>${d.duration} min</td>
-                                <td>${d.max_partecipants} persone</td>
-                                <td>€${d.price}</td>
-                                <td class="actions">
-                                    <button class="btn btn-view" data-id="${d.id}" data-type="spa">Visualizza</button>
-                                    <button class="btn btn-edit" data-id="${d.id}" data-type="spa">Modifica</button>
-                                    <button class="btn btn-delete" data-id="${d.id}" data-type="spa">Elimina</button>
-                                </td>
-                            `;
-                            const spaTbody = document.querySelector('#spa tbody');
-                            if (spaTbody) {
-                                const noData = spaTbody.querySelector('.no-data');
-                                if (noData) noData.remove();
-                                spaTbody.appendChild(spaRow);
-                            }
-                        }
-                        window.location.reload();
-                    }
-                } else {
-                    if (data.errors) {
-                        Object.entries(data.errors).forEach(([field, errors]) => {
-                            const input = this.querySelector(`[name="${field}"]`);
-                            if (input) {
-                                const errorDiv = document.createElement('div');
-                                errorDiv.className = 'field-error';
-                                errorDiv.textContent = errors[0];
-                                input.parentNode.appendChild(errorDiv);
-                            }
-                        });
-                    }
-                    showError(data.error || 'Errore durante l\'aggiunta del corso', true, 'courses');
-                }
-            })
-            .catch(error => {
-                submitBtn.disabled = false;
-                formLoader.style.display = 'none';
-                showError('Errore durante l\'aggiunta del corso', true, 'courses');
-            });
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submit-course-btn');
+        const formLoader = document.getElementById('form-loader');
+        
+        submitBtn.disabled = true;
+        formLoader.style.display = 'block';
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken()
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            submitBtn.disabled = false;
+            formLoader.style.display = 'none';
+            
+            if (data.success) {
+                showSuccess(data.message, true, 'courses');
+                closeAddCoursePopup();
+                window.location.reload();
+            } else {
+                showError(data.error || 'Errore durante l\'aggiunta del corso', true, 'courses');
+            }
+        })
+        .catch(error => {
+            submitBtn.disabled = false;
+            formLoader.style.display = 'none';
+            showError(error.message, true, 'courses');
         });
-    }
+    });
 
     document.addEventListener('click', function(e) {
         if (e.target && e.target.classList.contains('btn-delete')) {

@@ -19,7 +19,7 @@ def gest_corsi(req):
     gym = GymClass.objects.filter(scheduled__gte=now)
     spa = SpaService.objects.filter(scheduled__gte=now)
     all_corsi = list(gym) + list(spa)
-    instructors = User.objects.filter(is_staff=True)
+    instructors = User.objects.filter(is_staff=True).exclude(is_superuser=True)
     ctx = {
         'gym_courses': gym,
         'spa_services': spa,

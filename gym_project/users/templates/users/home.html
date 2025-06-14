@@ -14,6 +14,123 @@
 <link rel="stylesheet" href="{% static 'users/css/popup.css' %}">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<style>
+    html {
+        scroll-behavior: smooth;
+    }
+
+    .coaches {
+        padding: 80px 20px;
+        background-color: #f9f9f9;
+    }
+
+    .coaches h2 {
+        text-align: center;
+        margin-bottom: 40px;
+        color: #333;
+        font-family: 'Poppins', sans-serif;
+        font-size: 2.5em;
+    }
+
+    .coaches-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .coach-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .coach-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .coach-image-container {
+        width: 100%;
+        height: 300px;
+        overflow: hidden;
+        position: relative;
+        background-color: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .coach-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+        transition: transform 0.3s ease;
+        padding: 10px;
+    }
+
+    .coach-card:hover .coach-image {
+        transform: scale(1.05);
+    }
+
+    .coach-info {
+        padding: 20px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .coach-info h3 {
+        color: #333;
+        margin: 0 0 10px 0;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.5em;
+    }
+
+    .coach-specialization {
+        color: #666;
+        font-style: italic;
+        margin-bottom: 15px;
+    }
+
+    .coach-description {
+        color: #555;
+        margin-bottom: 15px;
+        line-height: 1.6;
+        flex-grow: 1;
+    }
+
+    .coach-details {
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+
+    .coach-details p {
+        margin: 5px 0;
+        color: #666;
+    }
+
+    .coach-details strong {
+        color: #333;
+    }
+
+    @media (max-width: 768px) {
+        .coaches-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .coach-card {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    }
+</style>
 </head>
 <body>
 
@@ -139,6 +256,42 @@
     <p>Non ci sono servizi disponibili al momento.</p>
     {% endfor %}
 </div>
+</section>
+
+<section id="coaches" class="coaches">
+    <h2>I Nostri Coach</h2>
+    <div class="coaches-grid">
+        {% for coach in coaches %}
+        <div class="coach-card">
+            <div class="coach-image-container">
+                <img src="{{ coach.profile_picture.url }}" alt="{{ coach.full_name }}" class="coach-image">
+            </div>
+            <div class="coach-info">
+                <h3>{{ coach.full_name }}</h3>
+                <p class="coach-specialization">
+                    {% if 'COACH' in coach.full_name|upper %}
+                        Specialista in Palestra
+                    {% else %}
+                        Specialista in Spa
+                    {% endif %}
+                </p>
+                <p class="coach-description">{{ coach.description }}</p>
+                <div class="coach-details">
+                    <p><strong>Esperienza:</strong> {{ coach.experience }} anni</p>
+                    <p><strong>Specialità:</strong>
+                        {% if 'COACH' in coach.full_name|upper %}
+                            Fitness, Allenamento Funzionale, Body Building
+                        {% else %}
+                            Massaggi, Trattamenti Benessere, Rituali Spa
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>Nessun coach disponibile al momento.</p>
+        {% endfor %}
+    </div>
 </section>
 
 <section id="contact" class="contact">

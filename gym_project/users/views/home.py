@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from palestra.models import GymClass, GymBooking
 from spa.models import SpaService, SpaBooking
+from users.models import User
 from datetime import datetime
 
 def home(req):
     gym_srv = GymClass.objects.all()
     spa_srv = SpaService.objects.all()
+    coaches = User.objects.filter(is_staff=True).exclude(is_superuser=True)
 
     gym_date = {s.id: s.scheduled for s in gym_srv}
     spa_date = {s.id: s.scheduled for s in spa_srv}
@@ -27,6 +29,7 @@ def home(req):
         'user_gym_bookings': user_gym,
         'user_spa_bookings': user_spa,
         'active_subscription': active_subscription,
+        'coaches': coaches,
         'timestamp': datetime.now().timestamp(),
     }
 
