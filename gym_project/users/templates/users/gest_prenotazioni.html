@@ -78,7 +78,7 @@
                         </thead>
                         <tbody>
                             {% for booking in all_bookings %}
-                            <tr class="booking-row">
+                            <tr class="booking-row" data-booking-id="{{ booking.id }}">
                                 <td>{{ booking.id }}</td>
                                 <td>{{ booking.user }}</td>
                                 <td>{{ booking.service }}</td>
@@ -144,7 +144,7 @@
                         </thead>
                         <tbody>
                             {% for booking in gym_bookings %}
-                            <tr class="booking-row">
+                            <tr class="booking-row" data-booking-id="{{ booking.id }}">
                                 <td>{{ booking.id }}</td>
                                 <td>{{ booking.user }}</td>
                                 <td>{{ booking.course }}</td>
@@ -210,7 +210,7 @@
                         </thead>
                         <tbody>
                             {% for booking in spa_bookings %}
-                            <tr class="booking-row">
+                            <tr class="booking-row" data-booking-id="{{ booking.id }}">
                                 <td>{{ booking.id }}</td>
                                 <td>{{ booking.user }}</td>
                                 <td>{{ booking.treatment }}</td>
@@ -455,7 +455,6 @@
             transform: translateY(0);
         }
     </style>
-    <script src="{% static 'users/js/script.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
     <script>
         function getCsrfToken() {
@@ -647,6 +646,7 @@
                 btn.addEventListener('click', function() {
                     const bookingId = this.getAttribute('data-id');
                     const bookingType = this.getAttribute('data-type');
+                    const row = this.closest('tr');
                     
                     openEditBookingPopup(); 
                     editBookingLoader.style.display = 'block';
@@ -658,86 +658,47 @@
                     const notesGroup = document.getElementById('edit-booking-notes-group');
                     const popupActions = editBookingForm.querySelector('.popup-actions');
 
-                    userInfoGroup.style.display = 'none';
-                    serviceInfoGroup.style.display = 'none';
-                    datetimeGroup.style.display = 'none';
-                    notesGroup.style.display = 'none';
-                    popupActions.style.display = 'none';
+                    // Popola i campi con i dati dalla riga
+                    document.getElementById('edit-booking-id').value = bookingId;
+                    document.getElementById('edit-booking-type').value = bookingType;
+                    document.getElementById('edit-booking-user-info').value = row.cells[1].textContent;
+                    document.getElementById('edit-booking-service-info').value = row.cells[2].textContent;
                     
-                    document.getElementById('edit-booking-user-info').value = '';
-                    document.getElementById('edit-booking-service-info').value = '';
-                    document.getElementById('edit-booking-datetime').value = '';
-                    document.getElementById('edit-booking-notes').value = '';
+                    // Estrai la data dalla riga e formattala per l'input datetime-local
+                    const dateCell = row.cells[4].textContent;
+                    const [datePart, timePart] = dateCell.split(', ');
+                    const [day, month, year] = datePart.split(' ');
+                    const [hours, minutes] = timePart.split(':');
+                    
+                    // Converti il mese da testo a numero
+                    const months = {
+                        'Gen': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'Mag': '05', 'Giu': '06',
+                        'Lug': '07', 'Ago': '08', 'Set': '09', 'Ott': '10', 'Nov': '11', 'Dic': '12'
+                    };
+                    
+                    const formattedDate = `${year}-${months[month]}-${day.padStart(2, '0')}T${hours}:${minutes}`;
+                    document.getElementById('edit-booking-datetime').value = formattedDate;
 
-                    fetch(`/edit-booking/${bookingType}/${bookingId}/`, {
-                        method: 'GET',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': getCsrfToken()
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Response not ok');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success && data.booking) {
-                            const booking = data.booking;
-                            document.getElementById('edit-booking-id').value = booking.id;
-                            document.getElementById('edit-booking-type').value = booking.type;
-                            document.getElementById('edit-booking-user-info').value = booking.user_info;
-                            document.getElementById('edit-booking-service-info').value = booking.service_info;
-                            document.getElementById('edit-booking-datetime').value = booking.datetime;
-                            
-                            // Mostra i gruppi di form popolati
-                            userInfoGroup.style.display = 'flex';
-                            serviceInfoGroup.style.display = 'flex';
-                            datetimeGroup.style.display = 'flex';
+                    // Gestisci le note se presenti
+                    const notesInput = document.getElementById('edit-booking-notes');
+                    const notesGroupElement = document.getElementById('edit-booking-notes-group');
+                    const descriptionCell = row.cells[3].textContent;
+                    
+                    if (descriptionCell && descriptionCell.trim() !== '') {
+                        notesInput.value = descriptionCell;
+                        notesGroupElement.style.display = 'block';
+                    } else {
+                        notesInput.value = '';
+                        notesGroupElement.style.display = 'none';
+                    }
 
-                            // Always show notes field if it exists and populate it
-                            const notesInput = document.getElementById('edit-booking-notes');
-                            const notesGroupElement = document.getElementById('edit-booking-notes-group');
-                            if (booking.notes !== undefined) {
-                                notesInput.value = booking.notes || '';
-                                notesInput.disabled = false;
-                                notesInput.readOnly = false;
-                                notesGroupElement.style.display = 'block'; // or 'flex'
-                            } else {
-                                notesGroupElement.style.display = 'none';
-                            }
-                            // Ensure datetime is editable
-                            const datetimeInput = document.getElementById('edit-booking-datetime');
-                            datetimeInput.disabled = false;
-                            datetimeInput.readOnly = false;
-                            popupActions.style.display = 'flex'; // Mostra i pulsanti di azione
-
-                            // --- BEGIN DIAGNOSTIC LOGS ---
-                            const datetimeInputForLog = document.getElementById('edit-booking-datetime');
-                            console.log('Datetime input state:', {
-                                disabled: datetimeInputForLog.disabled,
-                                readOnly: datetimeInputForLog.readOnly,
-                                value: datetimeInputForLog.value
-                            });
-                            const notesInputForLog = document.getElementById('edit-booking-notes');
-                            console.log('Notes input state:', {
-                                disabled: notesInputForLog.disabled,
-                                readOnly: notesInputForLog.readOnly,
-                                value: notesInputForLog.value
-                            });
-                            // --- END DIAGNOSTIC LOGS ---
-
-                        } else {
-                            throw new Error(data.error || 'Impossibile caricare i dati della prenotazione.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Errore nel fetch dei dettagli prenotazione:', error);
-                        showNotification(error.message || 'Errore caricamento dati.', 'error');
-                        closeEditBookingPopup();
-                    })
-                    .finally(() => {
-                        editBookingLoader.style.display = 'none'; // Nascondi lo spinner in ogni caso
-                    });
+                    // Mostra i gruppi di form
+                    userInfoGroup.style.display = 'flex';
+                    serviceInfoGroup.style.display = 'flex';
+                    datetimeGroup.style.display = 'flex';
+                    popupActions.style.display = 'flex';
+                    
+                    editBookingLoader.style.display = 'none';
                 });
             });
 
@@ -750,13 +711,26 @@
                 const bookingId = formData.get('booking_id');
                 const bookingType = formData.get('booking_type');
 
-                // Ensure 'notes' is included in formData even if empty, if the field was visible
-                const notesGroup = document.getElementById('edit-booking-notes-group');
-                if (notesGroup.style.display !== 'none' && !formData.has('notes')) {
-                    formData.append('notes', '');
+                // Formatta la data nel formato corretto
+                const datetimeInput = document.getElementById('edit-booking-datetime');
+                if (datetimeInput.value) {
+                    formData.set('datetime', datetimeInput.value);
                 }
 
-                fetch(`/edit-booking/${bookingType}/${bookingId}/`, { // URL de la nueva vista POST
+                // Aggiungi le note se presenti
+                const notesInput = document.getElementById('edit-booking-notes');
+                if (notesInput && notesInput.value) {
+                    formData.set('notes', notesInput.value);
+                }
+
+                console.log('Dati inviati:', {
+                    bookingId: bookingId,
+                    bookingType: bookingType,
+                    datetime: formData.get('datetime'),
+                    notes: formData.get('notes')
+                });
+
+                fetch(`/edit-booking/${bookingType}/${bookingId}/`, {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -764,47 +738,26 @@
                         'X-CSRFToken': getCsrfToken() 
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Risposta del server:', response);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Dati ricevuti:', data);
                     if (data.success) {
                         showNotification(data.message || 'Prenotazione aggiornata!', 'success');
                         closeEditBookingPopup();
-                        // Aggiorna la riga della tabella senza ricaricare la pagina
-                        const bookingId = formData.get('booking_id');
-                        const bookingType = formData.get('booking_type');
-                        // Trova la riga corrispondente in tutte le tabelle
-                        document.querySelectorAll(`.btn-edit[data-id='${bookingId}'][data-type='${bookingType}']`).forEach(function(btn) {
-                            const row = btn.closest('tr');
-                            if (row) {
-                                // Aggiorna la data (quinta colonna)
-                                const dateCell = row.querySelector('td:nth-child(5)');
-                                // Prendi il nuovo valore dal campo input
-                                const newDateValue = document.getElementById('edit-booking-datetime').value;
-                                // Formatta la data in stile italiano (es: 31 Mag 2025, 12:34)
-                                if (dateCell && newDateValue) {
-                                    const dateObj = new Date(newDateValue);
-                                    const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-                                    // toLocaleString con 'it-IT' per formato italiano
-                                    dateCell.textContent = dateObj.toLocaleString('it-IT', options).replace('.', '');
-                                }
-                                // Aggiorna la descrizione/notes (quarta colonna)
-                                const notesCell = row.querySelector('td:nth-child(4)');
-                                const newNotesValue = document.getElementById('edit-booking-notes').value;
-                                if (notesCell) {
-                                    notesCell.textContent = newNotesValue;
-                                }
-                            }
-                        });
-                        // Nessun reload della pagina!
+                        // Ricarica la pagina
+                        window.location.reload();
                     } else {
                         showNotification(data.error || 'Errore durante l\'aggiornamento.', 'error');
+                        submitEditBookingBtn.disabled = false;
+                        editBookingLoader.style.display = 'none';
                     }
                 })
                 .catch(error => {
                     console.error('Errore aggiornamento prenotazione:', error);
                     showNotification('Errore di rete o del server.', 'error');
-                })
-                .finally(() => {
                     submitEditBookingBtn.disabled = false;
                     editBookingLoader.style.display = 'none';
                 });

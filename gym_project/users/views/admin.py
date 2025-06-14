@@ -161,11 +161,19 @@ def edit_booking(request, type, id):
             except Exception as e:
                 return ajax_error('Formato data e ora non valido. Assicurati di selezionare una data valida.')
 
+            # Aggiorna la data della prenotazione
             booking.date = new_datetime
+            
+            # Aggiorna la data del corso/servizio associato
+            related_service.scheduled = new_datetime
+            
             if hasattr(booking, 'description'):
                 booking.description = data.get('notes', '')
             
+            # Salva entrambi gli oggetti
             booking.save()
+            related_service.save()
+            
             return ajax_ok(f'Prenotazione #{booking.id} aggiornata con successo.')
 
     except (GymBooking.DoesNotExist, SpaBooking.DoesNotExist):

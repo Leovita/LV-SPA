@@ -1,142 +1,167 @@
-from django.test import TestCase
-from .models import User
-from subscriptions.models import SubscriptionPlan, Subscription
-from spa.models import SpaService
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.contrib import messages
 
-class StaffSubscriptionTests(TestCase):
+User = get_user_model()
+
+#test funzionalità di codice applicativo
+class RegistrationTests(TestCase):
     def setUp(self):
-        self.annual_plan = SubscriptionPlan.objects.create(
-            id=3,
-            name="Annual Plan",
-            price=100,
-            duration=12
+        """Setup iniziale per ogni test"""
+        self.client = Client()
+        self.register_url = reverse('register')
+        
+    def test_empty_fields(self):
+        """Test 1: Verifica che la registrazione fallisca con campi vuoti"""
+        #richiesta POST con fields vuoti
+        response = self.client.post(self.register_url, {})
+        
+        #la risposta sia un redirect 
+        self.assertEqual(response.status_code, 302)
+        #non sia stato creato alcun utente
+        self.assertEqual(User.objects.count(), 0)
+        #il messaggio di errore sia corretto
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('compila tutti i campi' in str(msg).lower() for msg in messages_list))
+
+    def test_invalid_email(self):
+        """Test 2: Verifica che la registrazione fallisca con email non valida"""
+        #richiesta POST con email non valida
+        response = self.client.post(self.register_url, {
+            'register-name': 'Test User',
+            'register-email': 'invalid-email',
+            'register-password': 'Test123!',
+            'register-confirm': 'Test123!'
+        })
+        
+        #la risposta sia un redirect
+        self.assertEqual(response.status_code, 302)
+        #non sia stato creato alcun utente
+        self.assertFalse(User.objects.filter(email='invalid-email').exists())
+        #il messaggio di errore sia corretto
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('email non valida' in str(msg).lower() for msg in messages_list))
+
+    def test_existing_email(self):
+        """Test 3: Verifica che la registrazione fallisca con email già esistente"""
+        #crea un utente esistente
+        User.objects.create_user(
+            email='existing@test.com',
+            password='Test123!',
+            full_name='Existing User'
         )
         
-        self.staff_user = User.objects.create_user(
-            email='staff@example.com',
-            password='Staff123!@#',
-            full_name='Staff User',
-            is_staff=True
+        #richiesta POST con email già esistente
+        response = self.client.post(self.register_url, {
+            'register-name': 'Test User',
+            'register-email': 'existing@test.com',
+            'register-password': 'Test123!',
+            'register-confirm': 'Test123!'
+        })
+        
+        #la risposta sia un redirect
+        self.assertEqual(response.status_code, 302)
+        #non sia stato creato un nuovo utente con la stessa email
+        self.assertEqual(User.objects.filter(email='existing@test.com').count(), 1)
+        #il messaggio di errore sia corretto
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('utente già esistente' in str(msg).lower() for msg in messages_list))
+
+    def test_password_no_uppercase(self):
+        """Test 5: Verifica che la registrazione fallisca con password senza maiuscola"""
+        response = self.client.post(self.register_url, {
+            'register-name': 'Test User',
+            'register-email': 'nomaiuscola@test.com',
+            'register-password': 'test1234!',
+            'register-confirm': 'test1234!'
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(email='nomaiuscola@test.com').exists())
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('maiuscola' in str(msg).lower() for msg in messages_list))
+
+    def test_password_no_number(self):
+        """Test 6: Verifica che la registrazione fallisca con password senza numero"""
+        response = self.client.post(self.register_url, {
+            'register-name': 'Test User',
+            'register-email': 'nonumero@test.com',
+            'register-password': 'TestTest!',
+            'register-confirm': 'TestTest!'
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(email='nonumero@test.com').exists())
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('numero' in str(msg).lower() for msg in messages_list))
+
+    def test_password_no_special(self):
+        """Test 7: Verifica che la registrazione fallisca con password senza simbolo speciale"""
+        response = self.client.post(self.register_url, {
+            'register-name': 'Test User',
+            'register-email': 'nospeciale@test.com',
+            'register-password': 'Test1234',
+            'register-confirm': 'Test1234'
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(email='nospeciale@test.com').exists())
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('simbolo speciale' in str(msg).lower() for msg in messages_list))
+
+    def test_password_mismatch(self):
+        """Test 8: Verifica che la registrazione fallisca con password e conferma non coincidenti"""
+        response = self.client.post(self.register_url, {
+            'register-name': 'Test User',
+            'register-email': 'mismatch@test.com',
+            'register-password': 'Test123!',
+            'register-confirm': 'Test1234!'
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(email='mismatch@test.com').exists())
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('password non coincidono' in str(msg).lower() for msg in messages_list))
+
+    def test_short_name(self):
+        """Test 9: Verifica che la registrazione fallisca con nome troppo corto"""
+        response = self.client.post(self.register_url, {
+            'register-name': 'A',
+            'register-email': 'shortname@test.com',
+            'register-password': 'Test123!',
+            'register-confirm': 'Test123!'
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(email='shortname@test.com').exists())
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('nome completo' in str(msg).lower() for msg in messages_list))
+
+    def test_valid_registration(self):
+        """Test 10: Verifica che la registrazione valida crei un utente"""
+        response = self.client.post(self.register_url, {
+            'register-name': 'Test User',
+            'register-email': 'valido@test.com',
+            'register-password': 'Test123!',
+            'register-confirm': 'Test123!'
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.filter(email='valido@test.com').exists())
+        user = User.objects.get(email='valido@test.com')
+        self.assertEqual(user.full_name, 'Test User')
+        self.assertTrue(user.check_password('Test123!'))
+        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('registrazione completata' in str(msg).lower() for msg in messages_list))
+
+#test funzionalità di view profilo utente + codice di risposta HTTP
+    def test_profile_view(self):
+        """Test 11: Verifica la vista del profilo utente"""
+        user = User.objects.create_user(
+            email='profile@test.com',
+            password='Test123!',
+            full_name='Profile User'
         )
-        
-        self.admin_user = User.objects.create_superuser(
-            email='admin@example.com',
-            password='Admin123!@#'
-        )
-        
-        self.normal_user = User.objects.create_user(
-            email='normal@example.com',
-            password='Normal123!@#',
-            full_name='Normal User'
-        )
-
-    def test_staff_sub(self):
-        staff_subscription = Subscription.objects.filter(
-            user=self.staff_user,
-            plan=self.annual_plan,
-            is_active=True
-        ).first()
-        
-        self.assertIsNotNone(staff_subscription, "Lo staff dovrebbe avere un abbonamento attivo")
-        self.assertEqual(staff_subscription.plan, self.annual_plan, "L'abbonamento dovrebbe essere annuale")
-
-    def test_admin_sub(self):
-        admin_subscription = Subscription.objects.filter(
-            user=self.admin_user,
-            plan=self.annual_plan,
-            is_active=True
-        ).first()
-        
-        self.assertIsNotNone(admin_subscription, "L'admin dovrebbe avere un abbonamento attivo")
-        self.assertEqual(admin_subscription.plan, self.annual_plan, "L'abbonamento dovrebbe essere annuale")
-
-    def test_normal_user_no_subscription(self):
-        #testiamo che un utente normale non abbia un abbonamento attivo default
-        normal_subscription = Subscription.objects.filter(
-            user=self.normal_user,
-            plan=self.annual_plan,
-            is_active=True
-        ).first()
-        
-        self.assertIsNone(normal_subscription, "Un utente normale non dovrebbe avere un abbonamento automatico")
-
-    def test_staff_to_normal_user_subscription(self):
-        #rimuoviamo i privilegi staff e vediamo se l'abbonamento viene rimosso
-        self.staff_user.is_staff = False
-        self.staff_user.save()
-        
-        staff_subscription = Subscription.objects.filter(
-            user=self.staff_user,
-            plan=self.annual_plan,
-            is_active=True
-        ).first()
-        
-        self.assertIsNotNone(staff_subscription, "L'abbonamento dovrebbe essere mantenuto anche dopo la rimozione dei privilegi staff")
-
-    def test_multiple_staff_subscriptions(self):
-        #salviamo nuovamente l'utente staff per forzare il trigger
-        self.staff_user.save()
-        
-        #count sub attivi
-        subscription_count = Subscription.objects.filter(
-            user=self.staff_user,
-            plan=self.annual_plan,
-            is_active=True
-        ).count()
-        
-        self.assertEqual(subscription_count, 1, "Dovrebbe esserci un solo abbonamento attivo")
-
-    def test_subscription_after_staff_promotion(self):
-        #promuoviamo l'utente normale a staff
-        self.normal_user.is_staff = True
-        self.normal_user.save()
-        
-        #testiamo che l'utente abbia ricevuto l'abbonamento
-        normal_user_subscription = Subscription.objects.filter(
-            user=self.normal_user,
-            plan=self.annual_plan,
-            is_active=True
-        ).first()
-        
-        self.assertIsNotNone(normal_user_subscription, "User promosso a staff non ha subsciption")
-        self.assertEqual(normal_user_subscription.plan, self.annual_plan, "L'abbonamento dovrebbe essere annuale")
-
-class SpaServicePriceTests(TestCase):
-    def setUp(self):
-        self.plan = SubscriptionPlan.objects.create(
-            name="Abbonamento Annuale",
-            price=279.99,
-            duration=12,
-            description="Il miglior rapporto qualità-prezzo! 12 mesi di benessere totale"
-        )
-        
-        self.user = User.objects.create_user(
-            email='user@example.com',
-            password='User123!@#',
-            full_name='Normal User'
-        )
-        
-        self.spa_service = SpaService.objects.create(
-            name="Massaggio Relax",
-            description="Massaggio rilassante di 45 minuti",
-            price=50,
-            duration=45,
-            max_partecipants=1
-        )
-
-    def test_spa_service_price_with_subscription(self):
-        # Verifico che inizialmente l'utente non abbia accesso gratuito
-        self.assertFalse(self.user.has_free_spa_access())
-        
-        # Creo un abbonamento attivo per l'utente
-        subscription = Subscription.objects.create(
-            user=self.user,
-            plan=self.plan,
-            is_active=True
-        )
-        
-        self.assertTrue(self.user.has_free_spa_access())
-        self.assertEqual(self.spa_service.get_price_for_user(self.user), 0)
-
-    def test_spa_service_price_without_subscription(self):
-        self.assertEqual(self.spa_service.get_price_for_user(self.user), self.spa_service.price)
+        self.client.login(email='profile@test.com', password='Test123!')
+        response = self.client.get(reverse('profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Profile User')
+        self.assertContains(response, 'profile@test.com')

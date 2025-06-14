@@ -225,7 +225,7 @@
     <p><strong>Operatore:</strong> {{ service.operator.full_name }}</p>
     <p><strong>Prezzo:</strong>
         {% if request.user.is_authenticated and request.user.has_free_spa_access %}
-            <span class="free-price">Gratuito con abbonamento {{ active_subscription.plan.name }}</span>
+            <span class="free-price">Gratuito con {{ active_subscription.plan.name }}</span>
         {% else %}
             €{{ service.price }}
         {% endif %}
@@ -337,7 +337,13 @@
             <div id="spa-specific-fields" style="display: none;">
                 <div class="detail-row">
                     <div class="detail-label">Prezzo:</div>
-                    <div class="detail-value" id="popup-price"></div>
+                    <div class="detail-value" id="popup-price">
+                        {% if request.user.is_authenticated and request.user.has_free_spa_access %}
+                            <span class="free-price">Gratuito con {{ active_subscription.plan.name }}</span>
+                        {% else %}
+                            €{{ service.price }}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             <div class="detail-row">
@@ -441,7 +447,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('popup-availability').textContent = `${max - current} su ${max}`;
             } else if (serviceType === 'spa') {
                 document.getElementById('spa-specific-fields').style.display = 'block';
-                document.getElementById('popup-price').textContent = '€' + this.dataset.price;
+                const isAuth = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
+                const hasFreeAccess = "{{ request.user.has_free_spa_access|yesno:'true,false' }}" === "true";
+                
+                if (isAuth && hasFreeAccess) {
+                    document.getElementById('popup-price').innerHTML = '<span class="free-price">Gratuito con {{ active_subscription.plan.name }}</span>';
+                } else {
+                    document.getElementById('popup-price').textContent = '€' + this.dataset.price;
+                }
                 document.getElementById('popup-instructor').textContent = this.dataset.operator;
                 document.getElementById('popup-availability').textContent = `${max - current} su ${max}`;
             }

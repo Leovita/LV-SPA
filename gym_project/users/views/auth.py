@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from users.models import User, ProfileUpdateForm, ProfilePictureForm
 from django.conf import settings
+import re
 
 def profile(request):
     if not request.user.is_authenticated:
@@ -40,12 +41,23 @@ def register(req):
             messages.error(req, "Compila tutti i campi.")
             return redirect('/login/?tab=register')
 
+        # Validazione email
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, mail):
+            messages.error(req, "Email non valida.")
+            return redirect('/login/?tab=register')
+
         if pwd != pwd2:
             messages.error(req, "Le password non coincidono.")
             return redirect('/login/?tab=register')
 
         if User.objects.filter(email__iexact=mail).exists():
             messages.error(req, "Utente già esistente con questa email.")
+            return redirect('/login/?tab=register')
+
+        # Validazione nome completo
+        if len(name) < 3 or len(name.split()) < 2:
+            messages.error(req, "Il nome completo deve contenere almeno nome e cognome (minimo 3 caratteri e almeno due parole).")
             return redirect('/login/?tab=register')
 
         pwd_err = User.validate_password(pwd)

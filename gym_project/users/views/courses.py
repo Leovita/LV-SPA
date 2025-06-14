@@ -11,6 +11,7 @@ from dateutil import parser
 import json
 from django.http import JsonResponse
 from datetime import datetime
+from django.urls import reverse
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)
@@ -66,6 +67,8 @@ def add_course(request):
         image = request.FILES.get('image')
         max_partecipants = request.POST.get('max_partecipants')
         scheduled = request.POST.get('scheduled')
+        price = request.POST.get('price')
+        spa_type = request.POST.get('spa_type')
 
         if not all([course_type, name, description, duration, instructor_id, image, scheduled]):
             if is_ajax:
@@ -101,6 +104,10 @@ def add_course(request):
             except (TypeError, ValueError):
                 return ajax_error("Capacità massima richiesta per i corsi palestra (deve essere almeno 1).")
             try:
+                price_float = float(price) if price else 0.0
+            except ValueError:
+                return ajax_error("Prezzo non valido.")
+            try:
                 new_course = GymClass.objects.create(
                     name=name,
                     description=description,
@@ -111,7 +118,8 @@ def add_course(request):
                     scheduled=scheduled_dt
                 )
             except Exception as e:
-                return ajax_error("Errore durante la creazione del corso.")
+                print(f"Errore durante la creazione del corso: {e}")
+                return ajax_error(f"Errore durante la creazione del corso: {str(e)}")
 
             if is_ajax:
                 return JsonResponse({
@@ -128,31 +136,42 @@ def add_course(request):
                         'scheduled': new_course.scheduled.strftime('%Y-%m-%dT%H:%M'),
                         'type': 'gym',
                         'status': 'active',
-                        'image_url': new_course.imgs.url if new_course.imgs else '',
-                    }
+                        'image_url': new_course.imgs.url if new_course.imgs else ''
+                    },
+                    'redirect': reverse('gest_corsi')
                 })
             messages.success(request, f"Corso palestra '{name}' aggiunto con successo.")
 
         elif course_type == 'spa':
-            price = request.POST.get('price')
-            spa_type = request.POST.get('spa_type')
             if not price:
                 if is_ajax:
                     return ajax_error("Prezzo richiesto per i servizi spa.")
                 messages.error(request, "Prezzo richiesto per i servizi spa.")
                 return redirect('gest-corsi')
 
-            new_service = SpaService.objects.create(
-                name=name,
-                description=description,
-                operator=instructor,
-                duration=duration,
-                price=price,
-                imgs=image,
-                max_partecipants=max_partecipants if max_partecipants else 1,
-                scheduled=scheduled_dt,
-                type=spa_type or 'massage'
-            )
+            try:
+                price_float = float(price)
+            except ValueError:
+                if is_ajax:
+                    return ajax_error("Prezzo non valido.")
+                messages.error(request, "Prezzo non valido.")
+                return redirect('gest-corsi')
+
+            try:
+                new_service = SpaService.objects.create(
+                    name=name,
+                    description=description,
+                    operator=instructor,
+                    duration=duration,
+                    price=price_float,
+                    imgs=image,
+                    max_partecipants=int(max_partecipants) if max_partecipants else 1,
+                    scheduled=scheduled_dt,
+                    type=spa_type or 'massage'
+                )
+            except Exception as e:
+                return ajax_error(f"Errore durante la creazione del servizio: {str(e)}")
+
             if is_ajax:
                 return JsonResponse({
                     'success': True,
@@ -253,7 +272,10 @@ def edit_course(request, type, id):
         else:
             price = request.POST.get('price')
             max_partecipants = request.POST.get('max_partecipants')
-            course.price = price
+            try:
+                course.price = float(price) if price else 0.0
+            except ValueError:
+                return ajax_error("Prezzo non valido")
             course.operator = instructor
             course.type = request.POST.get('spa_type') or 'massage'
             course.max_partecipants = int(max_partecipants) if max_partecipants else 1

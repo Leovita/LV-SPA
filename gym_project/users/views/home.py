@@ -31,6 +31,9 @@ def home(req):
         'active_subscription': active_subscription,
         'coaches': coaches,
         'timestamp': datetime.now().timestamp(),
+        'contatti': 'Contatti',
+        'i_nostri_coach': 'I nostri Coach',
+        'is_free': active_subscription is not None
     }
 
     return render(req, 'users/home.html', ctx) 
