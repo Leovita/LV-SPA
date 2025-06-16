@@ -6,7 +6,7 @@ from django.contrib import messages
 User = get_user_model()
 
 #test funzionalità di codice applicativo
-class RegistrationTests(TestCase):
+class Tests(TestCase):
     def setUp(self):
         """Setup iniziale per ogni test"""
         self.client = Client()
@@ -165,3 +165,17 @@ class RegistrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Profile User')
         self.assertContains(response, 'profile@test.com')
+
+#test verifica cancellazione profilo
+    def test_delete_profile(self):
+        user = User.objects.create_user(
+            email='delete@test.com',
+            password='Test123!',
+            full_name='Delete User'
+        )
+        self.client.login(email='delete@test.com', password='Test123!')
+        response = self.client.post(reverse('delete_profile'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(email='delete@test.com').exists())
+        messages_list = list(messages.get_messages(response.wsgi_request))
+        self.assertTrue(any('profilo eliminato' in str(msg).lower() for msg in messages_list))

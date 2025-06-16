@@ -188,7 +188,7 @@
 </thead>
 <tbody>
 {% for service in spa_services %}
-<tr data-scheduled="{{ service.scheduled|date:'Y-m-d\\TH:i' }}" data-price="{{ service.price }}">
+<tr data-scheduled="{{ service.scheduled|date:'Y-m-d\\TH:i' }}" data-price="{{ service.price }}" data-max-partecipants="{{ service.max_partecipants }}">
 <td>{{ service.id }}</td>
 <td>{{ service.name }}</td>
 <td>{{ service.get_type_display }}</td>
@@ -902,7 +902,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 }
-            } else {
+            } else if (courseType === 'spa') {
                 const priceInput = document.getElementById('edit-price');
                 const price = priceInput ? parseFloat(priceInput.value) : 0;
                 const spaTypeInput = document.getElementById('edit-spa-type');
@@ -1016,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (capValue) {
                     document.getElementById('edit-max-partecipants').value = parseInt(capValue);
                 }
-            } else {
+            } else if (type === 'spa') {
                 document.getElementById('edit-gym-fields').style.display = 'none';
                 document.getElementById('edit-spa-fields').style.display = 'block';
                 const price = row.getAttribute('data-price');
@@ -1033,6 +1033,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             break;
                         }
                     }
+                }
+                const capValue = row.getAttribute('data-max-partecipants');
+                if (capValue) {
+                    document.getElementById('edit-max-partecipants-spa').value = parseInt(capValue);
                 }
             }
             
