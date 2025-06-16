@@ -212,36 +212,26 @@ def add_course(request):
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def course_details(request, type, id):
+    print(f"[DEBUG] course_details - type: {type}, id: {id}")
     try:
         if type == 'gym':
             course = get_object_or_404(GymClass, id=id)
-            booking = GymBooking(
-                id=course.id,
-                user=request.user,
-                date=timezone.now(),
-                class_id=course,
-                service_id=None,
-                description=""
-            )
+            print(f"[DEBUG] course_details - corso trovato: {course.name}")
+            return render(request, 'palestra/gym_course_details.html', {
+                'course': course
+            })
         elif type == 'spa':
             course = get_object_or_404(SpaService, id=id)
-            booking = SpaBooking(
-                id=course.id,
-                user=request.user,
-                date=timezone.now(),
-                class_id=None,
-                service_id=course,
-                description=""
-            )
+            print(f"[DEBUG] course_details - servizio trovato: {course.name}")
+            return render(request, 'spa/spa_service_details.html', {
+                'course': course
+            })
         else:
+            print(f"[DEBUG] course_details - tipo non valido: {type}")
             messages.error(request, "Tipo di corso non valido")
             return redirect('gest-corsi')
-
-        return render(request, 'users/booking_details.html', {
-            'booking': booking,
-            'type': type
-        })
     except Exception as e:
+        print(f"[DEBUG] course_details - errore: {str(e)}")
         messages.error(request, f"Errore nel caricamento dei dettagli: {str(e)}")
         return redirect('gest-corsi')
 

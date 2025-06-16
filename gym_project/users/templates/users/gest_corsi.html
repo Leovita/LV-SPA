@@ -588,6 +588,8 @@ text-align: center;
 <script src="{% static 'users/js/profile.js' %}?v={{ timestamp }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const courseDetailsUrl = "{% url 'course-details' 'type' 0 %}";
+    
     // Gestione delle date
     const now = new Date();
     const minDateTime = now.toISOString().slice(0, 16);
@@ -968,7 +970,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Gestione dei pulsanti di azione
     document.querySelectorAll('.btn-view').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
