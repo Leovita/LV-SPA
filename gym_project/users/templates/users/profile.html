@@ -32,7 +32,7 @@
                             <span>Cambia Foto</span>
                         </div>
                     </div>
-                    <form id="profile-pic-form" enctype="multipart/form-data" method="post" action="{% url 'update_profile_picture' %}">
+                    <form id="profile-pic-form" enctype="multipart/form-data" method="post" action="{% url 'update-profile-picture' %}">
                         {% csrf_token %}
                         <input type="file" id="profile-pic-input" name="profile_picture" accept="image/*" hidden>
                         <button type="button" id="change-photo-btn" class="profile-button">Seleziona Immagine</button>
@@ -52,7 +52,7 @@
                     </div>
                     {% endif %}
                     
-                    <form method="post" action="{% url 'update_profile' %}"> 
+                    <form method="post" action="{% url 'update-profile' %}"> 
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="full_name">Nome Completo</label>
@@ -97,7 +97,7 @@
             <div class="account-security">
                 <h2>Sicurezza Account</h2>
                 <a href="{% url 'login' %}" class="security-btn">Cambia Password</a>
-                <a href="{% url 'delete_account' %}" class="security-btn delete-account">Elimina Account</a>
+                <a href="{% url 'delete-account' %}" class="security-btn delete-account">Elimina Account</a>
             </div>
         </div>
     </section>

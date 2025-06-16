@@ -2,8 +2,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from palestra.models import GymClass
-from spa.models import SpaService
+from palestra.models import GymClass, GymBooking
+from spa.models import SpaService, SpaBooking
 from users.models import User
 from users.views.utils import ajax_error, ajax_ok
 from django.utils import timezone
@@ -215,15 +215,32 @@ def course_details(request, type, id):
     try:
         if type == 'gym':
             course = get_object_or_404(GymClass, id=id)
-            template = 'gym_course_details.html'
+            booking = GymBooking(
+                id=course.id,
+                user=request.user,
+                date=timezone.now(),
+                class_id=course,
+                service_id=None,
+                description=""
+            )
         elif type == 'spa':
             course = get_object_or_404(SpaService, id=id)
-            template = 'spa_service_details.html'
+            booking = SpaBooking(
+                id=course.id,
+                user=request.user,
+                date=timezone.now(),
+                class_id=None,
+                service_id=course,
+                description=""
+            )
         else:
             messages.error(request, "Tipo di corso non valido")
             return redirect('gest-corsi')
 
-        return render(request, template, {'course': course})
+        return render(request, 'users/booking_details.html', {
+            'booking': booking,
+            'type': type
+        })
     except Exception as e:
         messages.error(request, f"Errore nel caricamento dei dettagli: {str(e)}")
         return redirect('gest-corsi')

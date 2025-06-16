@@ -4,7 +4,7 @@
       <h2>Aggiungi Nuovo Corso/Servizio</h2>
       <button class="close-popup" onclick="closeAddCoursePopup()" aria-label="Close">&times;</button>
     </div>
-    <form id="add-course-form" method="post" enctype="multipart/form-data" action="{% url 'add_course' %}">
+    <form id="add-course-form" method="post" enctype="multipart/form-data" action="{% url 'add-course' %}">
       {% csrf_token %}
       <label>Tipo:</label>
       <select name="type" id="course-type" required>

@@ -44,12 +44,12 @@
                             </div>
                             <div class="booking-details">
                                 <div class="detail-item">
-                                    <span class="detail-label">Data:</span>
-                                    <span class="detail-value">{{ booking.date|date:"d/m/Y" }}</span>
+                                    <span class="detail-label">Data Prenotazione:</span>
+                                    <span class="detail-value">{{ booking.date|date:"d/m/Y H:i" }}</span>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">Ora:</span>
-                                    <span class="detail-value">{{ booking.date|date:"H:i" }}</span>
+                                    <span class="detail-label">Data e Ora Servizio:</span>
+                                    <span class="detail-value">{{ booking.class_id.scheduled|date:"d/m/Y H:i" }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Istruttore:</span>
@@ -88,12 +88,12 @@
                             </div>
                             <div class="booking-details">
                                 <div class="detail-item">
-                                    <span class="detail-label">Data:</span>
-                                    <span class="detail-value">{{ booking.date|date:"d/m/Y" }}</span>
+                                    <span class="detail-label">Data Prenotazione:</span>
+                                    <span class="detail-value">{{ booking.date|date:"d/m/Y H:i" }}</span>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">Ora:</span>
-                                    <span class="detail-value">{{ booking.date|date:"H:i" }}</span>
+                                    <span class="detail-label">Data e Ora Servizio:</span>
+                                    <span class="detail-value">{{ booking.service_id.scheduled|date:"d/m/Y H:i" }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Prezzo:</span>
@@ -195,8 +195,8 @@
 
         function cancelBooking(bookingId, bookingType) {
             const cancelUrl = bookingType === 'gym' 
-                ? "{% url 'cancel_gym_booking' 0 %}".replace('0', bookingId)
-                : "{% url 'cancel_spa_booking' 0 %}".replace('0', bookingId);
+                ? "{% url 'cancel-gym-booking' 0 %}".replace('0', bookingId)
+                : "{% url 'cancel-spa-booking' 0 %}".replace('0', bookingId);
             
             fetch(cancelUrl, {
                 method: 'POST',

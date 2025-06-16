@@ -35,11 +35,11 @@
                         <div class="dropdown-menu">
                             <a href="{% url 'profile' %}">Profilo</a>
                             {% if user.is_superuser or user.is_staff %}
-                                <a href="{% url 'gest_prenotazioni' %}">Gestisci Prenotazioni</a>
-                                <a href="{% url 'gest_corsi' %}">Gestisci Corsi</a>
+                                <a href="{% url 'gest-prenotazioni' %}">Gestisci Prenotazioni</a>
+                                <a href="{% url 'gest-corsi' %}">Gestisci Corsi</a>
                             {% else %}
                                 <a href="{% url 'subscription_plans' %}">Abbonamento</a>
-                                <a href="{% url 'my_bookings' %}">Le mie prenotazioni</a>
+                                <a href="{% url 'my-bookings' %}">Le mie prenotazioni</a>
                             {% endif %}
                             <a href="{% url 'logout' %}">Logout</a>
                         </div>

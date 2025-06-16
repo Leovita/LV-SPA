@@ -575,7 +575,7 @@
                     const serviceName = this.closest('tr').querySelector('td:nth-child(3)').textContent;
 
                     if (confirm(`Sei sicuro di voler eliminare la prenotazione di ${username} per ${serviceName}?`)) {
-                        fetch("{% url 'admin_delete_booking' %}", {
+                        fetch("{% url 'admin-delete-booking' %}", {
                             method: 'POST',
                             headers: {
                                 'X-CSRFToken': getCsrfToken(),
