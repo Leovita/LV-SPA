@@ -174,8 +174,8 @@ class Tests(TestCase):
             full_name='Delete User'
         )
         self.client.login(email='delete@test.com', password='Test123!')
-        response = self.client.post(reverse('delete_profile'), follow=True)
+        response = self.client.post(reverse('delete-account'), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(email='delete@test.com').exists())
         messages_list = list(messages.get_messages(response.wsgi_request))
-        self.assertTrue(any('profilo eliminato' in str(msg).lower() for msg in messages_list))
+        self.assertTrue(any('account è stato eliminato con successo' in str(msg).lower() for msg in messages_list))

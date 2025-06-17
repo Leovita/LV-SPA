@@ -47,30 +47,30 @@ def register(req):
 
         if not all([name, mail, pwd, pwd2]):
             messages.error(req, "Compila tutti i campi.")
-            return render(req, "users/login.html", form_data)
+            return redirect('register')
 
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_pattern, mail):
             messages.error(req, "Email non valida.")
-            return render(req, "users/login.html", form_data)
+            return redirect('register')
 
         if pwd != pwd2:
             messages.error(req, "Le password non coincidono.")
-            return render(req, "users/login.html", form_data)
+            return redirect('register')
 
         if User.objects.filter(email__iexact=mail).exists():
             messages.error(req, "Utente già esistente con questa email.")
-            return render(req, "users/login.html", form_data)
+            return redirect('register')
 
         if len(name) < 3 or len(name.split()) < 2:
             messages.error(req, "Il nome completo deve contenere almeno nome e cognome (minimo 3 caratteri e almeno due parole).")
-            return render(req, "users/login.html", form_data)
+            return redirect('register')
 
         pwd_err = User.validate_password(pwd)
         if pwd_err:
             for err in pwd_err:
                 messages.error(req, err)
-            return render(req, "users/login.html", form_data)
+            return redirect('register')
 
         try:
             user = User.objects.create_user(email=mail, password=pwd, full_name=name)
@@ -87,7 +87,7 @@ def register(req):
         except Exception as e:
             messages.error(req, "Errore durante la registrazione")
             print(f"[Register Error]: {e}")
-            return render(req, "users/login.html", form_data)
+            return redirect('register')
 
     return render(req, "users/login.html", {'tab': 'register'})
 
