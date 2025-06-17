@@ -2,8 +2,10 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from users.models import User, ProfileUpdateForm, ProfilePictureForm
 from django.conf import settings
+from django.urls import reverse
 import re
 
 def profile(request):
@@ -37,41 +39,55 @@ def register(req):
         pwd = req.POST.get("register-password", "")
         pwd2 = req.POST.get("register-confirm", "")
 
+        form_data = {
+            'name': name,
+            'email': mail,
+            'tab': 'register'
+        }
+
         if not all([name, mail, pwd, pwd2]):
             messages.error(req, "Compila tutti i campi.")
-            return redirect('users/register?tab=register')
+            return render(req, "users/login.html", form_data)
 
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_pattern, mail):
             messages.error(req, "Email non valida.")
-            return redirect('users/register?tab=register')
+            return render(req, "users/login.html", form_data)
 
         if pwd != pwd2:
             messages.error(req, "Le password non coincidono.")
-            return redirect('users/register?tab=register')
+            return render(req, "users/login.html", form_data)
 
         if User.objects.filter(email__iexact=mail).exists():
             messages.error(req, "Utente già esistente con questa email.")
-            return redirect('users/register?tab=register')
+            return render(req, "users/login.html", form_data)
 
         if len(name) < 3 or len(name.split()) < 2:
             messages.error(req, "Il nome completo deve contenere almeno nome e cognome (minimo 3 caratteri e almeno due parole).")
-            return redirect('users/register?tab=register')
+            return render(req, "users/login.html", form_data)
 
         pwd_err = User.validate_password(pwd)
         if pwd_err:
             for err in pwd_err:
                 messages.error(req, err)
-            return redirect('users/register?tab=register')
+            return render(req, "users/login.html", form_data)
 
         try:
             user = User.objects.create_user(email=mail, password=pwd, full_name=name)
-            messages.success(req, "Registrazione completata! Ora puoi effettuare il login.")
+            
+            try:
+                users_group = Group.objects.get(name='Users')
+                user.groups.add(users_group)
+            except Group.DoesNotExist:
+                users_group = Group.objects.create(name='Users')
+                user.groups.add(users_group)
+            
+            messages.success(req, "Registrazione completata! Ora puoi effettuare il login")
             return redirect('login')
         except Exception as e:
-            messages.error(req, "Errore durante la registrazione.")
+            messages.error(req, "Errore durante la registrazione")
             print(f"[Register Error]: {e}")
-            return redirect('users/register?tab=register')
+            return render(req, "users/login.html", form_data)
 
     return render(req, "users/login.html", {'tab': 'register'})
 

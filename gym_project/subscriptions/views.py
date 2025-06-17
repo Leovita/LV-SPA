@@ -38,7 +38,7 @@ def validate_fake_card_data(view_func):
             if errors:
                 for err in errors:
                     messages.error(request, err)
-                return redirect('subscription-plans')
+                return redirect('subscription_plans')
         return view_func(request, plan_id, *args, **kwargs)
     return _wrapped_view
 
@@ -47,7 +47,7 @@ def subscription_plans(request):
     """View to display all available subscription plans"""
     if not request.user.is_authenticated:
         messages.error(request, "Devi essere loggato per accedere agli abbonamenti.")
-        return redirect('subscription-plans')
+        return redirect('subscription_plans')
     plans = SubscriptionPlan.objects.all()
     context = {
         "subscription_plans": plans,
@@ -61,7 +61,7 @@ def subscribe_plan(request, plan_id):
     """View to subscribe to a specific plan and link it to the user"""
     if not request.user.is_authenticated:
         messages.error(request, "Devi essere loggato per sottoscrivere un abbonamento.")
-        return redirect('subscription-plans')
+        return redirect('subscription_plans')
     if request.method == 'POST':
         plan = get_object_or_404(SubscriptionPlan, id=plan_id)
         Subscription.objects.filter(user=request.user, is_active=True).update(is_active=False)
@@ -81,5 +81,5 @@ def subscribe_plan(request, plan_id):
             is_active=True
         )
         messages.success(request, f"Abbonamento '{plan.name}' sottoscritto con successo!")
-        return redirect('subscription-plans')
-    return redirect('subscription-plans')
+        return redirect('subscription_plans')
+    return redirect('subscription_plans')

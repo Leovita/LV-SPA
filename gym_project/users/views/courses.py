@@ -212,7 +212,6 @@ def add_course(request):
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def course_details(request, type, id):
-    print(f"[DEBUG] course_details - type: {type}, id: {id}")
     try:
         if type == 'gym':
             course = get_object_or_404(GymClass, id=id)

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    # piano abbonamento attivo
+    # piano abbonamento
     path('subscription-plans/', views.subscription_plans, name='subscription_plans'),
     path('subscribe/<int:plan_id>/', views.subscribe_plan, name='subscribe_plan'),
 ]
